@@ -1,0 +1,41 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <Obj N="moduleAuthor" RefId="1">
+        <TN RefId="1">
+          <T>System.String[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>Adrian Andersson</S>
+        </LST>
+      </Obj>
+      <S N="moduleName">ModuleForge</S>
+      <S N="moduleDescription">ModuleForge is a PowerShell scaffolding and build tool for creating other PowerShell modules. With ModuleForge, you can easily generate the foundational structure, boilerplate code, and github actions build techniques</S>
+      <S N="companyName"> </S>
+      <Version N="version">0.0.1.0</Version>
+      <S N="guid">c3746b45-1434-492b-b81b-1793dbc1973a</S>
+      <B N="AutoIncrementRevision">true</B>
+      <B N="RemoveSingleLineQuotes">false</B>
+      <B N="RemoveEmptyLines">false</B>
+      <Version N="minimumPsVersion">5.0.0.0</Version>
+      <Nil N="RequiredModules" />
+      <Nil N="Tags" />
+      <Nil N="Repository" />
+      <B N="trimSpaces">false</B>
+      <B N="publishOnBuild">false</B>
+      <B N="runPesterTests">false</B>
+      <S N="bartenderVersion">6.2.0</S>
+      <B N="autoDocument">false</B>
+      <B N="useGitDetails">true</B>
+      <S N="licenseUri">https://github.com/adrian-andersson/ModuleForge/blob/main/LICENSE</S>
+      <S N="projectUri">https://github.com/adrian-andersson/ModuleForge</S>
+      <S N="iconUri"></S>
+    </MS>
+  </Obj>
+</Objs>
