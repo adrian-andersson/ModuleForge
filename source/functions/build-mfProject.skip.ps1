@@ -1,4 +1,4 @@
-function build-mfProject
+function build-mfProjectAlt
 {
 
     <#
@@ -166,12 +166,11 @@ function build-mfProject
         
         #>
 
-        #DirectCopy
-        [array]$copyFolders = @('resource','bin')
+
 
         $scriptsToProcess = New-Object System.Collections.Generic.List[string]
         $functionsToExport = New-Object System.Collections.Generic.List[string]
-        #$nestedModules = New-Object System.Collections.Generic.List[string]
+        $nestedModules = New-Object System.Collections.Generic.List[string]
 
 
     }
@@ -219,41 +218,78 @@ function build-mfProject
                 switch ($folder) {
                     'enums' {
                         write-verbose 'Processing Enums'
-                        "`n### Enums`n`n"|Out-File $moduleFile -Append
-                        $folderItems.ForEach{
-                            $content = get-mfScriptText -path $_.Path -scriptType other
-                            $content.output|Out-File $moduleFile -Append
-                            if($exportClasses){
+                        if($dscResourcesFound)
+                        {
+                            "`n### Enums`n`n"|Out-File $moduleFile -Append
+                            $folderItems.ForEach{
+                                $content = get-mfScriptText -path $_.Path -scriptType other
+                                $content.output|Out-File $moduleFile -Append
+                            }
+                        }else{
+                            "`n### Enums`n`n"|Out-File $classesFile -Append
+                            $folderItems.ForEach{
+                                $content = get-mfScriptText -path $_.Path -scriptType other
                                 $content.output|Out-File $classesFile -Append
-                                if($classesFileShortname -notIn $scriptsToProcess)
-                                {
-                                    $scriptsToProcess.Add($classesFileShortname)
-                                }
+                            }
+
+                            if($classesFileShortname -notin $nestedModules)
+                            {
+                                $nestedModules.Add($classesFileShortname)
+                            }
+                            if($exportClasses -and $classesFileShortname -notIn $scriptsToProcess)
+                            {
+                                $scriptsToProcess.Add($classesFileShortname)
                             }
                         }
                     }
                     'validationClasses' {
                         write-verbose 'Processing validationClasses'
 
-                       "`n### Validation Classes`n`n"|Out-File $moduleFile -Append
+                        if($dscResourcesFound)
+                        {
+                            "`n### Validation Classes`n`n"|Out-File $moduleFile -Append
 
-                        $folderItems.ForEach{
-                            $content = get-mfScriptText -path $_.Path -scriptType other
-                            $content.output|Out-File $moduleFile -Append
+                            $folderItems.ForEach{
+                                $content = get-mfScriptText -path $_.Path -scriptType other
+                                $content.output|Out-File $moduleFile -Append
+                            }
+                        }else{
+                            
+                            "`n### Validation Classes`n`n"|Out-File $classesFile -Append
+                            $folderItems.ForEach{
+                                $content = get-mfScriptText -path $_.Path -scriptType other
+                                $content.output|Out-File $classesFile -Append
+                            }
+                            if($classesFileShortname -notin $nestedModules)
+                            {
+                                $nestedModules.Add($classesFileShortname)
+                            }
                         }
                     }
                     'classes' {
-                        write-verbose 'Processing Classes'
-                        "`n### Classes`n`n"|Out-File $moduleFile -Append
-                        $folderItems.ForEach{
-                            $content = get-mfScriptText -path $_.Path -scriptType other
-                            $content.output|Out-File $moduleFile -Append
-                            if($exportClasses){
+                        write-verbose 'Processing classes'
+
+                        if($dscResourcesFound)
+                        {
+                            "`n### Classes`n`n"|Out-File $moduleFile -Append
+                            $folderItems.ForEach{
+                                $content = get-mfScriptText -path $_.Path -scriptType other
+                                $content.output|Out-File $moduleFile -Append
+                            }
+                        }else{
+                            
+                            "`n### Classes`n`n"|Out-File $classesFile -Append
+                            $folderItems.ForEach{
+                                $content = get-mfScriptText -path $_.Path -scriptType other
                                 $content.output|Out-File $classesFile -Append
-                                if($classesFileShortname -notIn $scriptsToProcess)
-                                {
-                                    $scriptsToProcess.Add($classesFileShortname)
-                                }
+                            }
+                            if($classesFileShortname -notin $nestedModules)
+                            {
+                                $nestedModules.Add($classesFileShortname)
+                            }
+                            if($exportClasses -and $classesFileShortname -notIn $scriptsToProcess)
+                            {
+                                $scriptsToProcess.Add($classesFileShortname)
                             }
                         }
                     }
@@ -303,33 +339,6 @@ function build-mfProject
 
         }
 
-        #TODO: Copy the resources folder if required
-        foreach($folder in $copyFolders)
-        {
-            write-verbose "Processing folder: $folder"
-
-            $fullFolderPath = join-path -path $sourceFolder -ChildPath $folder
-            $folderItems = get-mfFolderItems -path $fullFolderPath
-            if($folderItems.count -ge 1) #Now we are on PS7 we don't need to worry about measure-object
-            {
-                write-verbose "$($folderItems.Count) Files found, need to copy"
-                $destinationFolder = join-path -path $moduleOutputFolder -childPath $folder
-                write-verbose "Destination Path will be: $destinationFolder"
-                if(!(test-path $destinationFolder))
-                {
-                    try{
-                        $r = new-item -ItemType Directory -Path $destinationFolder -ErrorAction Stop
-                        write-verbose 'Created Destination Folder'
-                    }catch{
-                        throw "Unable to make directory for: $destinationFolder"
-                    }
-                    
-                }
-                $copiedItems = get-mfFolderItems -path $fullFolderPath -destination $destinationFolder -copy
-            }
-        }
-
-
         write-verbose 'Building Manifest'
         #$config
         $splatManifest = @{
@@ -342,6 +351,10 @@ function build-mfProject
             ModuleVersion = $versionString
             Guid = $config.guid
             PowershellVersion = $config.minimumPsVersion.tostring()
+            #FunctionsToExport = if($functionsToExport.count -ge 1){$functionsToExport.ToArray()}else{[array]@()}
+            #ScriptsToProcess = if($exportClasses -and $scriptsToProcess.count -ge 1){$scriptsToProcess.ToArray()}else{[array]@()}
+            #NestedModules = if($nestedModules.count -ge 1){$nestedModules.ToArray()}else{[array]@()}
+            #Nested Modules When?
         }
         #Add the extra bits if present
         #Splatting really doesn't like nulls
@@ -374,6 +387,16 @@ function build-mfProject
             $splatManifest.ScriptsToProcess = $scriptsToProcess.ToArray()
         }else{
             write-verbose 'No scripts to process on module load'
+        }
+
+        #Nested Modules
+        if($nestedModules.count -ge 1)
+        {
+            write-verbose "Included in modulesToProcess: $($nestedModules.ToArray() -join ',')"
+            $splatManifest.NestedModules = $nestedModules.ToArray()
+
+        }else{
+            write-verbose 'Nothing to include in modulesToProcess'
         }
 
         New-ModuleManifest @splatManifest

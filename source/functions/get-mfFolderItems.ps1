@@ -172,9 +172,9 @@ function get-mfFolderItems
                     write-verbose "Copy file $($_.relativePath) to $($_.newFolder)"
                     if(!(test-path $_.newFolder))
                     {
-                        write-verbose 'Destionation folder does not exist, attempt to create'
+                        write-verbose 'Destination folder does not exist, attempt to create'
                         try{
-                            $r = new-item -itemtype directory -path $_.newFolder -force -ErrorAction stop
+                            $null = new-item -itemtype directory -path $_.newFolder -force -ErrorAction stop
                             write-verbose "Made new directory at: $($_.newFolder)"
                         }catch{
                             throw "Error making new directory at: $($_.newFolder)"
@@ -182,7 +182,7 @@ function get-mfFolderItems
                     }
                     try{
                         write-verbose "Copying $($_.relativePath) to $($_.newPath)"
-                        $r = copy-item -path ($_.fullname) -destination ($_.newPath) -force
+                        $null = copy-item -path ($_.fullname) -destination ($_.newPath) -force
                         write-verbose "Copied $($_.relativePath) to $($_.newFolder)"
                     }catch{
                         throw "Error with Copy: $($_.relativePath) to $($_.newFolder)"

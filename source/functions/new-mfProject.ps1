@@ -58,11 +58,11 @@ function new-mfProject
         [string]$modulePath = $(get-location).path,
         #Project URI. Will try and read from Git if your using a git repository.
         [Parameter()]
-        [string]$projectUri = (try{git config remote.origin.url}catch{$null}),
+        [string]$projectUri = $(try{git config remote.origin.url}catch{$null}),
         #URI to use for your projects license. Will try and use the license file if a projectUri is found
         [Parameter()]
         [string]$licenseUri,
-        [Parameter(Hidden)]
+        [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml'
 
         #ToDo Later: Add Required Modules.
@@ -106,7 +106,7 @@ function new-mfProject
 
 
         write-verbose 'Create Folder Scaffold'
-        add-mfFilesAndFolders
+        add-mfFilesAndFolders -moduleRoot $modulePath
 
        
 
@@ -120,6 +120,12 @@ function new-mfProject
 
         #Should we use JSON for this, or CLIXML.
         #The vote from the internet in July 2024 is stick to CLIXML for PowerShell centric projects. So we will do that
+        $moduleForgeReference = get-module 'ModuleForge'|Sort-Object version -Descending|Select-Object -First 1
+        if(! $moduleForgeReference)
+        {
+            $moduleForgeReference = get-module -listavailable 'ModuleForge'|Sort-Object version -Descending|Select-Object -First 1
+        }
+
         write-verbose 'Create config file'
         $config = [psCustomObject]@{
             #The params set from this function
@@ -131,9 +137,9 @@ function new-mfProject
             tags = [array]$moduleTags
             #Some automatic variables
             projectUri = $projectUri
-            licenseUri = 
+            licenseUri = $licenseUri
             guid = $(new-guid).guid
-            moduleforgeVersion = $($mf = (get-module -listavailable microsoft.graph.*|Sort-Object version -Descending|Select-Object -First 1);if($mf){$mf.version})
+            moduleforgeVersion = $moduleForgeReference.Version.ToString()
         }
 
         write-verbose "Exporting config to: $configPath"

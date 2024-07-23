@@ -25,7 +25,7 @@ function add-mfFilesAndFolders
     [CmdletBinding()]
     PARAM(
         #Root Path for module folder. Assume current working directory
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline)]
+        [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
         [string]$moduleRoot = (Get-Item .).FullName #Use the fullname so that we don't have problems with PSDrive, symlinks, confusing bits etc
     )
     begin{
@@ -35,7 +35,7 @@ function add-mfFilesAndFolders
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         $rootDirectories = @('documentation','source')
-        $sourceDirectories = @('functions','enums','classes','filters','dscClasses','validationClasses','private','bin')
+        $sourceDirectories = @('functions','enums','classes','filters','dscClasses','validationClasses','private','bin','resource')
         $emptyFiles = @('.gitignore','.mfignore')
         
         
@@ -58,21 +58,23 @@ function add-mfFilesAndFolders
                 }catch{
                     throw "Unable to make new directory: $result. Please check permissions and conflicts"
                 }
-                
             }
+
+           
 
             if($_ -eq 'source')
             {
-                write-verbose 'Checking for subdirectories and files in source folder'
+                write-verbose 'Source Folder: Checking for subdirectories and files in source folder'
                 $sourceDirectories.foreach{
-                    $subdirectoryFullPath = join-path path $fullPath -childPath $_
+                    $subdirectoryFullPath = join-path -path $fullPath -childPath $_
+                    
                     if(test-path $subdirectoryFullPath)
                     {
                         write-verbose "Directory: $subdirectoryFullPath is OK"
                     }else{
                         write-warning "Directory: $subdirectoryFullPath not found. Will create"
                         try{
-                            $result = new-item -itemtype directory -Path $subdirectoryFullPath -ErrorAction Stop
+                            $null = new-item -itemtype directory -Path $subdirectoryFullPath -ErrorAction Stop
                         }catch{
                             throw "Unable to make new directory: $subdirectoryFullPath. Please check permissions and conflicts"
                         }
@@ -86,7 +88,7 @@ function add-mfFilesAndFolders
                         }else{
                             write-warning "File: $filePath not found. Will create"
                             try{
-                                $result = new-item -itemtype File -Path $filePath -ErrorAction Stop
+                                $null = new-item -itemtype File -Path $filePath -ErrorAction Stop
                             }catch{
                                 throw "Unable to make new directory: $filePath. Please check permissions and conflicts"
                             }
