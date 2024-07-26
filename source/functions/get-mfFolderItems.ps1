@@ -9,6 +9,7 @@ function get-mfFolderItems
              - Ignore anything in the .mfignore file
              - Filter out anything that isn't a PS1 file if, with a switch
              - Ignore files with .test.ps1 - These are assumed to be pester files
+             - Ignore files with .tests.ps1 - These are assumed to be pester files
              - Ignore files with .skip.ps1 - These are assumed to be skippable
 
             
@@ -148,10 +149,10 @@ function get-mfFolderItems
         if($psScriptsOnly)
         {
             write-verbose 'Getting PS1 Files'
-            $fileList = get-childitem -path $folder -recurse -filter *.ps1|where-object{$_.psIsContainer -eq $false -and $_.name.tolower() -notlike '*.test.ps1' -and $_.name.tolower() -notlike '*.skip.ps1' -and $_.Name.tolower() -notin $excludeList}
+            $fileList = get-childitem -path $folder -recurse -filter *.ps1|where-object{$_.psIsContainer -eq $false -and $_.name.tolower() -notlike '*.test.ps1' -and $_.name.tolower() -notlike '*.tests.ps1' -and $_.name.tolower() -notlike '*.skip.ps1' -and $_.Name.tolower() -notin $excludeList}
         }else{
             write-verbose 'Getting Folder files'
-            $fileList = get-childitem -path $folder -recurse |where-object{$_.psIsContainer -eq $false -and $_.name.tolower() -notlike '*.test.ps1' -and $_.name.tolower() -notlike '*.skip.ps1' -and $_.Name.tolower() -notin $excludeList}
+            $fileList = get-childitem -path $folder -recurse |where-object{$_.psIsContainer -eq $false -and $_.name.tolower() -notlike '*.test.ps1' -and $_.name.tolower() -notlike '*.tests.ps1' -and $_.name.tolower() -notlike '*.skip.ps1' -and $_.Name.tolower() -notin $excludeList}
         }
 
         write-verbose 'Add custom member values'
