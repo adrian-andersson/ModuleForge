@@ -3,17 +3,21 @@ function register-mfLocalPsResourceRepository
 
     <#
         .SYNOPSIS
-            Simple description
+            Add a local file-based PowerShell repository into the systems temp location
             
         .DESCRIPTION
-            Detailed Description
-            
-        ------------
+            Allows you to test psresourceGet, as well as directly manipulate the nuget package,
+            for example, to add git data to the nuspec
+
         .EXAMPLE
-            verb-noun param1
+            register-mfLocalPsResourceRepository
+{
             
             #### DESCRIPTION
-            Line by line of what this example will do
+            Create a powershell file repository using default values.
+
+            Repository will be called: LocalTestRepository
+            Path will be where-ever [System.IO.Path]::GetTempPath() points
             
             
             #### OUTPUT

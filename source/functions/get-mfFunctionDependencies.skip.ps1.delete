@@ -1,0 +1,82 @@
+function Get-ScriptDependencies {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+    $Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+    $Classes = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeDefinitionAst] }, $true)
+
+    
+
+    foreach ($Function in $Functions) {
+        $cmdletDependenciesList = New-Object System.Collections.Generic.List[string]
+        $typeDependenciesList = New-Object System.Collections.Generic.List[string]
+        $paramTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+        $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+        $validatorTypeDependenciesList2 = New-Object System.Collections.Generic.List[string]
+
+        $FunctionName = $Function.Name
+
+
+        $Cmdlets = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
+
+
+        foreach($c in $Cmdlets)
+        {
+            $cmdletDependenciesList.add($c.GetCommandName())
+        }
+
+        $TypeExpressions = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeExpressionAst] }, $true)
+        $TypeExpressions.TypeName.FullName.foreach{$typeDependenciesList.add($_)}
+
+        $Parameters = $Function.Body.ParamBlock.Parameters
+        $Parameters.StaticType.Name.foreach{$paramTypeDependenciesList.add($_)}
+        $Parameters.Attributes.Typename.Fullname.where{$_ -notin $paramTypeDependenciesList}.foreach{$validatorTypeDependenciesList.Add($_)}
+
+        $attributes = $Parameters.Attributes
+        foreach($att in $attributes)
+        {
+            $refType = $att.TypeName.GetReflectionType()
+
+            if($refType -and $refType.IsSubclassOf([System.Management.Automation.ValidateArgumentsAttribute])) {
+                $validatorTypeDependenciesList2.Add($Att.TypeName.FullName)
+            }
+        }
+
+        [psCustomObject]@{
+            functionName = $FunctionName
+            cmdLets = $cmdletDependenciesList|group-object|Select-Object Name,Count
+            types = $TypeExpressions|group-object|Select-Object Name,Count
+            parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
+            Validators = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
+            Validators2 = $validatorTypeDependenciesList2|Group-Object|Select-Object name,count
+        }
+    }
+
+    foreach ($Class in $Classes) {
+        $className = $Class.Name
+        $classMethodsList = New-Object System.Collections.Generic.List[string]
+        $classPropertiesList = New-Object System.Collections.Generic.List[string]
+
+        $Methods = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.FunctionMemberAst] }
+        foreach($m in $Methods)
+        {
+            $classMethodsList.add($m.Name)
+        }
+
+        $Properties = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.PropertyMemberAst] }
+        foreach($p in $Properties)
+        {
+            $classPropertiesList.add($p.Name)
+        }
+
+        [psCustomObject]@{
+            className = $className
+            methods = $classMethodsList|group-object|Select-Object Name,Count
+            properties = $classPropertiesList|group-object|Select-Object Name,Count
+        }
+    }
+
+}

@@ -63,11 +63,13 @@ function new-mfProject
         [Parameter()]
         [string]$licenseUri,
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml'
+        [string]$configFile = 'moduleForgeConfig.xml',
+        [Parameter]
+        [Hashtable[]]$RequiredModules
 
         #ToDo Later: Add Required Modules.
 
-
+    
 
 
     )

@@ -1,0 +1,199 @@
+function Get-mfScriptDetails {
+
+    <#
+        .SYNOPSIS
+            Identify functions and classes in a PS1 file, return the name of the function along with the actual content of the file.
+            
+        .DESCRIPTION
+            Used to pull the names of functions and classes from a PS1 file, and return them in an object along with the content itself.
+            This will provide a way to get the names of functions and resources as well as copying the content cleanly into a module file.
+            It works best when you keep to single types (Classes or Functions) in a file.
+            By returning the function and dscResource names, we can also compile what we need to export in a module manifest
+
+            
+            
+        ------------
+        .EXAMPLE
+            get-mfScriptText c:\myFile.ps1 -scriptType function
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+            
+            Changelog:
+            
+                2024-07-28 - AA
+                    - Refactored from Bartender
+
+                2024-08-02
+                    - Suspect this is superceded with the moduleDependency stuff
+                    
+    #>
+
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path,
+        #Passthrough Relative Path from get-mfFolderItems
+        [Parameter()]
+        [string]$RelativePath,
+        [ValidateSet('Class','Function','All')]
+        [Parameter()]
+        [string]$type = 'All'
+    )
+
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+
+        write-verbose 'Checking Item'
+        if($path[-1] -eq '\' -or $path[-1] -eq '/')
+        {
+            write-verbose 'Removing extra \ or / from path'
+            $path = $path.Substring(0,$($path.length-1))
+            write-verbose "New Path $path"
+        }
+
+        $file = get-item $Path
+
+        if(!$file)
+        {
+            throw "File not found at: $path"
+        }
+
+
+
+    }
+    process{
+        
+        
+        write-verbose 'Using PowerShell Parser on file'
+        $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+        write-verbose 'Extracting Functions and Classes'
+        $Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+        $Classes = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeDefinitionAst] }, $true)
+
+        #$functionDetails = New-Object System.Collections.Generic.List[string]
+    
+        
+    
+        if($type -eq 'All' -or $type -eq 'Function')
+        {
+            $functionDetails = foreach ($Function in $Functions) {
+
+
+                $cmdletDependenciesList = New-Object System.Collections.Generic.List[string]
+                $typeDependenciesList = New-Object System.Collections.Generic.List[string]
+                $paramTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+                $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+                #$validatorTypeDependenciesList2 = New-Object System.Collections.Generic.List[string]
+        
+                write-verbose "Checking Function: $functionName"
+                $FunctionName = $Function.Name
+        
+        
+                write-verbose 'Finding Function Dependencies'
+                $Cmdlets = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
+        
+                
+                foreach($c in $Cmdlets)
+                {
+                    $cmdletDependenciesList.add($c.GetCommandName())
+                }
+        
+                write-verbose 'Finding Type and Class Dependencies'
+                $TypeExpressions = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeExpressionAst] }, $true)
+                $TypeExpressions.TypeName.FullName.foreach{
+                    write-verbose "Need to clean up: $($_)"
+                    $tname = $_
+                    [string]$tnameReplace = $($tname.Replace('[','')).replace(']','')
+                    $typeDependenciesList.add($tnameReplace)
+                }
+
+
+                write-verbose 'Finding Function Parameter Types'
+                $Parameters = $Function.Body.ParamBlock.Parameters
+                $Parameters.StaticType.Name.foreach{$paramTypeDependenciesList.add($_)}
+                #$Parameters.Attributes.Typename.Fullname.where{$_ -notin $paramTypeDependenciesList}.foreach{$validatorTypeDependenciesList.Add($_)}
+
+
+
+                write-verbose 'Finding Validators'
+                $attributes = $Parameters.Attributes
+                foreach($att in $attributes)
+                {
+                    $refType = $att.TypeName.GetReflectionType()
+
+                    write-verbose "refType for $($att.TypeName.FullName): $refType"
+
+        
+                    if($refType -and ($refType.IsSubclassOf([System.Management.Automation.ValidateArgumentsAttribute]) -or [System.Management.Automation.ValidateArgumentsAttribute].IsAssignableFrom($refType))) {
+                        [string]$tname = $Att.TypeName.FullName
+                        [string]$tname = $($tname.Replace('[','')).replace(']','')
+                        $validatorTypeDependenciesList.Add($tname)
+                    }
+                }
+        
+                [psCustomObject]@{
+                    functionName = $FunctionName
+                    cmdLets = $cmdletDependenciesList|group-object|Select-Object Name,Count
+                    #types = $TypeExpressions|group-object|Select-Object Name,Count
+                    types = $typeDependenciesList|group-object|Select-Object Name,Count
+                    parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
+                    Validators = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
+                }
+            }
+        }
+    
+        if($type -eq 'all' -or $type -eq 'Class')
+        {
+            $classDetails = foreach ($Class in $Classes) {
+                $className = $Class.Name
+                $classMethodsList = New-Object System.Collections.Generic.List[string]
+                $classPropertiesList = New-Object System.Collections.Generic.List[string]
+        
+                $Methods = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.FunctionMemberAst] }
+                foreach($m in $Methods)
+                {
+                    $classMethodsList.add($m.Name)
+                }
+        
+                $Properties = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.PropertyMemberAst] }
+                foreach($p in $Properties)
+                {
+                    $classPropertiesList.add($p.Name)
+                }
+        
+                [psCustomObject]@{
+                    className = $className
+                    methods = $classMethodsList|group-object|Select-Object Name,Count
+                    properties = $classPropertiesList|group-object|Select-Object Name,Count
+                }
+            }
+        }
+
+        $objectHash = @{
+            Name = $file.Name
+            Path = $file.FullName
+            FileSize = "$([math]::round($file.length / 1kb,2)) kb"
+            FunctionDetails = $functionDetails
+            ClassDetails = $classDetails
+            Content = $AST.ToString()
+        }
+        
+
+        if($RelativePath)
+        {
+            $objectHash.relativePath = $RelativePath
+        }
+
+        [psCustomObject]$objectHash
+    }
+
+    
+
+}

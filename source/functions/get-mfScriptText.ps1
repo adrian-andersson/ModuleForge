@@ -3,21 +3,17 @@ function get-mfScriptText
 
     <#
         .SYNOPSIS
-            Get the text from a PS1 file, return it
+            Identify functions and classes in a PS1 file, return the name of the function along with the actual content of the file.
             
         .DESCRIPTION
-            Detailed Description
+            Used to pull the names of functions and classes from a PS1 file, and return them in an object along with the content itself.
+            This will provide a way to get the names of functions and resources as well as copying the content cleanly into a module file.
+            It works best when you keep to single types (Classes or Functions) in a file.
+            By returning the function and dscResource names, we can also compile what we need to export in a module manifest
             
         ------------
         .EXAMPLE
-            verb-noun param1
-            
-            #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
-            #### OUTPUT
-            Copy of the output of this line
+            get-mfScriptText c:\myFile.ps1 -scriptType function
             
             
             
@@ -27,16 +23,20 @@ function get-mfScriptText
             
             Changelog:
             
-                yyyy-mm-dd - AA
-                    - Changed x for y
+                2024-07-28 - AA
+                    - Refactored from Bartender
+
+                2024-08-02 - AA
+                    - May be superceded by the get-mfDependencyTreeAsJob
                     
     #>
 
     [CmdletBinding()]
     PARAM(
-        #PARAM DESCRIPTION
+        #Path to the file
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline)]
         [string[]]$path,
+        #The type of function to return. Use Function to return function-names, use dscClasses for dscResources to export. Use other for private function, classes etc you do not want to export etc
         [Parameter()]
         [ValidateSet('function', 'dscClass', 'other')]
         [string]$scriptType = 'function',

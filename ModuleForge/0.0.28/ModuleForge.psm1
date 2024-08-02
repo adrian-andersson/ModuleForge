@@ -8,12 +8,13 @@ Module Mixed by BarTender
 Module Details:
 	Module: ModuleForge
 	Description: ModuleForge is a PowerShell scaffolding and build tool for creating other PowerShell modules. With ModuleForge, you can easily generate the foundational structure, boilerplate code, and github actions build techniques
-	Revision: 0.0.23.1
+	Revision: 0.0.27.1
 	Author: Adrian Andersson
 	Company:  
 
 Check Manifest for more details
 #>
+
 
 function build-mfProject
 {
@@ -585,7 +586,10 @@ function build-mfProject
         {
             if($version.PreReleaseLabel -ne $prerelease)
             {
-                [semver]$versionNew = [semver]::new($version.major,$version.Minor.$version.patch,$prerelease)
+                #Strange that you need to supply a build to build a semver like this, likely an oversite
+                #[semver]$versionNew = [semver]::new($version.major,$version.Minor.$version.patch,$prerelease)
+                #Creating as a string works though
+                [semver]$versionNew = [semver]::new("$($version.major).$($version.Minor).$($version.patch)-$prerelease")
                 write-verbose "Version Is: $($version.ToString()) ; Version Should Be: $($versionNew.tostring())"
                 write-verbose 'Updating version with PreRelease Tag'
                 $splatManifest.ModuleVersion = $version
@@ -606,6 +610,140 @@ function build-mfProject
 
         New-ModuleManifest @splatManifest
 
+    }
+    
+}
+
+function get-mfDependencyTree
+{
+
+    <#
+        .SYNOPSIS
+            Simple description
+            
+        .DESCRIPTION
+            Detailed Description
+            
+        ------------
+        .EXAMPLE
+            verb-noun param1
+            
+            #### DESCRIPTION
+            Line by line of what this example will do
+            
+            
+            #### OUTPUT
+            Copy of the output of this line
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+            
+            Changelog:
+            
+                yyyy-mm-dd - AA
+                    - Changed x for y
+                    
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Path to start in
+        [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [string]$path = $($(get-item .).fullname |join-path -ChildPath 'source')
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+        
+    }
+    
+    process{
+
+        write-verbose "Checking: $path"
+        if(!(test-path $path))
+        {
+            throw "Unable to find path: $path"
+        }
+        
+        $folderItems = get-mfFolderItems -path $path -psScriptsOnly
+
+        $privateMatch = "*$([IO.Path]::DirectorySeparatorChar)private$([IO.Path]::DirectorySeparatorChar)*"
+        $functionMatch = "*$([IO.Path]::DirectorySeparatorChar)functions$([IO.Path]::DirectorySeparatorChar)*"
+
+        write-verbose "PrivateMatchString : $privateMatch"
+        write-verbose "FunctionMatchString : $functionMatch"
+
+        $itemDetails = $folderItems.ForEach{
+            if($_.RelativePath -like $privateMatch -or $_.RelativePath -like $functionMatch)
+            {   
+                write-verbose "$($_.Path) matched on type: Function"
+                Get-mfScriptDetails -Path $_.Path -RelativePath $_.RelativePath -type Function
+            }else{
+                write-verbose "$($_.Path) matched on type: Class"
+                Get-mfScriptDetails -Path $_.Path -RelativePath $_.RelativePath -type Class
+            }
+            
+        }
+
+        write-verbose 'Return items in Context'
+        $inContextList =New-Object System.Collections.Generic.List[string]
+        $filenameReference = @{}
+
+        $itemDetails.foreach{
+            $relPath = $_.relativePath
+            write-verbose "Getting details for $($_.name)"
+            $_.FunctionDetails.Foreach{
+                $inContextList.add($_.functionName)
+                $filenameReference.add($_.functionName,$relPath)
+            }
+            $_.ClassDetails.Foreach{
+                $inContextList.add($_.className)
+                $filenameReference.add($_.className,$relPath)
+            }
+        }
+
+        $global:dbgItemDetails = $itemDetails
+        
+        #$inContextList
+        $global:dbgfilenameReference = $filenameReference
+        $checklist = $filenameReference.GetEnumerator().name
+        #write-verbose "Checklist: $checklist"
+        #foreach($item in $dbgitemDetails){$item.name;$item.ClassDetails.methods.name + $item.FunctionDetails.cmdlets.name + $item.FunctionDetails.types.Name + $item.FunctionDetails.validators.name}
+        foreach($item in $itemDetails)
+        {
+            write-verbose "Checking dependencies for file: $($item.name)"
+            $compareList =New-Object System.Collections.Generic.List[string]
+            $item.ClassDetails.methods.name.foreach{$compareList.add($_)}
+            $item.FunctionDetails.cmdlets.name.foreach{$compareList.add($_)}
+            $item.FunctionDetails.types.Name.foreach{$compareList.add($_)}
+            $item.FunctionDetails.validators.name.foreach{$compareList.add($_)}
+            $global:dbgCompareList = $compareList
+            #$compareList = $item.ClassDetails.methods.name + $item.FunctionDetails.cmdlets.name + $item.FunctionDetails.types.Name + $item.FunctionDetails.validators.name
+            foreach($c in $compareList)
+            {
+                write-verbose "Checking dependency of $c"
+                if($c -in $checklist)
+                {
+                    write-verbose "$c found in checklist"
+                    if($item.relativePath -ne $filenameReference["$c"])
+                    {
+                        write-verbose "$c found in checklist"
+                        write-warning "File:$($item.Name) depends on $($filenameReference["$c"]) for function or type $c"
+                    }else{
+                        write-verbose "$c found in checklist - but in same file, ignoring"
+                    }
+                    
+                }
+            }
+
+        }
+
+        
     }
     
 }
@@ -655,7 +793,7 @@ function get-mfFolderItems
 
     [CmdletBinding(DefaultParameterSetName='Default')]
     PARAM(
-        #Path to start in. Should be an FQDN
+        #Path to start in
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Default')]
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Copy')]
         [string]$path,
@@ -812,26 +950,104 @@ function get-mfFolderItems
     
 }
 
-function get-mfScriptText
-{
+function Get-ScriptDependencies {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+    $Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+    $Classes = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeDefinitionAst] }, $true)
+
+    
+
+    foreach ($Function in $Functions) {
+        $cmdletDependenciesList = New-Object System.Collections.Generic.List[string]
+        $typeDependenciesList = New-Object System.Collections.Generic.List[string]
+        $paramTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+        $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+        $validatorTypeDependenciesList2 = New-Object System.Collections.Generic.List[string]
+
+        $FunctionName = $Function.Name
+
+
+        $Cmdlets = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
+
+
+        foreach($c in $Cmdlets)
+        {
+            $cmdletDependenciesList.add($c.GetCommandName())
+        }
+
+        $TypeExpressions = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeExpressionAst] }, $true)
+        $TypeExpressions.TypeName.FullName.foreach{$typeDependenciesList.add($_)}
+
+        $Parameters = $Function.Body.ParamBlock.Parameters
+        $Parameters.StaticType.Name.foreach{$paramTypeDependenciesList.add($_)}
+        $Parameters.Attributes.Typename.Fullname.where{$_ -notin $paramTypeDependenciesList}.foreach{$validatorTypeDependenciesList.Add($_)}
+
+        $attributes = $Parameters.Attributes
+        foreach($att in $attributes)
+        {
+            $refType = $att.TypeName.GetReflectionType()
+
+            if($refType -and $refType.IsSubclassOf([System.Management.Automation.ValidateArgumentsAttribute])) {
+                $validatorTypeDependenciesList2.Add($Att.TypeName.FullName)
+            }
+        }
+
+        [psCustomObject]@{
+            functionName = $FunctionName
+            cmdLets = $cmdletDependenciesList|group-object|Select-Object Name,Count
+            types = $TypeExpressions|group-object|Select-Object Name,Count
+            parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
+            Validators = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
+            Validators2 = $validatorTypeDependenciesList2|Group-Object|Select-Object name,count
+        }
+    }
+
+    foreach ($Class in $Classes) {
+        $className = $Class.Name
+        $classMethodsList = New-Object System.Collections.Generic.List[string]
+        $classPropertiesList = New-Object System.Collections.Generic.List[string]
+
+        $Methods = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.FunctionMemberAst] }
+        foreach($m in $Methods)
+        {
+            $classMethodsList.add($m.Name)
+        }
+
+        $Properties = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.PropertyMemberAst] }
+        foreach($p in $Properties)
+        {
+            $classPropertiesList.add($p.Name)
+        }
+
+        [psCustomObject]@{
+            className = $className
+            methods = $classMethodsList|group-object|Select-Object Name,Count
+            properties = $classPropertiesList|group-object|Select-Object Name,Count
+        }
+    }
+
+}
+
+function Get-mfScriptDetails {
 
     <#
         .SYNOPSIS
-            Get the text from a PS1 file, return it
+            Identify functions and classes in a PS1 file, return the name of the function along with the actual content of the file.
             
         .DESCRIPTION
-            Detailed Description
+            Used to pull the names of functions and classes from a PS1 file, and return them in an object along with the content itself.
+            This will provide a way to get the names of functions and resources as well as copying the content cleanly into a module file.
+            It works best when you keep to single types (Classes or Functions) in a file.
+            By returning the function and dscResource names, we can also compile what we need to export in a module manifest
             
         ------------
         .EXAMPLE
-            verb-noun param1
-            
-            #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
-            #### OUTPUT
-            Copy of the output of this line
+            get-mfScriptText c:\myFile.ps1 -scriptType function
             
             
             
@@ -841,16 +1057,213 @@ function get-mfScriptText
             
             Changelog:
             
-                yyyy-mm-dd - AA
-                    - Changed x for y
+                2024-07-28 - AA
+                    - Refactored from Bartender
+                    
+    #>
+
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path,
+        #Passthrough Relative Path from get-mfFolderItems
+        [Parameter()]
+        [string]$RelativePath,
+        [ValidateSet('Class','Function','All')]
+        [Parameter()]
+        [string]$type = 'All'
+    )
+
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+
+        write-verbose 'Checking Item'
+        if($path[-1] -eq '\' -or $path[-1] -eq '/')
+        {
+            write-verbose 'Removing extra \ or / from path'
+            $path = $path.Substring(0,$($path.length-1))
+            write-verbose "New Path $path"
+        }
+
+        $file = get-item $Path
+
+        if(!$file)
+        {
+            throw "File not found at: $path"
+        }
+
+
+
+    }
+    process{
+        
+        
+        write-verbose 'Using PowerShell Parser on file'
+        $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+        write-verbose 'Extracting Functions and Classes'
+        $Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+        $Classes = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeDefinitionAst] }, $true)
+
+        #$functionDetails = New-Object System.Collections.Generic.List[string]
+    
+        
+    
+        if($type -eq 'All' -or $type -eq 'Function')
+        {
+            $functionDetails = foreach ($Function in $Functions) {
+
+
+                $cmdletDependenciesList = New-Object System.Collections.Generic.List[string]
+                $typeDependenciesList = New-Object System.Collections.Generic.List[string]
+                $paramTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+                $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+                #$validatorTypeDependenciesList2 = New-Object System.Collections.Generic.List[string]
+        
+                write-verbose "Checking Function: $functionName"
+                $FunctionName = $Function.Name
+        
+        
+                write-verbose 'Finding Function Dependencies'
+                $Cmdlets = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
+        
+                
+                foreach($c in $Cmdlets)
+                {
+                    $cmdletDependenciesList.add($c.GetCommandName())
+                }
+        
+                write-verbose 'Finding Type and Class Dependencies'
+                $TypeExpressions = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeExpressionAst] }, $true)
+                $TypeExpressions.TypeName.FullName.foreach{
+                    write-verbose "Need to clean up: $($_)"
+                    $tname = $_
+                    [string]$tnameReplace = $($tname.Replace('[','')).replace(']','')
+                    $typeDependenciesList.add($tnameReplace)
+                }
+
+
+                write-verbose 'Finding Function Parameter Types'
+                $Parameters = $Function.Body.ParamBlock.Parameters
+                $Parameters.StaticType.Name.foreach{$paramTypeDependenciesList.add($_)}
+                #$Parameters.Attributes.Typename.Fullname.where{$_ -notin $paramTypeDependenciesList}.foreach{$validatorTypeDependenciesList.Add($_)}
+
+
+
+                write-verbose 'Finding Validators'
+                $attributes = $Parameters.Attributes
+                foreach($att in $attributes)
+                {
+                    $refType = $att.TypeName.GetReflectionType()
+
+                    write-verbose "refType for $($att.TypeName.FullName): $refType"
+
+        
+                    if($refType -and ($refType.IsSubclassOf([System.Management.Automation.ValidateArgumentsAttribute]) -or [System.Management.Automation.ValidateArgumentsAttribute].IsAssignableFrom($refType))) {
+                        [string]$tname = $Att.TypeName.FullName
+                        [string]$tname = $($tname.Replace('[','')).replace(']','')
+                        $validatorTypeDependenciesList.Add($tname)
+                    }
+                }
+        
+                [psCustomObject]@{
+                    functionName = $FunctionName
+                    cmdLets = $cmdletDependenciesList|group-object|Select-Object Name,Count
+                    #types = $TypeExpressions|group-object|Select-Object Name,Count
+                    types = $typeDependenciesList|group-object|Select-Object Name,Count
+                    parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
+                    Validators = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
+                }
+            }
+        }
+    
+        if($type -eq 'all' -or $type -eq 'Class')
+        {
+            $classDetails = foreach ($Class in $Classes) {
+                $className = $Class.Name
+                $classMethodsList = New-Object System.Collections.Generic.List[string]
+                $classPropertiesList = New-Object System.Collections.Generic.List[string]
+        
+                $Methods = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.FunctionMemberAst] }
+                foreach($m in $Methods)
+                {
+                    $classMethodsList.add($m.Name)
+                }
+        
+                $Properties = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.PropertyMemberAst] }
+                foreach($p in $Properties)
+                {
+                    $classPropertiesList.add($p.Name)
+                }
+        
+                [psCustomObject]@{
+                    className = $className
+                    methods = $classMethodsList|group-object|Select-Object Name,Count
+                    properties = $classPropertiesList|group-object|Select-Object Name,Count
+                }
+            }
+        }
+
+        $objectHash = @{
+            Name = $file.Name
+            Path = $file.FullName
+            FileSize = "$([math]::round($file.length / 1kb,2)) kb"
+            FunctionDetails = $functionDetails
+            ClassDetails = $classDetails
+            Content = $AST.ToString()
+        }
+        
+
+        if($RelativePath)
+        {
+            $objectHash.relativePath = $RelativePath
+        }
+
+        [psCustomObject]$objectHash
+    }
+
+    
+
+}
+
+function get-mfScriptText
+{
+
+    <#
+        .SYNOPSIS
+            Identify functions and classes in a PS1 file, return the name of the function along with the actual content of the file.
+            
+        .DESCRIPTION
+            Used to pull the names of functions and classes from a PS1 file, and return them in an object along with the content itself.
+            This will provide a way to get the names of functions and resources as well as copying the content cleanly into a module file.
+            It works best when you keep to single types (Classes or Functions) in a file.
+            By returning the function and dscResource names, we can also compile what we need to export in a module manifest
+            
+        ------------
+        .EXAMPLE
+            get-mfScriptText c:\myFile.ps1 -scriptType function
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+            
+            Changelog:
+            
+                2024-07-28 - AA
+                    - Refactored from Bartender
                     
     #>
 
     [CmdletBinding()]
     PARAM(
-        #PARAM DESCRIPTION
+        #Path to the file
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline)]
         [string[]]$path,
+        #The type of function to return. Use Function to return function-names, use dscClasses for dscResources to export. Use other for private function, classes etc you do not want to export etc
         [Parameter()]
         [ValidateSet('function', 'dscClass', 'other')]
         [string]$scriptType = 'function',
@@ -1025,11 +1438,13 @@ function new-mfProject
         [Parameter()]
         [string]$licenseUri,
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml'
+        [string]$configFile = 'moduleForgeConfig.xml',
+        [Parameter]
+        [Hashtable[]]$RequiredModules
 
         #ToDo Later: Add Required Modules.
 
-
+    
 
 
     )
@@ -1111,6 +1526,214 @@ function new-mfProject
             throw 'Error exporting config'
         }
     }
+}
+
+function register-mfLocalPsResourceRepository
+{
+
+    <#
+        .SYNOPSIS
+            Simple description
+            
+        .DESCRIPTION
+            Detailed Description
+            
+        ------------
+        .EXAMPLE
+            verb-noun param1
+            
+            #### DESCRIPTION
+            Line by line of what this example will do
+            
+            
+            #### OUTPUT
+            Copy of the output of this line
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+            
+            Changelog:
+            
+                yyyy-mm-dd - AA
+                    - Changed x for y
+                    
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Name of the repository
+        [Parameter()]
+        [string]$repositoryName = 'LocalTestRepository',
+        #Root path of the module. Uses Temp Path by default
+        [string]$path = [System.IO.Path]::GetTempPath()
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        $psResourceGet = @{
+            name = 'Microsoft.PowerShell.PSResourceGet'
+            version = [version]::new('1.0.4')
+        }
+
+        $psResourceGetRef = get-module $psResourceGet.name -ListAvailable|Sort-Object -Property Version -Descending|Select-Object -First 1
+
+        
+        if(!$psResourceGetRef -or $psResourceGetRef.Version -lt $psResourceGet.version)
+        {
+            throw "Module dependancy Name: $($psResourceGet.Name) minver:$($psResourceGet.version) Not found. Please install from the PSGallery"
+        }
+
+        $repositoryLocation = join-path $path -ChildPath $repositoryName
+
+    }
+    
+    process{
+        
+        write-verbose "Checking we dont already have a repository with name: $repositoryName"
+        if(!(Get-PSResourceRepository -Name $repositoryName -erroraction Ignore))
+        {
+            write-verbose 'Repository not found.'
+
+            write-verbose "Checking for drive location at:`n`t$($repositoryLocation)"
+            if(!(test-path $repositoryLocation))
+            {
+                try{
+                    New-Item -ItemType Directory -Path $repositoryLocation
+                    write-verbose 'Directory Created'
+                }Catch{
+                    Throw 'Error creating directory'
+                }
+            }
+
+            $registerSplat = @{
+                Name = $repositoryName
+                URI = $repositoryLocation
+                Trusted = $true
+            }
+            write-verbose 'Registering resource repository'
+            try{
+                Register-PSResourceRepository @registerSplat
+            }catch{
+                throw 'Error creating temporary repository'
+            }
+
+            write-verbose 'Test Repository was created'
+            if(!(Get-PSResourceRepository -Name $repositoryName -erroraction Ignore))
+            {
+                throw 'Something has gone wrong. Unable to find repository'
+            }else{
+                write-verbose 'Repository looks healthy'
+            }
+
+
+        }else{
+            write-verbose "$repositoryName Found"
+        }
+    }
+    
+}
+
+function Remove-mfLocalPsResourceRepository
+{
+
+    <#
+        .SYNOPSIS
+            Simple description
+            
+        .DESCRIPTION
+            Detailed Description
+            
+        ------------
+        .EXAMPLE
+            verb-noun param1
+            
+            #### DESCRIPTION
+            Line by line of what this example will do
+            
+            
+            #### OUTPUT
+            Copy of the output of this line
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+            
+            Changelog:
+            
+                yyyy-mm-dd - AA
+                    - Changed x for y
+                    
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Name of the repository
+        [Parameter()]
+        [string]$repositoryName = 'LocalTestRepository',
+        #Root path of the module. Uses Temp Path by default
+        [string]$path = [System.IO.Path]::GetTempPath()
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        $psResourceGet = @{
+            name = 'Microsoft.PowerShell.PSResourceGet'
+            version = [version]::new('1.0.4')
+        }
+
+        $psResourceGetRef = get-module $psResourceGet.name -ListAvailable|Sort-Object -Property Version -Descending|Select-Object -First 1
+
+        
+        if(!$psResourceGetRef -or $psResourceGetRef.Version -lt $psResourceGet.version)
+        {
+            throw "Module dependancy Name: $($psResourceGet.Name) minver:$($psResourceGet.version) Not found. Please install from the PSGallery"
+        }
+
+        $repositoryLocation = join-path $path -ChildPath $repositoryName
+
+    }
+    
+    process{
+
+        write-verbose 'Clean up the repository'
+        
+        write-verbose "Checking we dont already have a repository with name: $repositoryName"
+        $repoRef = (Get-PSResourceRepository -Name $repositoryName -erroraction Ignore)
+        if($repoRef)
+        {
+            write-verbose 'Repository reference found, try and remove'
+            Try{
+                unregister-PSResourceRepository -name $repositoryName -ErrorAction Stop
+            }catch{
+                throw 'Error unregistering the Resource Repository'
+            }
+        }
+
+        if((test-path $repositoryLocation))
+        {
+            write-verbose "File folder found at: $repositoryLocation"
+            try{
+                remove-item $repositoryLocation -force -ErrorAction Stop -Recurse
+                write-verbose 'Directory removed'
+            }Catch{
+                Throw 'Error Removing directory'
+            }
+        }
+    }
+    
 }
 
 

@@ -3,21 +3,17 @@ function build-mfProject
 
     <#
         .SYNOPSIS
-            Simple description
+            Grab all the files from source, compile them into a PowerShell module, make a manifest, do some version things
             
         .DESCRIPTION
             Detailed Description
             
         ------------
         .EXAMPLE
-            verb-noun param1
+            build-mfProject -version '0.12.2' -prerelease 'alpha.1'
             
             #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
-            #### OUTPUT
-            Copy of the output of this line
+            Make a PowerShell module from the current folder, and mark it as a pre-release version
             
             
             
@@ -27,8 +23,18 @@ function build-mfProject
             
             Changelog:
             
-                yyyy-mm-dd - AA
-                    - Changed x for y
+                2024-07-26 - AA
+                    - Refactored from Bartender
+                    - Added necessary joining functions
+                    - Minimum Parameters
+                    - Test with no externals
+                
+                2024-07-29 - AA
+                    - Test with all classes,enums,validators as external
+                    - Revert to just Validators as external after testing
+                    - Expand parameters
+                    - Make Pre-release work
+                    - Decided that short-term, DSC modules are not supported
                     
     #>
 
@@ -98,6 +104,7 @@ function build-mfProject
         # - A folder to build in
         # - Build folder will need a subfolder named after the module
         # - That subfolder then needs a version name? Or does it?
+        # - For now, put into build folder, actual versions should be handled in a package repository or copied to a storage location
         write-verbose 'Checking for a build and module folder'
         $buildFolder = join-path -path $modulePath -childPath 'build'
         if(!(test-path $buildFolder))
@@ -128,7 +135,7 @@ function build-mfProject
             try{
                 remove-item $moduleOutputFolder -force -Recurse
                 start-sleep -Seconds 2
-                #Save to var to loose the output
+                #Save to var to loose the output. More efficient than |out-null
                 $null = new-item -ItemType Directory -Path $moduleOutputFolder -ErrorAction Stop
             }catch{
                 throw 'Unable to recreate Module folder'
@@ -155,7 +162,7 @@ function build-mfProject
 
         $sourceFolder = join-path -path $modulePath -childPath 'source'
 
-        <#
+        <# THIS NEEDS TO MOVE OUT OF A COMMENT BLOCK: IT CAN LIVE HERE FOR NOW
         Ok so what do we need to achieve here? 
             - If DSC Resources are involved, scripts to process doesn't happen and nested modules don't load in time
                 - Since Enums are critical for DSC Resources, they need to go at the top of the module
@@ -476,10 +483,13 @@ function build-mfProject
                 #Make null = to suppress the object output
                 $null = get-mfFolderItems -path $fullFolderPath -destination $destinationFolder -copy
 
-                <# Ideally we add all the copied items to the filelist
+                <# Ideally we add all the copied items to the filelist param in the module manifest
                 #But since we are putting them in a child folder, I've got concerns
                 #Like the relativename is there, and it works, but the folder divider wont be a \ on non-windows
                 #Probably safer to leave this out for the time being
+                # Also worth noting, I don't think I've ever seen a manifest have a file list
+
+
                 $folderItems.ForEach{
                     if($_.name -notIn $fileList)
                     {

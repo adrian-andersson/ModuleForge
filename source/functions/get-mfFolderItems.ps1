@@ -19,15 +19,7 @@ function get-mfFolderItems
             
         ------------
         .EXAMPLE
-            verb-noun param1
-            
-            #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
-            #### OUTPUT
-            Copy of the output of this line
-            
+            get-mfFolderItems '.\source\functions\example.ps1'
             
             
         .NOTES
@@ -38,12 +30,13 @@ function get-mfFolderItems
             
                 2024-07-22 - AA
                     - Refactored from Bartender
+                    - Made much faster and more modern
                     
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
     PARAM(
-        #Path to start in. Should be an FQDN
+        #Path to start in
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Default')]
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Copy')]
         [string]$path,
