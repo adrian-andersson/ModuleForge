@@ -1,0 +1,27 @@
+
+@{
+    ScriptsToProcess = @()
+    CmdletsToExport = @()
+    PrivateData = @{
+      moduleRevision = '1.0.11.1'
+      builtOn = '2021-10-06T23:03:52'
+      builtBy = 'Adrian.Andersson'
+      bartenderVersion = '6.2.0'
+      PSData = @{
+        ProjectUri = 'https://github.com/domain-group/domain-devops-windows'
+      }
+      moduleCompiledBy = 'Bartender | A Framework for making PowerShell Modules'
+      bartenderCopyright = '2020 Domain Group'
+    }
+    FunctionsToExport = @('disable-awsAdAccount','get-awsAdAccount','new-awsAdAccount','remove-awsAdAccount','reset-awsAdAccount','get-akamaiPragmaHeader','get-akamaiSampleReport','get-myIp','compare-awsIpAuditToList','connect-awsCli','connect-ToAwsInstance','get-awsDbJumpboxInstance','get-awsIp4Ranges','get-awsIpAddressAssignment','get-awsProfileConfigCommand','get-awsRoleCredentials','get-domainAwsHostedZones','get-domainAwsIpAddresses','get-domainAwsR53LBAudit','get-pemDecrypt','get-pemKeyFromStackname','get-pemS3Backup','install-awsPowerShellTools','get-domainWebUserAgent','get-domainOfficeIp','get-randomPassword','new-snapPassSecret','get-elasticData','get-ipAddressDetails','get-ipPortDetails','get-ipAddressDetails','get-ipAddressGeoData','get-ipAddressGeoDataBatch','get-networkCidrDetails','get-oktaSyslogSearch','convert-utcString','copy-psObject','get-scriptFunctions','Optimize-phoneNumber','Reset-Spacing','set-tsvClipboard','prompt','set-terminalName','Connect-Mstsc','convert-UTCtoLocal','get-adminStatus','get-allWindowHandles','get-fileEncoding','get-timeDifference','New-IsoFile','add-userEnvironmentPath')
+    AliasesToExport = @()
+    Description = 'A place to store windows operations tools'
+    RootModule = 'winops_tools.psm1'
+    CompanyName = 'Domain Group'
+    ModuleVersion = '1.0.0'
+    Copyright = '2021 Domain Group'
+    PowerShellVersion = '7.0.0.0'
+    GUID = '639c9500-f5fe-4513-aa43-610b44bb3412'
+    Author = 'Adrian.Andersson'
+  }
+  
