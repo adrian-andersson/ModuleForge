@@ -59,18 +59,24 @@ function new-mfProject
         #Project URI. Will try and read from Git if your using a git repository.
         [Parameter()]
         [string]$projectUri = $(try{git config remote.origin.url}catch{$null}),
+        # A URL to an icon representing this module.
+        [Parameter()]
+        [string]$iconUri,
         #URI to use for your projects license. Will try and use the license file if a projectUri is found
         [Parameter()]
         [string]$licenseUri,
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
+        #Modules that must be imported into the global environment prior to importing this module
         [Parameter]
-        [Hashtable[]]$RequiredModules
-
-        #ToDo Later: Add Required Modules.
-
-    
-
+        [Object[]]$RequiredModules,
+        #Modules that must be imported into the global environment prior to importing this module
+        [Parameter]
+        [String[]]$ExternalModuleDependencies,
+        [Parameter]
+        [String[]]$DefaultCommandPrefix,
+        [Parameter]
+        [object[]]$PrivateData
 
     )
     begin{
@@ -142,6 +148,12 @@ function new-mfProject
             licenseUri = $licenseUri
             guid = $(new-guid).guid
             moduleforgeVersion = $moduleForgeReference.Version.ToString()
+            iconUri = $iconUri
+            requiredModules = $RequiredModules
+            ExternalModuleDependencies = $ExternalModuleDependencies
+            DefaultCommandPrefix = $DefaultCommandPrefix
+            PrivateData = $PrivateData
+
         }
 
         write-verbose "Exporting config to: $configPath"

@@ -529,6 +529,21 @@ function build-mfProject
         if($config.tags){
             $splatManifest.tags = $config.tags
         }
+        if($config.iconUri){
+            $splatManifest.iconUri = $config.iconUri
+        }
+        if($config.requiredModules){
+            $splatManifest.requiredModules = $config.RequiredModules
+        }
+        if($config.ExternalModuleDependencies){
+            $splatManifest.ExternalModuleDependencies = $config.ExternalModuleDependencies
+        }
+        if($config.DefaultCommandPrefix){
+            $splatManifest.DefaultCommandPrefix = $config.DefaultCommandPrefix
+        }
+        if($config.PrivateData){
+            $splatManifest.PrivateData = $config.PrivateData
+        }
 
         #FunctionsToExport
         if($functionsToExport.count -ge 1)

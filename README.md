@@ -5,19 +5,27 @@ ModuleForge is a powerful scaffolding and build tool for creating other PowerShe
 ## ToDo
 
 - [ ] Add a way to build a file dependency tree. Should help with building pester dependencies and maybe we can make a mermaid chart out of it for documentation purposes
+  - 2024.08.03: Tested out and don't beieve this is non-trivial in cross-platform for much benefit. Revisit alter
 - [ ] Add a function to publish to packages. At least add the repository to the nuspec
-- [ ] Add support back in for Icons
-- [ ] Add support and commentary in for module DefaultCommandPrefix
-- [ ] Add support for RequiredModules
-- [ ] Add support for ExternalModuleDependencies.
-- [ ] Add more details into PrivateData
-- [ ] Consider the implications of not building until AFTER pester
+- [X] Add support back in for Icons
+  - Added, no checking or parsing, just pass it through to the manifest splat
+- [X] Add support and commentary in for module DefaultCommandPrefix
+  - Added, no checking or parsing, just pass it through to the manifest splat
+- [x] Add support for RequiredModules
+  - Added, no checking or parsing, just pass it through to the manifest splat
+- [x] Add support for ExternalModuleDependencies.
+  - Added, no checking or parsing, just pass it through to the manifest splat
+- [X] Add more details into PrivateData
+  - Need to quantify what I want here
+  - Right now, pass through to manifest splat
 - [ ] Save to config more pester option:
   - including a bool for codecoverage
   - Include INTS, 1 each for prerelease and non-prerelease modules.
     - (PreRelease could be much lower, like 30 percent for prerelease and 60 percent for non as an example)
-- [ ] Add a way to include own private data
+  - Should this be done here, people can manage their own tests, more thought required
 - [ ] Consider adding back PlatyPS for help documentation and changelogs stuff. It worked pretty well in Bartender
+- [ ] Fix DSC modules
+  - Have attempted a first pass at DSC, but there are currently problems and I don't have a good test scenario. Will revisit at a later time. Do people still make DSC modules?
 
 ## RequiredModules and ExternalModule ExternalModuleDependencies
 
