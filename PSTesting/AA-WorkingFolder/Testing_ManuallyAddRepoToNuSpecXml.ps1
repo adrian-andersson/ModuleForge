@@ -29,6 +29,7 @@ $nuSpecXml.Load($nuSpecPath)
 #$nuSpecXml.package.metadata.SetAttribute('repository',$repositoryString)
 #Create new element, in same namespaceURI
 $newElement = $nuSpecXml.CreateElement("repository",$nuSpecXml.package.namespaceURI)
+#$repositoryString = 'https://github.com/adrian-andersson/ModuleForge.Test'
 $newElement.SetAttribute('url',$repositoryString)
 $nuSpecXml.package.metadata.AppendChild($newElement)
 

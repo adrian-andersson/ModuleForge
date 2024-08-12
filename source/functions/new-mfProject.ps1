@@ -6,20 +6,21 @@ function new-mfProject
             Capture some basic parameters, and create the scaffold file structure
             
         .DESCRIPTION
-        The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
-        Whether you’re building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
-        Think of it as laying the foundation for your module project.
+            The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
+            Whether you’re building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
+            Think of it as laying the foundation for your module project.
             
         ------------
         .EXAMPLE
-            new-mfProject
-            
+            new-mfProject -ModuleName "MyModule" -description "A module for automating tasks" -moduleAuthors "John Doe" -companyName "MyCompany" -moduleTags "automation", "tasks" -projectUri "https://github.com/username/repo" -iconUri "https://example.com/icon.png" -licenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
+
             #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
+            This example demonstrates how to use the `new-mfProject` function to create a scaffold for a new PowerShell module named "MyModule". 
+            It includes a description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
+
             #### OUTPUT
-            Copy of the output of this line
+            The function will create the directory structure and essential files for the new module "MyModule" in the current working directory. 
+            It will also set up the specified metadata and dependencies.
             
             
             
@@ -68,14 +69,14 @@ function new-mfProject
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
         #Modules that must be imported into the global environment prior to importing this module
-        [Parameter]
+        [Parameter()]
         [Object[]]$RequiredModules,
         #Modules that must be imported into the global environment prior to importing this module
-        [Parameter]
+        [Parameter()]
         [String[]]$ExternalModuleDependencies,
-        [Parameter]
+        [Parameter()]
         [String[]]$DefaultCommandPrefix,
-        [Parameter]
+        [Parameter()]
         [object[]]$PrivateData
 
     )

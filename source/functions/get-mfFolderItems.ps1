@@ -64,9 +64,13 @@ function get-mfFolderItems
         }
 
         try{
-            $folder = get-item $path -erroraction stop
+            $folderItem = get-item $path -erroraction stop
             #Ensure we have the full path
-            $folder = $folder.FullName
+
+            $folder = $folderItem.FullName
+            write-verbose "Folder Fullname: $folder"
+            $folderShortName = $folderItem.Name
+            write-verbose "Folder Shortname: $folderShortName"
 
         }catch{
             throw "Unable to get folder at $path"
@@ -101,6 +105,10 @@ function get-mfFolderItems
                 Expression = {$_.Fullname}
             }
             'RelativePath'
+            @{
+                Name = 'Folder'
+                Expression = {$folderShortName}
+            }
         )
 
         $fileListSelect2 = @(
@@ -112,6 +120,10 @@ function get-mfFolderItems
             'RelativePath'
             'newPath'
             'newFolder'
+            @{
+                Name = 'Folder'
+                Expression = {$folderShortName}
+            }
         )
 
 

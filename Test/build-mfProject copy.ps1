@@ -169,6 +169,44 @@ function build-mfProject
 
         $sourceFolder = join-path -path $modulePath -childPath 'source'
 
+        <# THIS NEEDS TO MOVE OUT OF A COMMENT BLOCK: IT CAN LIVE HERE FOR NOW
+        Ok so what do we need to achieve here? 
+            - If DSC Resources are involved, scripts to process doesn't happen and nested modules don't load in time
+                - Since Enums are critical for DSC Resources, they need to go at the top of the module
+            - If NO DSC resources are involved, then Classes, Enums etc need to load first
+                - Doing this with ScriptsToProcess makes them available on the terminal scope, but not in the module scope.
+                - Doing this in the module file works, but also does not expose outside the module scope
+                - Doing this with nested-modules works mostly the same as putting in the module file - makes it available on the module-scope, but not the terminal scope.
+                - Doing it in both ScriptsToProcess and nested-modules fixes both scenarios, and means there is no duplicated code.
+                - This is how we did it in Bartender, but now I think it's not the best way
+                - Doing it in both the Module file AND the scriptstoprocess _IF REQUIRED_ might be the best approach
+
+            - OK Testing things and now I think, as per this https://stackoverflow.com/questions/31051103/how-to-export-a-class-in-a-powershell-v5-module
+                - Add a switch to export functions
+                - Add all the enums, validations, classes etc to a separate file
+                - Add those as part of nestedModules together
+                - IF the switch is set, also export to scriptsToProcess and save the files there
+
+            - Ok Further Testing
+                - Seems like nestedModules is also hit/miss
+                - Keep the same, but export to the main psm1 file as well, and don't worry about nested modules
+
+            - OK so VALIDATOR CLASSES
+                - Seems like keeping them in the module results in an error, pretty much this one: https://github.com/PowerShell/PowerShell/issues/1762
+                - I _believe_ putting these in a nested module will work though
+                - This seems to work, but I would NOT recommend using this with dsc modules
+
+
+            - ENUMS
+                - Seems like the module will _NOT_ import correctly _if_ the ENUMS are loaded in a nested module
+                - This is so very frustrating, and counter to how VALIDATORS work.
+                - Putting them in the base module works... But then how do we test? Maybe we don't need to, they will abstractly be tested otherwise
+
+            - New Theory
+                - Loading more than 1 NestedModule causes problems
+        
+        #>
+
         #What folders do we need to copy the files directly in
         [array]$copyFolders = @('resource','bin')
 
@@ -236,9 +274,6 @@ function build-mfProject
         }else{
             write-verbose 'No DSC Resources found'
         }
-
-        write-verbose 'Getting all the Script Details'
-        $folderItemDetails = get-mfFolderItemDetails -path $sourceFolder
 
         #Start getting our data
         foreach($folder in $folders)

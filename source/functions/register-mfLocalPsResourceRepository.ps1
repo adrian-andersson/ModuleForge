@@ -10,19 +10,12 @@ function register-mfLocalPsResourceRepository
             for example, to add git data to the nuspec
 
         .EXAMPLE
-            register-mfLocalPsResourceRepository
-{
-            
+            register-mfLocalPsResourceRepository            
             #### DESCRIPTION
             Create a powershell file repository using default values.
 
             Repository will be called: LocalTestRepository
             Path will be where-ever [System.IO.Path]::GetTempPath() points
-            
-            
-            #### OUTPUT
-            Copy of the output of this line
-            
             
             
         .NOTES
@@ -31,8 +24,8 @@ function register-mfLocalPsResourceRepository
             
             Changelog:
             
-                yyyy-mm-dd - AA
-                    - Changed x for y
+                2024-07-26 - AA
+                    - Created function to register repository
                     
     #>
 
@@ -42,6 +35,7 @@ function register-mfLocalPsResourceRepository
         [Parameter()]
         [string]$repositoryName = 'LocalTestRepository',
         #Root path of the module. Uses Temp Path by default
+        [Parameter()]
         [string]$path = [System.IO.Path]::GetTempPath()
 
     )

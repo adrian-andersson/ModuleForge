@@ -3,22 +3,21 @@ function get-mfDependencyTree
 
     <#
         .SYNOPSIS
-            Check the source file for dependency items. Try and make a manifest of dependencies
+            Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal or a mermaid flowchart
             
         .DESCRIPTION
-            When testing out how best to do Pester Tests with dependencies (Such as private functions, enums etc), I discovered that getting good code coverage was a challenge.
-            Considered doing the tests with the ModuleScope pester argument, but that means you don't get code coverage.
-            Tried to do it with Using but that was messy and inconsistent.
-            Discovered that the best way is to dotSource the files you might need or mock your functions is the best option.
-
-            If you are going to dot source the files, you need to find the dependencies.
-            This function comes from that requirement.
-
-            In testing, I have already superceded it with the job one. I think this version should probably go
+            The `get-mfDependencyTree` function processes an array of objects representing PowerShell scripts and their dependencies.
+            It generates a visual representation of the dependency tree, either as a text-based tree in the terminal or as a Mermaid diagram.
+            This function helps in understanding the relationships and dependencies between different scripts and modules in a project.
             
         ------------
         .EXAMPLE
-            get-mfDependencyTree
+            $folderItemDetails = get-mfFolderItemDetails -path (get-item .\source).fullname
+            get-mfDependencyTree ($folderItemDetails|Select-Object relativePath,dependencies)
+            
+            #### DESCRIPTION
+            Show files and any dependencies
+            
             
             
         .NOTES
@@ -27,107 +26,94 @@ function get-mfDependencyTree
             
             Changelog:
             
-                2024-07-27 - AA
-                    - First Attempt
+            2024-08-11 - AA
+                - Initial script
+                - Bit of an experimental function this one
                     
     #>
 
     [CmdletBinding()]
     PARAM(
-        #Path to start in
-        [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [string]$path = $($(get-item .).fullname |join-path -ChildPath 'source')
+        #What Reference Data are we looking at. See function example for how to retrieve
+        [Parameter(Mandatory)]
+        [object[]]$referenceData,
+        [Parameter()]
+        [ValidateSet('Mermaid','MermaidMarkdown','Terminal')]
+        [string]$outputType = 'Terminal'
     )
-    begin{
-        #Return the script name when running verbose, makes it tidier
+    begin {
+        # Return the script name when running verbose, makes it tidier
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
-        #Return the sent variables when running debug
+        # Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
         
-    }
-    
-    process{
+        $dependencies = New-Object System.Collections.Generic.List[object]
 
-        write-verbose "Checking: $path"
-        if(!(test-path $path))
-        {
-            throw "Unable to find path: $path"
-        }
-        
-        $folderItems = get-mfFolderItems -path $path -psScriptsOnly
+        function printTree {
+            param(
+                [string]$node,
+                [int]$level = 0
+            )
 
-        $privateMatch = "*$([IO.Path]::DirectorySeparatorChar)private$([IO.Path]::DirectorySeparatorChar)*"
-        $functionMatch = "*$([IO.Path]::DirectorySeparatorChar)functions$([IO.Path]::DirectorySeparatorChar)*"
-
-        write-verbose "PrivateMatchString : $privateMatch"
-        write-verbose "FunctionMatchString : $functionMatch"
-
-        $itemDetails = $folderItems.ForEach{
-            if($_.RelativePath -like $privateMatch -or $_.RelativePath -like $functionMatch)
-            {   
-                write-verbose "$($_.Path) matched on type: Function"
-                Get-mfScriptDetails -Path $_.Path -RelativePath $_.RelativePath -type Function
-            }else{
-                write-verbose "$($_.Path) matched on type: Class"
-                Get-mfScriptDetails -Path $_.Path -RelativePath $_.RelativePath -type Class
-            }
-            
-        }
-
-        write-verbose 'Return items in Context'
-        $inContextList =New-Object System.Collections.Generic.List[string]
-        $filenameReference = @{}
-
-        $itemDetails.foreach{
-            $relPath = $_.relativePath
-            write-verbose "Getting details for $($_.name)"
-            $_.FunctionDetails.Foreach{
-                $inContextList.add($_.functionName)
-                $filenameReference.add($_.functionName,$relPath)
-            }
-            $_.ClassDetails.Foreach{
-                $inContextList.add($_.className)
-                $filenameReference.add($_.className,$relPath)
-            }
-        }
-
-        $global:dbgItemDetails = $itemDetails
-        
-        #$inContextList
-        $global:dbgfilenameReference = $filenameReference
-        $checklist = $filenameReference.GetEnumerator().name
-        #write-verbose "Checklist: $checklist"
-        #foreach($item in $dbgitemDetails){$item.name;$item.ClassDetails.methods.name + $item.FunctionDetails.cmdlets.name + $item.FunctionDetails.types.Name + $item.FunctionDetails.validators.name}
-        foreach($item in $itemDetails)
-        {
-            write-verbose "Checking dependencies for file: $($item.name)"
-            $compareList =New-Object System.Collections.Generic.List[string]
-            $item.ClassDetails.methods.name.foreach{$compareList.add($_)}
-            $item.FunctionDetails.cmdlets.name.foreach{$compareList.add($_)}
-            $item.FunctionDetails.types.Name.foreach{$compareList.add($_)}
-            $item.FunctionDetails.validators.name.foreach{$compareList.add($_)}
-            $global:dbgCompareList = $compareList
-            #$compareList = $item.ClassDetails.methods.name + $item.FunctionDetails.cmdlets.name + $item.FunctionDetails.types.Name + $item.FunctionDetails.validators.name
-            foreach($c in $compareList)
-            {
-                write-verbose "Checking dependency of $c"
-                if($c -in $checklist)
-                {
-                    write-verbose "$c found in checklist"
-                    if($item.relativePath -ne $filenameReference["$c"])
-                    {
-                        write-verbose "$c found in checklist"
-                        write-warning "File:$($item.Name) depends on $($filenameReference["$c"]) for function or type $c"
-                    }else{
-                        write-verbose "$c found in checklist - but in same file, ignoring"
-                    }
-                    
+            $indent = '    ' * $level
+            write-output "$indent >--DEPENDS-ON--> $node"
+            if ($tree.ContainsKey($node)) {
+                foreach ($child in $tree[$node]) {
+                    printTree -node $child -level ($level + 1)
                 }
             }
-
         }
-
-        
     }
     
+    process {
+        foreach ($ref in $referenceData) {
+            $relativePath = $ref.relativePath
+            foreach ($dep in $ref.dependencies) {
+                $dependencies.add(
+                    [PSCustomObject]@{
+                        Parent = $relativePath
+                        Child  = $dep.ReferenceFile
+                    }
+                )
+            }
+        }
+
+        $output = New-Object System.Collections.Generic.List[string]
+        if ($outputType -eq 'Mermaid' -or $outputType -eq 'MermaidMarkdown') {
+            if ($outputType -eq 'MermaidMarkdown') {
+                $output.add('```mermaid')
+            }
+            $output.add('flowchart TD')
+            foreach ($dep in $dependencies) {
+                $output.add("'$($dep.Parent)' --> '$($dep.Child)'")
+            }
+            if ($outputType -eq 'MermaidMarkdown') {
+                $output.add('```')
+            }
+            
+            $output -join "`n"
+        } else {
+            $tree = @{}
+            foreach ($dep in $dependencies) {
+                write-verbose "In: $dep dependencyCheck"
+                if (-not $tree.ContainsKey($dep.Parent)) {
+                    write-verbose "Need to add: $($dep.Parent) As ParentRef"
+                    $tree[$dep.Parent] = New-Object System.Collections.Generic.List[string]
+                }
+
+                write-verbose "Need to add $($dep.Child) as child of $($dep.Parent)"
+                $tree[$dep.Parent].add($dep.Child)
+            }
+
+            $rootNodes = $referenceData.where{$_.Dependencies.Count -gt 0}.relativePath
+            $rootNodes.foreach{
+                write-output $_
+                if ($tree.ContainsKey($_)) {
+                    foreach ($child in $tree[$_]) {
+                        printTree -node $child -level 1
+                    }
+                }
+            }
+        }
+    }
 }

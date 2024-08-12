@@ -1,23 +1,16 @@
-function Remove-mfLocalPsResourceRepository
+function remove-mfLocalPsResourceRepository
 {
 
     <#
         .SYNOPSIS
-            Simple description
+            Remove the local test repository that was created with register-mfLocalPsResourceRepository
             
         .DESCRIPTION
-            Detailed Description
-            
-        ------------
+             If a local test repository was created with the register-mfLocalPsResourceRepository, this command will remove it
+             It will also remove the directory that hosted the local repository   
+
         .EXAMPLE
-            verb-noun param1
-            
-            #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
-            #### OUTPUT
-            Copy of the output of this line
+            remove-mfLocalPsResourceRepository
             
             
             
@@ -27,8 +20,8 @@ function Remove-mfLocalPsResourceRepository
             
             Changelog:
             
-                yyyy-mm-dd - AA
-                    - Changed x for y
+                2024-07-26 - AA
+                    - Created function to clean-up repository
                     
     #>
 
@@ -38,6 +31,7 @@ function Remove-mfLocalPsResourceRepository
         [Parameter()]
         [string]$repositoryName = 'LocalTestRepository',
         #Root path of the module. Uses Temp Path by default
+        [Parameter()]
         [string]$path = [System.IO.Path]::GetTempPath()
 
     )

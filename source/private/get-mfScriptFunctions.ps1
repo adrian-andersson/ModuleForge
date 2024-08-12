@@ -27,6 +27,8 @@ function get-mfScriptFunctionNames
                     - Added more verbosity
                     - Simplified
                     - Added extension checks
+                2024-08-12
+                    - Suspect deprecated, leave for compatibility or revisit
                     
     #>
 

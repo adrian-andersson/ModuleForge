@@ -3,25 +3,32 @@ function update-mfProject
 
     <#
         .SYNOPSIS
-            Capture some basic parameters, and create the scaffold file structure
+            Update the parameters of a moduleForge project
             
         .DESCRIPTION
-        The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
-        Whether you’re building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
-        Think of it as laying the foundation for your module project.
+            This command allows you to update any of the parameters that were saved with the new-mfProject function without
+            having to recreate the whole project file from scratch.
             
         ------------
         .EXAMPLE
-            new-mfProject
-            
+            update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module" -moduleAuthors "Jane Doe" -companyName "UpdatedCompany" -moduleTags "updated", "module" -projectUri "https://github.com/username/updated-repo" -iconUri "https://example.com/updated-icon.png" -licenseUri "https://example.com/updated-license" -RequiredModules @("UpdatedModule1", "UpdatedModule2") -ExternalModuleDependencies @("UpdatedDependency1", "UpdatedDependency2") -DefaultCommandPrefix "UpdMod" -PrivateData @{}
+
             #### DESCRIPTION
-            Line by line of what this example will do
-            
-            
+            This example demonstrates how to use the `update-mfProject` function to update multiple parameters of an existing module project. 
+            It updates the module name, description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
+
             #### OUTPUT
-            Copy of the output of this line
+            The function will update the specified parameters in the module project configuration file.
             
-            
+         .EXAMPLE
+            update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module"
+
+            #### DESCRIPTION
+            This example demonstrates how to use the `update-mfProject` function to update only the module name and description of an existing module project. 
+            It leaves all other parameters unchanged.
+
+            #### OUTPUT
+            The function will update the module name and description in the module project configuration file.   
             
         .NOTES
             Author: Adrian Andersson
@@ -64,14 +71,14 @@ function update-mfProject
         [Parameter()]
         [string]$licenseUri,
         #Modules that must be imported into the global environment prior to importing this module
-        [Parameter]
+        [Parameter()]
         [Object[]]$RequiredModules,
         #Modules that must be imported into the global environment prior to importing this module
-        [Parameter]
+        [Parameter()]
         [String[]]$ExternalModuleDependencies,
-        [Parameter]
+        [Parameter()]
         [String[]]$DefaultCommandPrefix,
-        [Parameter]
+        [Parameter()]
         [object[]]$PrivateData,
          #Root path of the module. Uses the current working directory by default
         [string]$modulePath = $(get-location).path,
