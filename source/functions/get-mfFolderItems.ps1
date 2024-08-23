@@ -31,6 +31,9 @@ function get-mfFolderItems
                 2024-07-22 - AA
                     - Refactored from Bartender
                     - Made much faster and more modern
+
+                2024-08-23 - AA
+                    - Added the .bt files as exclusions to help with Bartender backwards compatibility
                     
     #>
 
@@ -77,7 +80,8 @@ function get-mfFolderItems
         }
 
 
-        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore'
+        #Include the older bartender bits so we have backwards compatibility
+        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
 
 
         if($destination)

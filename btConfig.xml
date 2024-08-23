@@ -18,7 +18,7 @@
       <S N="moduleName">ModuleForge</S>
       <S N="moduleDescription">ModuleForge is a PowerShell scaffolding and build tool for creating other PowerShell modules. With ModuleForge, you can easily generate the foundational structure, boilerplate code, and github actions build techniques</S>
       <S N="companyName"> </S>
-      <Version N="version">0.0.38.0</Version>
+      <Version N="version">0.0.47.0</Version>
       <S N="guid">c3746b45-1434-492b-b81b-1793dbc1973a</S>
       <B N="AutoIncrementRevision">true</B>
       <B N="RemoveSingleLineQuotes">false</B>
@@ -36,7 +36,7 @@
       <S N="licenseUri">https://github.com/adrian-andersson/ModuleForge/blob/main/LICENSE</S>
       <S N="projectUri">https://github.com/adrian-andersson/ModuleForge</S>
       <S N="iconUri"></S>
-      <S N="versionAsTag">0.0.38</S>
+      <S N="versionAsTag">0.0.47</S>
       <Obj N="previousRelease" RefId="2">
         <TN RefId="2">
           <T>System.Collections.Hashtable</T>
@@ -44,9 +44,13 @@
         </TN>
         <DCT>
           <En>
+            <S N="Key">version</S>
+            <Version N="Value">0.0.46.0</Version>
+          </En>
+          <En>
             <S N="Key">date</S>
             <Obj N="Value" RefId="3">
-              <DT>2024-08-12T16:20:13.792559+10:00</DT>
+              <DT>2024-08-23T16:06:41.1694855+10:00</DT>
               <MS>
                 <Obj N="DisplayHint" RefId="4">
                   <TN RefId="3">
@@ -61,19 +65,19 @@
               </MS>
             </Obj>
           </En>
-          <En>
-            <S N="Key">version</S>
-            <Version N="Value">0.0.37.0</Version>
-          </En>
         </DCT>
       </Obj>
       <Obj N="lastRelease" RefId="5">
         <TNRef RefId="2" />
         <DCT>
           <En>
+            <S N="Key">version</S>
+            <Version N="Value">0.0.47.0</Version>
+          </En>
+          <En>
             <S N="Key">date</S>
             <Obj N="Value" RefId="6">
-              <DT>2024-08-12T16:50:27.7271769+10:00</DT>
+              <DT>2024-08-23T16:18:12.9311833+10:00</DT>
               <MS>
                 <Obj N="DisplayHint" RefId="7">
                   <TN RefId="4">
@@ -87,10 +91,6 @@
                 </Obj>
               </MS>
             </Obj>
-          </En>
-          <En>
-            <S N="Key">version</S>
-            <Version N="Value">0.0.38.0</Version>
           </En>
         </DCT>
       </Obj>

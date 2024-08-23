@@ -288,7 +288,7 @@ function get-mfFolderItemDetails
         [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
         $folderItems = $folders.ForEach{
             $folderPath = Join-Path $path -ChildPath $_
-            get-mfFolderItems -path $folderPath
+            get-mfFolderItems -path $folderPath -psScriptsOnly
         }
 
         write-verbose 'Starting Job'

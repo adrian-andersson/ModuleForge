@@ -8,7 +8,7 @@ Module Mixed by BarTender
 Module Details:
 	Module: ModuleForge
 	Description: ModuleForge is a PowerShell scaffolding and build tool for creating other PowerShell modules. With ModuleForge, you can easily generate the foundational structure, boilerplate code, and github actions build techniques
-	Revision: 0.0.37.1
+	Revision: 0.0.42.1
 	Author: Adrian Andersson
 	Company:  
 
@@ -225,6 +225,9 @@ function build-mfProject
                     - Change the way we handle prereleases, get it from the supplied semver
                         - Will allow easier passing through of get-mfNextSemver output
                     - Change the way we get script details
+
+                2024-08-23 - AA
+                    - Change the build to use the folderItemDetails, should lead to a faster pass
                     
     #>
 
@@ -244,9 +247,6 @@ function build-mfProject
         #Use this flag to put any enums in ScriptsToProcess
         [Parameter()]
         [switch]$exportEnums,
-        #Use this flag to put any validators in ScriptsToProcess
-        [Parameter()]
-        [switch]$exportValidators,
         #Use this to not put anything in nestedmodules, making everything a single file. By default validators are put in a separate nestedmodule script to ensure they are loaded properly
         [Parameter()]
         [switch]$noExternalFiles
@@ -287,12 +287,6 @@ function build-mfProject
         #Reference version as a string
         $versionString = $version.tostring()
 
-
-        #Ok so we need:
-        # - A folder to build in
-        # - Build folder will need a subfolder named after the module
-        # - That subfolder then needs a version name? Or does it?
-        # - For now, put into build folder, actual versions should be handled in a package repository or copied to a storage location
         write-verbose 'Checking for a build and module folder'
         $buildFolder = join-path -path $modulePath -childPath 'build'
         if(!(test-path $buildFolder))
@@ -340,9 +334,6 @@ function build-mfProject
         }
 
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
-
-
-        #Reference to source folders, and specific order
        
         #Better Order
         [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
@@ -361,12 +352,11 @@ function build-mfProject
 
         $fileList = New-Object System.Collections.Generic.List[string]
 
-
     }
     
     process{
 
-        write-verbose "Attempt to build: $versionString"
+        write-verbose "Attempt to build:`n`t`tmodule:$($config.moduleName)version:`n`t`t$versionString"
 
         #References for our manifest and module root
         $moduleFileShortname = "$($config.moduleName).psm1"
@@ -376,12 +366,11 @@ function build-mfProject
         $manifestFile = join-path $moduleOutputFolder -ChildPath $manifestFileShortname
         $fileList.Add($manifestFileShortname)
 
-        write-verbose "Will create module in: $moduleOutputFolder; Module Filename: $moduleFile ; Manifest Filename: $manifestFileShortname "
+        write-verbose "Will create module in:`n`t`t$moduleOutputFolder;`n`t`tModule Filename: $moduleFileShortname ;`n`t`tManifest Filename: $manifestFileShortname "
 
         #References for external files, if needed
         $classesFileShortname = "$($config.moduleName).Classes.ps1"
         $classesFile = join-path -path $moduleOutputFolder -ChildPath $classesFileShortname
-
 
         $validatorsFileShortname = "$($config.moduleName).Validators.ps1"
         $validatorsFile = join-path -path $moduleOutputFolder -ChildPath $validatorsFileShortname
@@ -394,7 +383,7 @@ function build-mfProject
 
         
         #Start creating the moduleFile
-        write-verbose 'Adding Header'
+        write-verbose 'Adding Header Comment'
         $moduleHeader|out-file $moduleFile -Force
 
 
@@ -421,200 +410,128 @@ function build-mfProject
         write-verbose 'Getting all the Script Details'
         $folderItemDetails = get-mfFolderItemDetails -path $sourceFolder
 
-        #Start getting our data
-        foreach($folder in $folders)
+        Write-Information $($(get-mfdependencyTree ($folderItemDetails|Select-Object relativePath,dependencies)) -join "`n")
+
+        #Start compiling the module file and associated content
+        write-verbose "`n`n`n==========================================`n`n"
+        write-verbose 'Starting module Compile'
+        write-debug 'Starting module Compile'
+        foreach($item in $folderItemDetails)
         {
-            write-verbose "Processing folder: $folder"
-
-            $fullFolderPath = join-path -path $sourceFolder -ChildPath $folder
-            $folderItems = get-mfFolderItems -path $fullFolderPath -psScriptsOnly
-            if($folderItems.count -ge 1) #Now we are on PS7 we don't need to worry about measure-object
+            switch($item.group)
             {
-                write-verbose "$($folderItems.Count) Files found, getting content"
+                'dscClasses' {
+                    write-verbose "Processing $($item.name) as a DSCClass"
+                    throw 'DSC Classes currently not supported, sorry!'
+                }
 
-                #Primarily done for DSC, which we don't care about at the moment anyway
-                #But its nice to have options, and something to revisit later
-                if($noExternalFiles){
-                    write-warning 'Compiling into single file'
-                    switch ($folder) {
-                        
-                        'dscClasses' {
-                            write-verbose 'Processing DSCResources'
-                            "`n### dscClasses`n`n"|Out-File $moduleFile -Append
-                            $folderItems.ForEach{
-                                $content = get-mfScriptText -path $_.Path -scriptType dscClass
-                                $content.output|Out-File $moduleFile -Append
-                                foreach($dr in $content.dscResources)
-                                {
-                                    write-verbose "Need to export function: $dr"
-                                    $DscResourcesToExport.add($dr)
-                                }
+                'functions' {
+                    write-verbose "Processing $($item.name) as a Function"
 
-                                
-                            }
-                        }
-    
-                        'functions'  {
-                            #Ok so we need to add the content to the module file
-                            write-verbose 'Processing Public Functions'
-                            
-                            
-                            "`n### Public/Non-Private Functions`n`n"|Out-File $moduleFile -Append
-                            $folderItems.ForEach{
-                                #write-verbose "Getting content for $($_.name)"
-                                $content = get-mfScriptText -path $_.Path -scriptType function
-                                #$global:dbgContent = $content
-                                $content.output|Out-File $moduleFile -Append
-                                foreach($fr in $content.functionResources)
-                                {
-                                    write-verbose "Need to export function: $fr"
-                                    $functionsToExport.add($fr)
-                                }
-                            }
-                        }
-                        
-                        Default {
-                            #So Private functions and filters should land in here
-                            #In theory we can do all the file types except functions and DSC Resources here (Which need to add to export)
-                            #Since we are not exposing them in nested modules or scriptsToProcess
-                            
-                            write-verbose "Processing $folder"
-                            
-                            "`n### $folder `n`n"|Out-File $moduleFile -Append
-                            $folderItems.ForEach{
-                                write-verbose "$($folder): Getting content for $($_.name)"
-                                $content = get-mfScriptText -path $_.Path -scriptType other
-                                $content.output|Out-File $moduleFile -Append
-                            }
-                        }
+                    $item.content|out-file $moduleFile -Append
+                    
+                    $item.functionDetails.functionName.forEach{
+                        write-verbose "Adding $_ as functionToExport"
+                        $functionsToExport.add($_)
                     }
 
-                }else{
-                    write-verbose 'No DSC Resources Found - Compiling Normally'
-                    switch ($folder) {
-                        'enums' {
-                            # I tried putting the ENUMS in there own file, but it cant find the types when you do that
-                            write-verbose 'Processing Enums'
-                            "`n### Enums`n`n"|Out-File $moduleFile -Append
-                            #"`n### Enums`n`n"|Out-File $enumsFile -Append
-                            $folderItems.ForEach{
-                                $content = get-mfScriptText -path $_.Path -scriptType other
-                                $content.output|Out-File $moduleFile -Append
-                                #$content.output|Out-file $enumsFile -Append
-                                <#
-                                if($enumsFileShortname -notIn $nestedModules)
-                                {
-                                    $nestedModules.Add($enumsFileShortname)
-                                }
-                                #>
-                                if($exportEnums){
-                                    if($enumsFileShortname -notIn $scriptsToProcess)
-                                    {
-                                        $content.output|Out-file $enumsFile -Append
-                                        $scriptsToProcess.Add($enumsFileShortname)
-                                    }
+                }
 
-                                    if($enumsFileShortname -notIn $fileList)
-                                    {
-                                        $fileList.Add($enumsFileShortname)
-                                    }
-                                }
-                            }
-                        }
-                        'validationClasses' {
-                            # Validators seem to have the opposite behaviour to ENUMS - If they arent in nested module, they dont load in time
-                            write-verbose 'Processing validationClasses'
-    
-                           "`n### Validation Classes`n`n"|Out-File $validatorsFile -Append
-    
-                            $folderItems.ForEach{
-                                $content = get-mfScriptText -path $_.Path -scriptType other
-                                $content.output|Out-File $validatorsFile -Append
-                                if($validatorsFileShortname -notIn $nestedModules)
-                                {
-                                    $nestedModules.Add($validatorsFileShortname)
-                                }
-                                if($exportValidators -and $validatorsFileShortname -notIn $scriptsToProcess){
-                                    $scriptsToProcess.Add($validatorsFileShortname)
-                                }
+                'enums' {
+                    write-verbose "Processing $($item.name) as an Enum"
 
-                                if($validatorsFileShortname -notIn $fileList)
-                                {
-                                    $fileList.Add($validatorsFileShortname)
-                                }
-                            }
-                        }
-                        'classes' {
-                            # Classes could probably be external, but lets treat them the same as enums
-                            write-verbose 'Processing Classes'
-                            #"`n### Classes`n`n"|Out-File $classesFile -Append
-                            "`n### Classes`n`n"|Out-File $moduleFile -Append
-                            $folderItems.ForEach{
-                                $content = get-mfScriptText -path $_.Path -scriptType other
-                                #$content.output|Out-File $classesFile -Append
-                                $content.output|Out-File $moduleFile -Append
-                                <#
-                                if($classesFileShortname -notIn $nestedModules)
-                                {
-                                    $nestedModules.Add($classesFileShortname)
-                                }
-                                #>
-                                if($exportClasses){
-                                    $content.output|Out-File $classesFile -Append
-                                    if($classesFileShortname -notIn $scriptsToProcess)
-                                    {
-                                        $scriptsToProcess.Add($classesFileShortname)
-                                    }
+                    if($exportEnums -and !$noExternalFiles){
+                        write-verbose 'Exporting enum content to external enum file'
+                        $item.content|Out-file $enumsFile -Append
 
-                                    if($classesFileShortname -notIn $fileList)
-                                    {
-                                        $fileList.Add($classesFileShortname)
-                                    }
-                                }
-                            }
+                        if($enumsFileShortname -notIn $scriptsToProcess)
+                        {
+                            $scriptsToProcess.Add($enumsFileShortname)
                         }
-    
-                        'functions'  {
-                            #Ok so we need to add the content to the module file
-                            write-verbose 'Processing Public Functions'
-                            
-                            
-                            "`n### Public/Non-Private Functions`n`n"|Out-File $moduleFile -Append
-                            $folderItems.ForEach{
-                                #write-verbose "Getting content for $($_.name)"
-                                $content = get-mfScriptText -path $_.Path -scriptType function
-                                #$global:dbgContent = $content
-                                $content.output|Out-File $moduleFile -Append
-                                foreach($fr in $content.functionResources)
-                                {
-                                    write-verbose "Need to export function: $fr"
-                                    $functionsToExport.add($fr)
-                                }
-                            }
+
+                        if($enumsFileShortname -notIn $fileList)
+                        {
+                            $fileList.Add($enumsFileShortname)
                         }
-                        
-                        Default {
-                            #So Private functions and filters should land in here
-                            write-verbose "Processing $folder"
-                            
-                            "`n### $folder `n`n"|Out-File $moduleFile -Append
-                            $folderItems.ForEach{
-                                write-verbose "$($folder): Getting content for $($_.name)"
-                                $content = get-mfScriptText -path $_.Path -scriptType other
-                                $content.output|Out-File $moduleFile -Append
-                            }
-                        }
+                    }else{
+                        write-verbose 'Exporting enum content to module file'
+                        $item.content|out-file $moduleFile -Append
+
                     }
                 }
-                
-                
-            }
 
+                'validationClasses' {
+                    write-verbose "Processing $($item.name) as ValidationClass"
+
+                    if($noExternalFiles)
+                    {
+                        write-verbose 'No ExternalFiles flag set'
+                        write-warning 'By setting NoExternalFiles with files in the validationClasses folder, you run the risk of your validator class objects not loading correctly.'
+                        write-warning 'If your module has DSC Classes, the NoExternalFiles switch will be forced. Avoid using custom validators with DSC Modules for predictable results'
+                        write-verbose 'Exporting validator content to external module file'
+                        $item.content|out-file $moduleFile -append
+                    }else{
+                        write-verbose 'Exporting validator content to external validators file'
+                        $item.content|Out-file $validatorsFile -Append
+                        if($validatorsFileShortname -notIn $scriptsToProcess)
+                        {
+                            $scriptsToProcess.Add($validatorsFileShortname)
+                        }
+
+                        if($validatorsFileShortname -notIn $fileList)
+                        {
+                            $fileList.Add($validatorsFileShortname)
+                        }
+
+                    }
+                }
+
+                'classes' {
+                    write-verbose "Processing $($item.name) as Class"
+
+                    if($exportClasses -and !$noExternalFiles){
+                        write-verbose 'Exporting classes content to external classes file'
+                        $item.content|Out-file $classesFile -Append
+
+                        if($classesFileShortname -notIn $scriptsToProcess)
+                        {
+                            $scriptsToProcess.Add($classesFileShortname)
+                        }
+
+                        if($classesFileShortname -notIn $fileList)
+                        {
+                            $fileList.Add($classesFileShortname)
+                        }
+
+
+                    }else{
+                        write-verbose 'Exporting classes content to external module file'
+                        $item.content|out-file $moduleFile -append
+                    }
+
+                }
+
+                'private' {
+                    write-verbose "Processing $($item.name) as a Private (Non Exported) Function"
+
+                    $item.content|out-file $moduleFile -Append
+                }
+
+                Default {
+                    write-warning "$($item.group) grouptype is unknown. Uncertain how to handle file: $($item.name). Will be skipped"
+                }
+
+            }
         }
+
+        write-verbose 'Finished compiling module file'
+        write-verbose "`n`n`n==========================================`n`n"
+
+
 
         foreach($folder in $copyFolders)
         {
-            write-verbose "Processing folder: $folder"
+            write-verbose "Processing folder for content copy: $folder"
 
             $fullFolderPath = join-path -path $sourceFolder -ChildPath $folder
             $folderItems = get-mfFolderItems -path $fullFolderPath
@@ -654,7 +571,6 @@ function build-mfProject
                 
             }
         }
-
 
         write-verbose 'Building Manifest'
         #Manifest Base
@@ -758,11 +674,13 @@ function build-mfProject
         $splatManifest.ModuleVersion = $version
 
         #Currently not adding anything to file list, will leave this code here in case we revisit later
+        <#
         if($fileList.count -ge 1)
         {
             write-verbose "Included in fileList: $($fileList.ToArray() -join ',')"
             [array]$splatManifest.fileList = [array]$fileList.ToArray()
         }
+        #>
 
         New-ModuleManifest @splatManifest
 
@@ -1180,7 +1098,7 @@ function get-mfFolderItemDetails
         [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
         $folderItems = $folders.ForEach{
             $folderPath = Join-Path $path -ChildPath $_
-            get-mfFolderItems -path $folderPath
+            get-mfFolderItems -path $folderPath -psScriptsOnly
         }
 
         write-verbose 'Starting Job'
@@ -1273,7 +1191,8 @@ function get-mfFolderItems
         }
 
 
-        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore'
+        #Include the older bartender bits so we have backwards compatibility
+        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
 
 
         if($destination)
