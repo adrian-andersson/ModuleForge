@@ -12,7 +12,7 @@
 RootModule = 'ModuleForge.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.32.1'
+ModuleVersion = '0.0.37.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -57,7 +57,7 @@ PowerShellVersion = '7.2.0'
 # RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
-ScriptsToProcess = 'validators.ps1'
+ScriptsToProcess = @()
 
 # Type files (.ps1xml) to be loaded when importing this module
 # TypesToProcess = @()
@@ -66,12 +66,12 @@ ScriptsToProcess = 'validators.ps1'
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('validators.ps1')
+# NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = 'add-mfRepositoryXmlData', 'build-mfProject', 'get-mfDependencyTree', 
-               'get-mfDependencyTreeAsJob', 'get-mfFolderItems', 'get-mfNextSemver', 
-               'Get-mfScriptDetails', 'get-mfScriptText', 'new-mfProject', 
+               'get-mfFolderItemDetails', 'get-mfFolderItems', 'get-mfNextSemver', 
+               'Get-mfScriptFunctionDetails', 'new-mfProject', 
                'publish-mfGithubPackage', 'register-mfLocalPsResourceRepository', 
                'remove-mfLocalPsResourceRepository', 'update-mfProject'
 
@@ -125,23 +125,23 @@ PrivateData = @{
     } # End of PSData hashtable
 
 
-    # bartenderCopyright
-    bartenderCopyright = '2020 Domain Group'
+    # builtOn
+    builtOn = '2024-08-12T16:50:15'
+
+    # builtBy
+    builtBy = 'AdrianAndersson'
+
+    # moduleCompiledBy
+    moduleCompiledBy = 'Bartender | A Framework for making PowerShell Modules'
 
     # bartenderVersion
     bartenderVersion = '6.2.0'
 
     # moduleRevision
-    moduleRevision = '0.0.32.1'
+    moduleRevision = '0.0.37.1'
 
-    # moduleCompiledBy
-    moduleCompiledBy = 'Bartender | A Framework for making PowerShell Modules'
-
-    # builtBy
-    builtBy = 'AdrianAndersson'
-
-    # builtOn
-    builtOn = '2024-08-12T10:33:32'
+    # bartenderCopyright
+    bartenderCopyright = '2020 Domain Group'
 
 } # End of PrivateData hashtable
 
