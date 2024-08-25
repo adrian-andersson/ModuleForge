@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.0.0
-	BuildDate: 2024-08-23T20:41:05
+	BuildDate: 2024-08-25T23:04:09
 #>
 function add-mfRepositoryXmlData
 {
@@ -34,6 +34,9 @@ function add-mfRepositoryXmlData
             
                 2024-08-08 - AA
                     - Initial Attempt
+
+                2024-08-28 - AA
+                    - Need to fix the xml space, I put in type but it should be repository
                     
     #>
 
@@ -121,7 +124,7 @@ function add-mfRepositoryXmlData
             $nuSpecXml.Load($nuSpec.FullName)
 
             #Repository Element
-            $newElement = $nuSpecXml.CreateElement("type",$nuSpecXml.package.namespaceURI)
+            $newElement = $nuSpecXml.CreateElement("repository",$nuSpecXml.package.namespaceURI)
             write-verbose 'Adding Repository Type Attribute'
             $newElement.SetAttribute('type','git')
             write-verbose 'Adding Repository URL Attribute'
@@ -1354,27 +1357,36 @@ function get-mfNextSemver
 
             2024-08-10 - AA
                 - First attempt at incrementing the Semver
-                   
+
+            2024-08-24 - AA
+                - Have discovered that PSGallery only supports SemVer v1. So need to remove the prerelese Version
+                - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
+                    - I.e. 1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName='default')]
     PARAM(
         #Semver Version
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory,ParameterSetName='default')]
         [SemVer]$version,
 
         #What are we incrementing
-        [Parameter()]
+        [Parameter(ParameterSetName='default')]
         [ValidateSet('Major','Minor','Patch')]
         [string]$increment,
 
         #Is this a prerelease
-        [Parameter()]
+        [Parameter(ParameterSetName='default')]
         [switch]$prerelease,
 
         #Optional override the prerelease label. If not supplied will use 'prerelease'
-        [Parameter()]
-        [string]$preReleaseLabel
+        [Parameter(ParameterSetName='default')]
+        [Parameter(ParameterSetName='Initial')]
+        [string]$preReleaseLabel,
+        #Is this a prerelease
+        [Parameter(ParameterSetName='Initial')]
+        [switch]$initialPreRelease
+
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -1382,9 +1394,9 @@ function get-mfNextSemver
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $defaultPrereleaseLabel = 'prerelease'
+        $defaultPrereleaseLabel = 'PRE'
 
-        if (-not $increment -and -not $prerelease) {
+        if (-not $increment -and -not $prerelease -and -not $initialPreRelease) {
             throw 'At least one of "increment" parameter or "prerelease" switch should be supplied.'
         }
     }
@@ -1412,7 +1424,7 @@ function get-mfNextSemver
         {
             #This scenario indicates version supplied is already a prerelease, and what we want to do is increment the prerelease version
             write-verbose 'Incrementing Prerelease Version'
-            $currentPreReleaseSplit = $version.PreReleaseLabel.Split('.')
+            $currentPreReleaseSplit = $version.PreReleaseLabel.Split('v')
             $currentpreReleaseLabel = $currentPreReleaseSplit[0]
             if(!$preReleaseLabel -or ($currentpreReleaseLabel -eq $preReleaseLabel)){
                 write-verbose 'No change to prerelease label'
@@ -1427,7 +1439,7 @@ function get-mfNextSemver
                 $nextPreRelease = 1
             }
             
-            $nextVersionString = "$($version.major).$($version.minor).$($version.patch)-$($nextPreReleaseLabel).$($nextPrerelease)"
+            $nextVersionString = "$($version.major).$($version.minor).$($version.patch)-$($nextPreReleaseLabel)v$('{0:d3}' -f $nextPrerelease)"
             $nextVersion = [semver]::New($nextVersionString)
             write-verbose "Next Prerelease will be: $($nextVersion.ToString())"
             
@@ -1441,10 +1453,30 @@ function get-mfNextSemver
                 $nextPreReleaseLabel = $preReleaseLabel
             }
 
-            $nextVersionString = "$($nextVersion.major).$($nextVersion.minor).$($nextVersion.patch)-$($nextPreReleaseLabel).1"
+            $nextVersionString = "$($nextVersion.major).$($nextVersion.minor).$($nextVersion.patch)-$($nextPreReleaseLabel)v001"
             $nextVersion = [semver]::New($nextVersionString)
             write-verbose "Next Prerelease will be: $($nextVersion.ToString())"
+        }elseIf($prerelease){
+            #This is a strange scenario. Indicates that we have prerelease switch,but the version supplied wasn't a prerelease already. And we didn't increment anything.
+            #Are we supposed to go backwards
+
+            #throw 'Unsure on version scenario. Prerelease wanted but version provided was not a pre-release. Please provide a version with existing prerelease, or include an increment'
+            
+            #I think what we do, is we increment patch by 1 and then tag as pre-release
+            write-warning 'Unspecified version increment. Will increment Patch. If this is not what you meant, please try again'
+            $nextVersionString = "$($version.major).$($version.minor).$($version.patch+1)-v001"
+        }elseIf($initialPreRelease){
+            if(!$preReleaseLabel){
+                $nextPreReleaseLabel = $defaultPrereleaseLabel
+            }else{
+                $nextPreReleaseLabel = $preReleaseLabel
+            }
+            write-verbose 'Start at v1 prerelease v001'
+            $nextVersionString = "1.0.0-$($nextPreReleaseLabel)v001"
+            $nextVersion = [semver]::New($nextVersionString)
         }
+
+        
 
         return $nextVersion
 
