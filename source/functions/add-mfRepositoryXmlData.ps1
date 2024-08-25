@@ -29,6 +29,9 @@ function add-mfRepositoryXmlData
             
                 2024-08-08 - AA
                     - Initial Attempt
+
+                2024-08-28 - AA
+                    - Need to fix the xml space, I put in type but it should be repository
                     
     #>
 
@@ -116,7 +119,7 @@ function add-mfRepositoryXmlData
             $nuSpecXml.Load($nuSpec.FullName)
 
             #Repository Element
-            $newElement = $nuSpecXml.CreateElement("type",$nuSpecXml.package.namespaceURI)
+            $newElement = $nuSpecXml.CreateElement("repository",$nuSpecXml.package.namespaceURI)
             write-verbose 'Adding Repository Type Attribute'
             $newElement.SetAttribute('type','git')
             write-verbose 'Adding Repository URL Attribute'
