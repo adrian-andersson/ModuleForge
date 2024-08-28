@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.0.0
-	BuildDate: 2024-08-25T23:04:09
+	BuildDate: 2024-08-26T10:09:43
 #>
 function add-mfRepositoryXmlData
 {
@@ -1362,28 +1362,38 @@ function get-mfNextSemver
                 - Have discovered that PSGallery only supports SemVer v1. So need to remove the prerelese Version
                 - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
                     - I.e. 1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
+
+            2024-08-26 - AA
+                - Added functionality to be able to drop pre-release tag
     #>
 
     [CmdletBinding(DefaultParameterSetName='default')]
     PARAM(
         #Semver Version
         [Parameter(Mandatory,ParameterSetName='default')]
+        [Parameter(Mandatory,ParameterSetName='preRelease')]
         [SemVer]$version,
 
         #What are we incrementing
         [Parameter(ParameterSetName='default')]
+        [Parameter(ParameterSetName='preRelease')]
         [ValidateSet('Major','Minor','Patch')]
         [string]$increment,
 
         #Is this a prerelease
-        [Parameter(ParameterSetName='default')]
+        [Parameter(ParameterSetName='preRelease')]
         [switch]$prerelease,
 
-        #Optional override the prerelease label. If not supplied will use 'prerelease'
+        #Is this a prerelease
         [Parameter(ParameterSetName='default')]
+        [switch]$stableRelease,
+
+        #Optional override the prerelease label. If not supplied will use 'prerelease'
+        [Parameter(ParameterSetName='preRelease')]
         [Parameter(ParameterSetName='Initial')]
         [string]$preReleaseLabel,
-        #Is this a prerelease
+
+        #Is this the initial prerelease
         [Parameter(ParameterSetName='Initial')]
         [switch]$initialPreRelease
 
@@ -1396,8 +1406,8 @@ function get-mfNextSemver
 
         $defaultPrereleaseLabel = 'PRE'
 
-        if (-not $increment -and -not $prerelease -and -not $initialPreRelease) {
-            throw 'At least one of "increment" parameter or "prerelease" switch should be supplied.'
+        if (-not $increment -and -not $prerelease -and -not $initialPreRelease -and -not $stableRelease) {
+            throw 'At least one of "increment", parameter or "stableRelease", "prerelease", "initialPreRelease" switch should be supplied.'
         }
     }
     
@@ -1465,6 +1475,7 @@ function get-mfNextSemver
             #I think what we do, is we increment patch by 1 and then tag as pre-release
             write-warning 'Unspecified version increment. Will increment Patch. If this is not what you meant, please try again'
             $nextVersionString = "$($version.major).$($version.minor).$($version.patch+1)-v001"
+            $nextVersion = [semver]::New($nextVersionString)
         }elseIf($initialPreRelease){
             if(!$preReleaseLabel){
                 $nextPreReleaseLabel = $defaultPrereleaseLabel
@@ -1474,12 +1485,22 @@ function get-mfNextSemver
             write-verbose 'Start at v1 prerelease v001'
             $nextVersionString = "1.0.0-$($nextPreReleaseLabel)v001"
             $nextVersion = [semver]::New($nextVersionString)
+        }elseIf($stableRelease)
+        {
+            write-verbose 'Mark release as stable'
+            #This scenario is for when we have a pre-release tag and we want to drop it for a stable release version
+            if(!($version.PreReleaseLabel))
+            {
+                throw 'version supplied does not contain a prerelease'
+            }
+
+            $nextVersionString = "$($version.major).$($version.minor).$($version.patch)"
+            $nextVersion = [semver]::New($nextVersionString)
+            write-verbose "Stable Release Version: $($nextVersion.tostring())"
+
         }
 
-        
-
         return $nextVersion
-
 
     }
     

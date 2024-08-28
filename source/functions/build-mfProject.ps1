@@ -80,7 +80,12 @@ function build-mfProject
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         write-verbose 'Testing module path'
-        $moduleTest = get-item $modulePath
+        try{
+            $moduleTest = get-item $modulePath -ErrorAction SilentlyContinue
+        }catch{
+            $moduleTest = $null
+        }
+        
         if(!$moduleTest){
             throw "Unable to read from $modulePath"
         }
@@ -156,7 +161,7 @@ function build-mfProject
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
        
         #Better Order
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
+        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
 
 
         $sourceFolder = join-path -path $modulePath -childPath 'source'

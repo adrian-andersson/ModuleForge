@@ -285,7 +285,7 @@ function get-mfFolderItemDetails
 
         write-verbose 'Getting Folder Items'
 
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
+        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
         $folderItems = $folders.ForEach{
             $folderPath = Join-Path $path -ChildPath $_
             get-mfFolderItems -path $folderPath -psScriptsOnly

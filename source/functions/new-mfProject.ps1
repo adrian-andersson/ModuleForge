@@ -75,7 +75,7 @@ function new-mfProject
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
         [Parameter()]
-        [String[]]$DefaultCommandPrefix,
+        [String]$DefaultCommandPrefix,
         [Parameter()]
         [object[]]$PrivateData
 
@@ -118,14 +118,16 @@ function new-mfProject
         add-mfFilesAndFolders -moduleRoot $modulePath
 
        
-
+        <#
         if($projectUri -and !$licenseUri)
         {
+            write-verbose 'Auto-checking for license'
             if(test-path $(join-path -path $modulePath -childPath 'LICENSE'))
             {
                 $licenseUri = "$projectUri\LICENSE"
             }
         }
+        #>
 
         #Should we use JSON for this, or CLIXML.
         #The vote from the internet in July 2024 is stick to CLIXML for PowerShell centric projects. So we will do that
@@ -148,7 +150,7 @@ function new-mfProject
             projectUri = $projectUri
             licenseUri = $licenseUri
             guid = $(new-guid).guid
-            moduleforgeVersion = $moduleForgeReference.Version.ToString()
+            moduleforgeVersion = $(if($moduleForgeReference){ $moduleForgeReference.Version.ToString()}else{'n/a'})
             iconUri = $iconUri
             requiredModules = $RequiredModules
             ExternalModuleDependencies = $ExternalModuleDependencies
@@ -156,6 +158,8 @@ function new-mfProject
             PrivateData = $PrivateData
 
         }
+
+        
 
         write-verbose "Exporting config to: $configPath"
         try{

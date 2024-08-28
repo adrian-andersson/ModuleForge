@@ -52,7 +52,7 @@ function add-mfFilesAndFolders
             {
                 write-verbose "Directory: $fullpath is OK"
             }else{
-                write-warning "Directory: $fullpath not found. Will create"
+                write-information "Directory: $fullpath not found. Will create" -tags 'FileCreation'
                 try{
                     $result = new-item -itemtype directory -Path $fullPath -ErrorAction Stop
                 }catch{
@@ -72,7 +72,7 @@ function add-mfFilesAndFolders
                     {
                         write-verbose "Directory: $subdirectoryFullPath is OK"
                     }else{
-                        write-warning "Directory: $subdirectoryFullPath not found. Will create"
+                        write-information "Directory: $subdirectoryFullPath not found. Will create" -tags 'FileCreation'
                         try{
                             $null = new-item -itemtype directory -Path $subdirectoryFullPath -ErrorAction Stop
                         }catch{
@@ -86,7 +86,7 @@ function add-mfFilesAndFolders
                         {
                             write-verbose "File: $filePath is OK"
                         }else{
-                            write-warning "File: $filePath not found. Will create"
+                            write-information "File: $filePath not found. Will create" -tags 'FileCreation'
                             try{
                                 $null = new-item -itemtype File -Path $filePath -ErrorAction Stop
                             }catch{

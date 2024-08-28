@@ -149,8 +149,8 @@ function update-mfProject
 
         if($moduleTags)
         {
-            write-verbose "Updating Module tags from: $($config.moduleTags) -> $($moduleTags)"
-            $config.moduleTags = $moduleTags
+            write-verbose "Updating Module tags from: $($config.tags) -> $($tags)"
+            $config.tags = $moduleTags
         }
 
         if($projectUri)
