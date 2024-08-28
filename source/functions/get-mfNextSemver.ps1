@@ -114,6 +114,7 @@ function get-mfNextSemver
             write-verbose 'Incrementing Prerelease Version'
             $currentPreReleaseSplit = $version.PreReleaseLabel.Split('v')
             $currentpreReleaseLabel = $currentPreReleaseSplit[0]
+            write-verbose "Current PreRelease Label: $currentpreReleaseLabel"
             if(!$preReleaseLabel -or ($currentpreReleaseLabel -eq $preReleaseLabel)){
                 write-verbose 'No change to prerelease label'
                 $nextPreReleaseLabel = $currentpreReleaseLabel
