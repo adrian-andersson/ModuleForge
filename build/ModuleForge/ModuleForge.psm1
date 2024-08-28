@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.0.0
-	BuildDate: 2024-08-26T10:09:43
+	BuildDate: 2024-08-28T13:35:19
 #>
 function add-mfRepositoryXmlData
 {
@@ -251,7 +251,12 @@ function build-mfProject
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         write-verbose 'Testing module path'
-        $moduleTest = get-item $modulePath
+        try{
+            $moduleTest = get-item $modulePath -ErrorAction SilentlyContinue
+        }catch{
+            $moduleTest = $null
+        }
+        
         if(!$moduleTest){
             throw "Unable to read from $modulePath"
         }
@@ -327,7 +332,7 @@ function build-mfProject
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
        
         #Better Order
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
+        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
 
 
         $sourceFolder = join-path -path $modulePath -childPath 'source'
@@ -1094,7 +1099,7 @@ function get-mfFolderItemDetails
 
         write-verbose 'Getting Folder Items'
 
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private','filters')
+        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
         $folderItems = $folders.ForEach{
             $folderPath = Join-Path $path -ChildPath $_
             get-mfFolderItems -path $folderPath -psScriptsOnly
@@ -1474,7 +1479,14 @@ function get-mfNextSemver
             
             #I think what we do, is we increment patch by 1 and then tag as pre-release
             write-warning 'Unspecified version increment. Will increment Patch. If this is not what you meant, please try again'
-            $nextVersionString = "$($version.major).$($version.minor).$($version.patch+1)-v001"
+
+            if(!$preReleaseLabel){
+                $nextPreReleaseLabel = $defaultPrereleaseLabel
+            }else{
+                $nextPreReleaseLabel = $preReleaseLabel
+            }
+
+            $nextVersionString = "$($version.major).$($version.minor).$($version.patch+1)-$($nextPreReleaseLabel)v001"
             $nextVersion = [semver]::New($nextVersionString)
         }elseIf($initialPreRelease){
             if(!$preReleaseLabel){
@@ -1505,219 +1517,6 @@ function get-mfNextSemver
     }
     
 }
-function Get-mfScriptFunctionDetails
-{
-
-    <#
-        .SYNOPSIS
-            Identify functions and classes in a PS1 file, return the name of the function along with the actual content of the file.
-            
-        .DESCRIPTION
-            Used to pull the names of functions and classes from a PS1 file, and return them in an object along with the content itself.
-            This will provide a way to get the names of functions and resources as well as copying the content cleanly into a module file.
-            It works best when you keep to single types (Classes or Functions) in a file.
-            By returning the function and dscResource names, we can also compile what we need to export in a module manifest
-
-            
-            
-        ------------
-        .EXAMPLE
-            get-mfScriptText c:\myFile.ps1 -scriptType function
-            
-            
-            
-        .NOTES
-            Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-28 - AA
-                    - Refactored from Bartender
-
-                2024-08-02
-                    - Suspect this is superceded with the moduleDependency stuff
-
-                2024-08-12
-                    - Add a passthrough param for folderGroup
-                    
-    #>
-
-    param(
-        [Parameter(Mandatory)]
-        [string]$Path,
-        #Passthrough Relative Path from get-mfFolderItems
-        [Parameter()]
-        [string]$RelativePath,
-        #What type of file are we looking at, is it expected we will have Classes, Functions or a mix of everything
-        [ValidateSet('Class','Function','All')]
-        [Parameter()]
-        [string]$type = 'All',
-        #Passthrough param for FolderGroup
-        [Parameter()]
-        [string]$folderGroup
-    )
-
-    begin{
-        #Return the script name when running verbose, makes it tidier
-        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
-        #Return the sent variables when running debug
-        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
-
-        write-verbose 'Checking Item'
-        if($path[-1] -eq '\' -or $path[-1] -eq '/')
-        {
-            write-verbose 'Removing extra \ or / from path'
-            $path = $path.Substring(0,$($path.length-1))
-            write-verbose "New Path $path"
-        }
-
-        $file = get-item $Path
-
-        if(!$file)
-        {
-            throw "File not found at: $path"
-        }
-
-
-
-    }
-    process{
-        
-        
-        write-verbose 'Using PowerShell Parser on file'
-        $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
-        write-verbose 'Extracting Functions and Classes'
-        $Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
-        $Classes = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeDefinitionAst] }, $true)
-
-        #$functionDetails = New-Object System.Collections.Generic.List[string]
-    
-        
-    
-        if($type -eq 'All' -or $type -eq 'Function')
-        {
-            $functionDetails = foreach ($Function in $Functions) {
-
-
-                $cmdletDependenciesList = New-Object System.Collections.Generic.List[string]
-                $typeDependenciesList = New-Object System.Collections.Generic.List[string]
-                $paramTypeDependenciesList = New-Object System.Collections.Generic.List[string]
-                $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
-                #$validatorTypeDependenciesList2 = New-Object System.Collections.Generic.List[string]
-        
-                write-verbose "Checking Function: $functionName"
-                $FunctionName = $Function.Name
-        
-        
-                write-verbose 'Finding Function Dependencies'
-                $Cmdlets = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
-        
-                
-                foreach($c in $Cmdlets)
-                {
-                    $cmdletDependenciesList.add($c.GetCommandName())
-                }
-        
-                write-verbose 'Finding Type and Class Dependencies'
-                $TypeExpressions = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeExpressionAst] }, $true)
-                $TypeExpressions.TypeName.FullName.foreach{
-                    write-verbose "Need to clean up: $($_)"
-                    $tname = $_
-                    [string]$tnameReplace = $($tname.Replace('[','')).replace(']','')
-                    $typeDependenciesList.add($tnameReplace)
-                }
-
-
-                write-verbose 'Finding Function Parameter Types'
-                $Parameters = $Function.Body.ParamBlock.Parameters
-                $Parameters.StaticType.Name.foreach{$paramTypeDependenciesList.add($_)}
-                #$Parameters.Attributes.Typename.Fullname.where{$_ -notin $paramTypeDependenciesList}.foreach{$validatorTypeDependenciesList.Add($_)}
-
-
-
-                write-verbose 'Finding Validators'
-                $attributes = $Parameters.Attributes
-                foreach($att in $attributes)
-                {
-                    $refType = $att.TypeName.GetReflectionType()
-
-                    write-verbose "refType for $($att.TypeName.FullName): $refType"
-
-        
-                    if($refType -and ($refType.IsSubclassOf([System.Management.Automation.ValidateArgumentsAttribute]) -or [System.Management.Automation.ValidateArgumentsAttribute].IsAssignableFrom($refType))) {
-                        [string]$tname = $Att.TypeName.FullName
-                        [string]$tname = $($tname.Replace('[','')).replace(']','')
-                        $validatorTypeDependenciesList.Add($tname)
-                    }
-                }
-        
-                [psCustomObject]@{
-                    functionName = $FunctionName
-                    cmdLets = $cmdletDependenciesList|group-object|Select-Object Name,Count
-                    #types = $TypeExpressions|group-object|Select-Object Name,Count
-                    types = $typeDependenciesList|group-object|Select-Object Name,Count
-                    parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
-                    Validators = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
-                }
-            }
-        }
-    
-        if($type -eq 'all' -or $type -eq 'Class')
-        {
-            $classDetails = foreach ($Class in $Classes) {
-                $className = $Class.Name
-                $classMethodsList = New-Object System.Collections.Generic.List[string]
-                $classPropertiesList = New-Object System.Collections.Generic.List[string]
-        
-                $Methods = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.FunctionMemberAst] }
-                foreach($m in $Methods)
-                {
-                    $classMethodsList.add($m.Name)
-                }
-        
-                $Properties = $Class.Members | Where-Object { $_ -is [System.Management.Automation.Language.PropertyMemberAst] }
-                foreach($p in $Properties)
-                {
-                    $classPropertiesList.add($p.Name)
-                }
-        
-                [psCustomObject]@{
-                    className = $className
-                    methods = $classMethodsList|group-object|Select-Object Name,Count
-                    properties = $classPropertiesList|group-object|Select-Object Name,Count
-                }
-            }
-        }
-
-        $objectHash = @{
-            Name = $file.Name
-            Path = $file.FullName
-            FileSize = "$([math]::round($file.length / 1kb,2)) kb"
-            FunctionDetails = $functionDetails
-            ClassDetails = $classDetails
-            Content = $AST.ToString()
-        }
-        
-
-        if($RelativePath)
-        {
-            $objectHash.relativePath = $RelativePath
-        }
-
-        if($folderGroup)
-        {
-            $objectHash.group = $folderGroup
-        }
-
-        [psCustomObject]$objectHash
-    }
-
-    
-
-}
-
 function new-mfProject
 {
 
@@ -1795,7 +1594,7 @@ function new-mfProject
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
         [Parameter()]
-        [String[]]$DefaultCommandPrefix,
+        [String]$DefaultCommandPrefix,
         [Parameter()]
         [object[]]$PrivateData
 
@@ -1838,14 +1637,16 @@ function new-mfProject
         add-mfFilesAndFolders -moduleRoot $modulePath
 
        
-
+        <#
         if($projectUri -and !$licenseUri)
         {
+            write-verbose 'Auto-checking for license'
             if(test-path $(join-path -path $modulePath -childPath 'LICENSE'))
             {
                 $licenseUri = "$projectUri\LICENSE"
             }
         }
+        #>
 
         #Should we use JSON for this, or CLIXML.
         #The vote from the internet in July 2024 is stick to CLIXML for PowerShell centric projects. So we will do that
@@ -1868,7 +1669,7 @@ function new-mfProject
             projectUri = $projectUri
             licenseUri = $licenseUri
             guid = $(new-guid).guid
-            moduleforgeVersion = $moduleForgeReference.Version.ToString()
+            moduleforgeVersion = $(if($moduleForgeReference){ $moduleForgeReference.Version.ToString()}else{'n/a'})
             iconUri = $iconUri
             requiredModules = $RequiredModules
             ExternalModuleDependencies = $ExternalModuleDependencies
@@ -1877,6 +1678,8 @@ function new-mfProject
 
         }
 
+        
+
         write-verbose "Exporting config to: $configPath"
         try{
             $config|export-clixml $configPath
@@ -1884,111 +1687,6 @@ function new-mfProject
             throw 'Error exporting config'
         }
     }
-}
-function publish-mfGithubPackage
-{
-
-    <#
-        .SYNOPSIS
-            Push an updated PowerShell NUPKG to github packages
-            
-        .DESCRIPTION
-            This function uploads a specified PowerShell NUPKG file to a GitHub repository. 
-            It should be executed after updating the NUSPEC XML file to ensure the package metadata is current.
-            
-        .EXAMPLE
-            publish-mfGithubPackage -repositoryUri "https://api.github.com/repos/username/repo" -NugetPackagePath "C:\path\to\package.nupkg" -githubToken (Get-Credential)
-            
-            #### DESCRIPTION
-            This example demonstrates how to use the `publish-mfGithubPackage` function to upload a NUPKG file to a GitHub repository. 
-            The `repositoryUri` parameter specifies the GitHub repository URI, `NugetPackagePath` is the path to the NUPKG file, 
-            and `githubToken` is the PSCredential object containing the GitHub token.
-            
-            #### OUTPUT
-            The function will output verbose messages indicating the progress of the upload process. 
-            If successful, the NUPKG file will be uploaded to the specified GitHub repository.
-            
-            
-            
-        .NOTES
-            Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-08-09 - AA
-                    - Initial script
-                    
-    #>
-
-    [CmdletBinding()]
-    PARAM(
-         #RepositoryUri
-         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
-         [string]$repositoryUri,
-         #Path to the actual file in the repository, should be something like C:\Users\{UserName}\AppData\Local\Temp\LocalTestRepository\{ModuleName}.{ModuleVersion}.nupkg
-         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
-         [string]$NugetPackagePath,
-         #github token to use to publish. Uses a PSCredential Object, but username is not used
-         [Parameter(Mandatory)]
-         [pscredential]$githubToken
-    )
-    begin{
-        #Return the script name when running verbose, makes it tidier
-        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
-        #Return the sent variables when running debug
-        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-        
-    }
-    
-    process{
-
-        write-verbose 'Checking nupkg is valid'
-        $nuPackage = get-item $NugetPackagePath
-        if(!$nuPackage)
-        {
-            throw "Unable to find: $NugetPackagePath"
-        }
-
-        if($nuPackage.Extension -ne '.nupkg')
-        {
-            throw "$NugetPackagePath not a .nupkg file"
-        }
-
-        if($repositoryUri[-1] -eq '/')
-        {
-            write-verbose 'Fixing URI'
-            $repositoryUri = $repositoryUri.Substring(0,($repositoryUri.Length-1))
-        }
-
-        # Read the file content
-        $fileContent = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($nuPackage.FullName))
-
-        # Create the JSON body
-        $jsonBody = @{
-            "message" = "Upload .nupkg file"
-            "content" = $fileContent
-        } | ConvertTo-Json
-
-        $uploadUri = "$($repositoryUri)/contents/$($nupackage.name)"
-        write-verbose "Upload URI is: $uploadUri"
-
-        $headers = @{
-            Authorization = "token $($githubToken.GetNetworkCredential().Password)"
-            Accept = 'application/vnd.github.v3+json'
-        }
-
-        $restSplat = @{
-            URI = $uploadUri
-            Headers = $headers
-            Method = 'Put'
-            Body = $jsonBody
-        }
-
-        Invoke-RestMethod @restSplat
-        
-    }
-    
 }
 function register-mfLocalPsResourceRepository
 {
@@ -2339,8 +2037,8 @@ function update-mfProject
 
         if($moduleTags)
         {
-            write-verbose "Updating Module tags from: $($config.moduleTags) -> $($moduleTags)"
-            $config.moduleTags = $moduleTags
+            write-verbose "Updating Module tags from: $($config.tags) -> $($tags)"
+            $config.tags = $moduleTags
         }
 
         if($projectUri)
@@ -2446,7 +2144,7 @@ function add-mfFilesAndFolders
             {
                 write-verbose "Directory: $fullpath is OK"
             }else{
-                write-warning "Directory: $fullpath not found. Will create"
+                write-information "Directory: $fullpath not found. Will create" -tags 'FileCreation'
                 try{
                     $result = new-item -itemtype directory -Path $fullPath -ErrorAction Stop
                 }catch{
@@ -2466,7 +2164,7 @@ function add-mfFilesAndFolders
                     {
                         write-verbose "Directory: $subdirectoryFullPath is OK"
                     }else{
-                        write-warning "Directory: $subdirectoryFullPath not found. Will create"
+                        write-information "Directory: $subdirectoryFullPath not found. Will create" -tags 'FileCreation'
                         try{
                             $null = new-item -itemtype directory -Path $subdirectoryFullPath -ErrorAction Stop
                         }catch{
@@ -2480,7 +2178,7 @@ function add-mfFilesAndFolders
                         {
                             write-verbose "File: $filePath is OK"
                         }else{
-                            write-warning "File: $filePath not found. Will create"
+                            write-information "File: $filePath not found. Will create" -tags 'FileCreation'
                             try{
                                 $null = new-item -itemtype File -Path $filePath -ErrorAction Stop
                             }catch{
@@ -2498,90 +2196,4 @@ function add-mfFilesAndFolders
         
     }
     
-}
-function get-mfScriptFunctionNames
-{
-
-    <#
-        .SYNOPSIS
-            Retrieves the names of powershell functions from PowerShell script files.
-            
-        .DESCRIPTION
-            Basically, a get-command type function for scripts you haven't dotSourced or imported yet.
-            
-        ------------
-        .EXAMPLE
-            get-mfScriptFunctionNames example.ps1
-            
-            #### DESCRIPTION
-            Get the names of any functions in the example.ps1 file           
-            
-            
-        .NOTES
-            Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Recreated from bartender
-                    - Added more verbosity
-                    - Simplified
-                    - Added extension checks
-                2024-08-12
-                    - Suspect deprecated, leave for compatibility or revisit
-                    
-    #>
-
-    [CmdletBinding()]
-    PARAM(
-        #PS1 / PowerShell Script file to check
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline)]
-        [string]$path,
-        #Ignore extension name
-        [Parameter()]
-        [switch]$ignoreFileExtension
-    )
-    begin{
-        #Return the script name when running verbose, makes it tidier
-        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
-        #Return the sent variables when running debug
-        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
-        $powershellExtensions = @(
-            '.ps1'
-            '.psm1'
-        )
-        
-    }
-    
-    process{
-        $item = get-item $path
-        
-        if(test-path $item)
-        {
-            write-verbose "Found item at $path"
-
-            if($item.extension -notin $powershellExtensions)
-            {
-                if(!$ignoreFileExtension)
-                {
-                    Throw 'File extension is not a PowerShell script filefile'
-                }else{
-                    write-warning 'File extension is not a PowerShell file. Ignore switch supplied so proceeding with warning'
-                }
-            }
-            write-verbose 'Reading contents and finding function names'
-            $contents = get-contents $item
-            $contents.foreach{
-                if($_ -like 'function *')
-                {
-                    write-verbose 'Function Found'
-                    $($_ -split 'function ')[0]
-                }
-            }
-        }else{
-            throw "Error finding file: $path"
-        }        
-    }
 }

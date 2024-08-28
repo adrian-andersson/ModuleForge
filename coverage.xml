@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd"[]>
-<report name="Pester (08/28/2024 12:13:25)">
-  <sessioninfo id="this" start="1724847185429" dump="1724847205949" />
+<report name="Pester (08/28/2024 13:35:03)">
+  <sessioninfo id="this" start="1724852082885" dump="1724852103975" />
   <package name="functions">
     <class name="functions/add-mfRepositoryXmlData" sourcefilename="add-mfRepositoryXmlData.ps1">
       <method name="add-mfRepositoryXmlData" desc="()" line="48">
