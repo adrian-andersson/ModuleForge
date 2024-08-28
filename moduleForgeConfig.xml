@@ -1,0 +1,51 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Deserialized.System.Management.Automation.PSCustomObject</T>
+      <T>Deserialized.System.Object</T>
+    </TN>
+    <MS>
+      <S N="moduleName">ModuleForge</S>
+      <S N="description">ModuleForge is a PowerShell scaffolding and build tool for creating other PowerShell modules. With ModuleForge, you can easily generate the foundational structure, boilerplate code, and github actions build techniques</S>
+      <Version N="minimumPsVersion">7.2</Version>
+      <Obj N="moduleAuthors" RefId="1">
+        <TN RefId="1">
+          <T>Deserialized.System.String[]</T>
+          <T>Deserialized.System.Array</T>
+          <T>Deserialized.System.Object</T>
+        </TN>
+        <LST>
+          <S>Adrian.Andersson</S>
+        </LST>
+      </Obj>
+      <S N="companyName">Adrian.Andersson</S>
+      <Obj N="tags" RefId="2">
+        <TNRef RefId="1" />
+        <LST>
+          <S>Module</S>
+          <S>Scaffold</S>
+          <S>Bootstrap</S>
+        </LST>
+      </Obj>
+      <S N="projectUri">https://github.com/adrian-andersson/ModuleForge</S>
+      <S N="licenseUri">https://github.com/adrian-andersson/ModuleForge/blob/main/LICENSE</S>
+      <S N="guid">af358439-4ce1-4633-9a55-f5f3a24b646d</S>
+      <S N="moduleforgeVersion">0.0.47</S>
+      <S N="iconUri"></S>
+      <Nil N="requiredModules" />
+      <Obj N="ExternalModuleDependencies" RefId="3">
+        <TN RefId="2">
+          <T>System.String[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>Pester</S>
+          <S>Microsoft.PowerShell.PSResourceGet</S>
+        </LST>
+      </Obj>
+      <Nil N="DefaultCommandPrefix" />
+      <Nil N="PrivateData" />
+    </MS>
+  </Obj>
+</Objs>
