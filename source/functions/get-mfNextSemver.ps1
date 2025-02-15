@@ -82,7 +82,8 @@ function get-mfNextSemver
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $defaultPrereleaseLabel = 'PRE'
+        #Making the default preReleaase label to be lower case. This addresses a problem with psResourceGet and AzureDevOps repositories specifically (Issue #1787)
+        $defaultPrereleaseLabel = 'pre' 
 
         if (-not $increment -and -not $prerelease -and -not $initialPreRelease -and -not $stableRelease) {
             throw 'At least one of "increment", parameter or "stableRelease", "prerelease", "initialPreRelease" switch should be supplied.'
