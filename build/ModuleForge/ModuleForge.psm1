@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
-	 ModuleForge Version: 1.0.0
-	BuildDate: 2024-08-28T16:53:17
+	 ModuleForge Version: 1.0.1
+	BuildDate: 2025-02-15T15:12:32
 #>
 function add-mfRepositoryXmlData
 {
@@ -581,8 +581,8 @@ function build-mfProject
         $splatManifest = @{
             Path = $manifestFile
             RootModule = $moduleFileShortname
-            Author = $($config.name.moduleAuthors -join ',')
-            Copyright = "$(get-date -f yyyy)$(if($config.companyName){" $($config.companyName)"}else{" $($config.name.moduleAuthors -join ' ')"})"
+            Author = $($config.moduleAuthors -join ',')
+            Copyright = "$(get-date -f yyyy)$(if($config.companyName){" $($config.companyName)"}else{" $($config.moduleAuthors -join ' ')"})"
             CompanyName = $config.companyName
             Description = $config.Description
             ModuleVersion = $versionString
@@ -1409,7 +1409,8 @@ function get-mfNextSemver
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $defaultPrereleaseLabel = 'PRE'
+        #Making the default preReleaase label to be lower case. This addresses a problem with psResourceGet and AzureDevOps repositories specifically (Issue #1787)
+        $defaultPrereleaseLabel = 'pre' 
 
         if (-not $increment -and -not $prerelease -and -not $initialPreRelease -and -not $stableRelease) {
             throw 'At least one of "increment", parameter or "stableRelease", "prerelease", "initialPreRelease" switch should be supplied.'
@@ -1441,7 +1442,12 @@ function get-mfNextSemver
             write-verbose 'Incrementing Prerelease Version'
             $currentPreReleaseSplit = $version.PreReleaseLabel.Split('v')
             $currentpreReleaseLabel = $currentPreReleaseSplit[0]
-            if(!$preReleaseLabel -or ($currentpreReleaseLabel -eq $preReleaseLabel)){
+            write-verbose "Current PreRelease Label: $currentpreReleaseLabel"
+            if(!$preReleaseLabel -or ($currentpreReleaseLabel -ceq $preReleaseLabel)){
+                if($currentpreReleaseLabel -eq $preReleaseLabel)
+                {
+                    write-warning 'It appears the prerelease casing has changed, but the label has not. This may cause unexpected ordering results.'
+                }
                 write-verbose 'No change to prerelease label'
                 $nextPreReleaseLabel = $currentpreReleaseLabel
                 $currentPreReleaseInt = [int]$currentPreReleaseSplit[1]
