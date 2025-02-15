@@ -115,7 +115,11 @@ function get-mfNextSemver
             $currentPreReleaseSplit = $version.PreReleaseLabel.Split('v')
             $currentpreReleaseLabel = $currentPreReleaseSplit[0]
             write-verbose "Current PreRelease Label: $currentpreReleaseLabel"
-            if(!$preReleaseLabel -or ($currentpreReleaseLabel -eq $preReleaseLabel)){
+            if(!$preReleaseLabel -or ($currentpreReleaseLabel -ceq $preReleaseLabel)){
+                if($currentpreReleaseLabel -eq $preReleaseLabel)
+                {
+                    write-warning 'It appears the prerelease casing has changed, but the label has not. This may cause unexpected ordering results.'
+                }
                 write-verbose 'No change to prerelease label'
                 $nextPreReleaseLabel = $currentpreReleaseLabel
                 $currentPreReleaseInt = [int]$currentPreReleaseSplit[1]
