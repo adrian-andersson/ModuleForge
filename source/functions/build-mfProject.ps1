@@ -410,7 +410,7 @@ function build-mfProject
         $splatManifest = @{
             Path = $manifestFile
             RootModule = $moduleFileShortname
-            Author = $($config.name.moduleAuthors -join ',')
+            Author = $($config.moduleAuthors -join ',')
             Copyright = "$(get-date -f yyyy)$(if($config.companyName){" $($config.companyName)"}else{" $($config.name.moduleAuthors -join ' ')"})"
             CompanyName = $config.companyName
             Description = $config.Description
