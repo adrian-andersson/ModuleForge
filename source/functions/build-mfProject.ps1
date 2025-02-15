@@ -411,7 +411,7 @@ function build-mfProject
             Path = $manifestFile
             RootModule = $moduleFileShortname
             Author = $($config.moduleAuthors -join ',')
-            Copyright = "$(get-date -f yyyy)$(if($config.companyName){" $($config.companyName)"}else{" $($config.name.moduleAuthors -join ' ')"})"
+            Copyright = "$(get-date -f yyyy)$(if($config.companyName){" $($config.companyName)"}else{" $($config.moduleAuthors -join ' ')"})"
             CompanyName = $config.companyName
             Description = $config.Description
             ModuleVersion = $versionString
