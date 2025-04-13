@@ -19,7 +19,7 @@ What I wanted to achieve with this tool was the following:
 
 ## Why do we need another Scaffolding tool?
 
-Good question, I had some pretty clear objectives and goals for this module (see above). If you already have a good pipeline that works for you and your module needs, please keep using it. This scaffolding module is built for what works for me. That said, I built ModuleForge to be compatible with a wide range of other supporting modules and tools. For example, it will work fine if you're using PSake or PSBuild. It will help you with module versioning, with whatever private repository you want to use, and a variety of other things.
+Great question! While I had specific objectives and goals for this module (see above), it's important to note that if you already have a pipeline that works well for your needs, you should definitely continue using it. ModuleForge is designed to be flexible and compatible with a wide range of other tools and workflows. For instance, it should works seamlessly with any orchestration tool, including PSake or PSBuild. ModuleForge assists with module versioning, and supports various private repositories. This tool is here to help you work the way you want to, providing additional options and support where needed.
 
 ## Tested Compatibility
 
