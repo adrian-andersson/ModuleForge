@@ -130,7 +130,7 @@ function get-mfGitChangeLog
                     $markDown.add("Version: $tags`n")
                 }
                 $grouped.forEach{
-                    $markDown.Add("## $($changeLogTypes.$($_.name))`n")
+                    $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
                     $_.group.Message.ForEach{
                         $markDown.Add("- $_")
                     }
