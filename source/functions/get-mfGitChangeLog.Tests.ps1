@@ -53,7 +53,7 @@ Describe 'Git Mocking' {
             }
             
             process{
-                write-warning "Command provided: $commandLine"
+                Write-Verbose "Command provided: $commandLine"
                 switch -Wildcard ($commandLine) {
                     '--version' { return 'git version 2.30.0.mock' }
                     'rev-parse --is-inside-work-tree' { return 'true' }
@@ -92,83 +92,325 @@ Describe 'Git Mocking' {
         $test | should -be 'feat: Initial commit'
     }
 
+    AfterAll{
+        remove-alias git
+    }
+
 }
-<#
+
 # Define the Pester tests
 Describe 'get-mfGitChangeLog for Multi Tag' {
     # Mock the git version command
     BeforeAll{
-        Mock git {
-            write-verbose 'Mocking GIT'
-            write-warning "Args: $args"
-            switch -Wildcard ($args) {
-                '--version' { return 'git version 2.30.0.mock' }
-                'rev-parse --is-inside-work-tree' { return 'true' }
-                'tag --sort=-creatordate' { return @('v1.1.0', 'v1.0.0') }
-                'log v1.0.0..v1.1.0 --pretty=format:"%s"' { return @('feat: Added new feature', 'fix: Fixed bug', 'docs: Updated documentation') }
-                'log --pretty=format:"%s"' { return @('feat: Initial commit') }
-                default { throw "Unexpected git command: $args" }
-            }
+        function invoke-GitCommand{
+            [CmdletBinding()]
+            PARAM(
+                [Parameter(Position = 0)]
+                [Alias("p0")]
+                [string]$Param0,
+                [Parameter(Position = 1)]
+                [Alias("p1")]
+                [string]$Param1,
+                [Parameter(Position = 2)]
+                [Alias("p2")]
+                [string]$Param2,
+                [Parameter(Position = 3)]
+                [Alias("p3")]
+                [string]$Param3,
+                [Parameter(Position = 4)]
+                [Alias("p4")]
+                [string]$Param4,
+                [Parameter(Position = 5)]
+                [Alias("p5")]
+                [string]$Param5,
+                [Parameter(Position = 6)]
+                [Alias("p6")]
+                [string]$Param6
+            )
 
+            begin{
+                $commandLine = "$Param0 $Param1 $Param2 $Param3 $Param4 $Param5 $Param6"
+                $commandLine = $commandLine.trim()
+
+
+                $tags = @(
+                    'v1.0.1-prev006',
+                    'v1.0.1-prev005',
+                    'v1.0.1-prev004',
+                    'v1.0.1-prev003',
+                    'v1.0.1-prev002',
+                    'v1.0.1-prev001'
+                )
+
+                $prettyLog = @(
+                    'feat: errors are now a feature'
+                    'test: threw spaget at wall to see what stuck'
+                    'fix: Added bandaid to small memory leak'
+                    'fix: Fixed bug that was stuck on fly paper by removing fly paper'
+                    'test: Added true test of patience'
+                    'feat: Added another hello world example'
+                    'feat: Added new feature'
+                    'chore: mopped the floor'
+                    'chore: washed the dishes'
+                    'fix: Removed the throw command and changed to Write-verbose so error is now a feature'
+                    'perf: Removed artificial sleep timer to drastically improve performance'
+                    'perf: increased caffiene dossage by ordering strong flatwhite instead of regular flatwhite'
+                    'docs: Updated documentation by switching from single spacing to 1.5 spacing and changing font to comic-sans'
+                    'refactor: changed ritual sacrifice from jane to jenny '
+                )
+            }
+            
+            process{
+                Write-Verbose "Command provided: $commandLine"
+                switch -Wildcard ($commandLine) {
+                    '--version' { return 'git version 2.30.0.mock' }
+                    'rev-parse --is-inside-work-tree' { return 'true' }
+                    'tag --sort=-creatordate' { return $tags }
+                    'log v1.0.1-prev005..v1.0.1-prev006 --pretty=format:"%s"' { return $prettyLog }
+                    'log v1.0.1-prev005..v1.0.1-prev006 --pretty=format:%s' { return $prettyLog }
+                    default { throw "Unexpected git command: $commandLine" }
+                }
+            }
         }
+
+        Set-Alias -name 'git' -Value invoke-GitCommand
+
+        $result = get-mfGitChangeLog
+
+        write-verbose $result
+    
     }
 
     # Test case for multiple tags
     It 'should generate changelog for multiple tags' {
-        $changeLogTypes = @{
-            'feat' = 'New Features'
-            'fix' = 'Bug Fixes'
-            'docs' = 'Documentation Changes'
-        }
-        $result = get-mfGitChangeLog -changeLogTypes $changeLogTypes
-        $result | Should -Contain '# Change Log'
-        $result | Should -Contain 'Version: v1.0.0 --> v1.1.0'
-        $result | Should -Contain '## New Features'
-        $result | Should -Contain '- Added new feature'
-        $result | Should -Contain '## Bug Fixes'
-        $result | Should -Contain '- Fixed bug'
-        $result | Should -Contain '## Documentation Changes'
-        $result | Should -Contain '- Updated documentation'
+
+        $result | Should -BeLike '*# Change Log*'
+        $result | Should -BeLike '*Version: v1.0.1-prev005 --> v1.0.1-prev006*'
+        $result | Should -BeLike '*## New Features*'
+        $result | Should -BeLike '*- Added new feature*'
+        $result | Should -BeLike '*## Bug Fixes*'
+        $result | Should -BeLike '*- Fixed bug*'
+        $result | Should -BeLike '*## Documentation Changes*'
+        $result | Should -BeLike '*- Updated documentation*'
+        $result | should -belike '*## Code Rewrite/Refactor*'
+        $result | should -Not -BeLike '*## Chore*'
+        #>
     }
 
-    # Test case for single tag
-    It 'should generate changelog for single tag' {
-        Mock git {
-            param($args)
-            if ($args -eq 'tag --sort=-creatordate') {
-            return @('v1.0.0')
+    
+    AfterAll{
+        remove-alias git
+    }
+
+
+}
+
+# Define the Pester tests
+Describe 'get-mfGitChangeLog for Single Tag' {
+    # Mock the git version command
+    BeforeAll{
+        function invoke-GitCommand{
+            [CmdletBinding()]
+            PARAM(
+                [Parameter(Position = 0)]
+                [Alias("p0")]
+                [string]$Param0,
+                [Parameter(Position = 1)]
+                [Alias("p1")]
+                [string]$Param1,
+                [Parameter(Position = 2)]
+                [Alias("p2")]
+                [string]$Param2,
+                [Parameter(Position = 3)]
+                [Alias("p3")]
+                [string]$Param3,
+                [Parameter(Position = 4)]
+                [Alias("p4")]
+                [string]$Param4,
+                [Parameter(Position = 5)]
+                [Alias("p5")]
+                [string]$Param5,
+                [Parameter(Position = 6)]
+                [Alias("p6")]
+                [string]$Param6
+            )
+
+            begin{
+                $commandLine = "$Param0 $Param1 $Param2 $Param3 $Param4 $Param5 $Param6"
+                $commandLine = $commandLine.trim()
+
+
+                $tags = @(
+                    'v1.0.1-prev001'
+                )
+
+                $prettyLog = @(
+                    'feat: errors are now a feature'
+                    'test: threw spaget at wall to see what stuck'
+                    'fix: Added bandaid to small memory leak'
+                    'fix: Fixed bug that was stuck on fly paper by removing fly paper'
+                    'test: Added true test of patience'
+                    'feat: Added another hello world example'
+                    'feat: Added new feature'
+                    'chore: mopped the floor'
+                    'chore: washed the dishes'
+                    'fix: Removed the throw command and changed to Write-verbose so error is now a feature'
+                    'perf: Removed artificial sleep timer to drastically improve performance'
+                    'perf: increased caffiene dossage by ordering strong flatwhite instead of regular flatwhite'
+                    'docs: Updated documentation by switching from single spacing to 1.5 spacing and changing font to comic-sans'
+                    'refactor: changed ritual sacrifice from jane to jenny '
+                )
+            }
+            
+            process{
+                Write-Verbose "Command provided: $commandLine"
+                switch -Wildcard ($commandLine) {
+                    '--version' { return 'git version 2.30.0.mock' }
+                    'rev-parse --is-inside-work-tree' { return 'true' }
+                    'tag --sort=-creatordate' { return $tags }
+                    'log --pretty=format:"%s"' { return $prettyLog }
+                    'log --pretty=format:%s' { return $prettyLog }
+                    default { throw "Unexpected git command: $commandLine" }
+                }
             }
         }
 
-        $changeLogTypes = @{
-            'feat' = 'New Features'
-            'fix' = 'Bug Fixes'
-            'docs' = 'Documentation Changes'
-        }
-        $result = get-mfGitChangeLog -changeLogTypes $changeLogTypes
-        $result | Should -Contain '# Change Log'
-        $result | Should -Contain 'Version: v1.0.0'
-        $result | Should -Contain '## New Features'
-        $result | Should -Contain '- Initial commit'
+        Set-Alias -name 'git' -Value invoke-GitCommand
+
+        $result = get-mfGitChangeLog
+
+        write-verbose $result
+    
     }
 
-    # Test case for no tags
-    It 'should warn when no tags are found' {
-        Mock git {
-            param($args)
-            if ($args -eq 'tag --sort=-creatordate') {
-            return @()
+    # Test case for multiple tags
+    It 'should generate changelog for Single tags' {
+
+        $result | Should -BeLike '*# Change Log*'
+        $result | Should -BeLike '*Version: v1.0.1-prev001*'
+        $result | Should -BeLike '*## New Features*'
+        $result | Should -BeLike '*- Added new feature*'
+        $result | Should -BeLike '*## Bug Fixes*'
+        $result | Should -BeLike '*- Fixed bug*'
+        $result | Should -BeLike '*## Documentation Changes*'
+        $result | Should -BeLike '*- Updated documentation*'
+        $result | should -belike '*## Code Rewrite/Refactor*'
+        $result | should -Not -BeLike '*## Chore*'
+        #>
+    }
+
+    
+    AfterAll{
+        remove-alias git
+    }
+
+
+}
+
+
+Describe 'get-mfGitChangeLog for Custom changeLogTypes' {
+    # Mock the git version command
+    BeforeAll{
+        function invoke-GitCommand{
+            [CmdletBinding()]
+            PARAM(
+                [Parameter(Position = 0)]
+                [Alias("p0")]
+                [string]$Param0,
+                [Parameter(Position = 1)]
+                [Alias("p1")]
+                [string]$Param1,
+                [Parameter(Position = 2)]
+                [Alias("p2")]
+                [string]$Param2,
+                [Parameter(Position = 3)]
+                [Alias("p3")]
+                [string]$Param3,
+                [Parameter(Position = 4)]
+                [Alias("p4")]
+                [string]$Param4,
+                [Parameter(Position = 5)]
+                [Alias("p5")]
+                [string]$Param5,
+                [Parameter(Position = 6)]
+                [Alias("p6")]
+                [string]$Param6
+            )
+
+            begin{
+                $commandLine = "$Param0 $Param1 $Param2 $Param3 $Param4 $Param5 $Param6"
+                $commandLine = $commandLine.trim()
+
+
+                $tags = @(
+                    'v1.0.1-prev001'
+                )
+
+                $prettyLog = @(
+                    'feat: errors are now a feature'
+                    'test: threw spaget at wall to see what stuck'
+                    'fix: Added bandaid to small memory leak'
+                    'fix: Fixed bug that was stuck on fly paper by removing fly paper'
+                    'test: Added true test of patience'
+                    'feat: Added another hello world example'
+                    'feat: Added new feature'
+                    'chore: mopped the floor'
+                    'chore: washed the dishes'
+                    'fix: Removed the throw command and changed to Write-verbose so error is now a feature'
+                    'perf: Removed artificial sleep timer to drastically improve performance'
+                    'perf: increased caffiene dossage by ordering strong flatwhite instead of regular flatwhite'
+                    'docs: Updated documentation by switching from single spacing to 1.5 spacing and changing font to comic-sans'
+                    'refactor: changed ritual sacrifice from jane to jenny '
+                )
+            }
+            
+            process{
+                Write-Verbose "Command provided: $commandLine"
+                switch -Wildcard ($commandLine) {
+                    '--version' { return 'git version 2.30.0.mock' }
+                    'rev-parse --is-inside-work-tree' { return 'true' }
+                    'tag --sort=-creatordate' { return $tags }
+                    'log --pretty=format:"%s"' { return $prettyLog }
+                    'log --pretty=format:%s' { return $prettyLog }
+                    default { throw "Unexpected git command: $commandLine" }
+                }
             }
         }
 
+        Set-Alias -name 'git' -Value invoke-GitCommand
+
         $changeLogTypes = @{
-            'feat' = 'New Features'
-            'fix' = 'Bug Fixes'
-            'docs' = 'Documentation Changes'
+            'chore' = 'Chore and Pipeline work'
+            'test' = 'Testing'
         }
-        { get-mfGitChangeLog -changeLogTypes $changeLogTypes } | Should -Throw -ErrorId 'No tags found. May not be a release.'
-}
-}
+
+        $result = get-mfGitChangeLog -changeLogTypes $changeLogTypes
+
+        write-verbose $result
+    
+    }
+
+    # Test case for multiple tags
+    It 'should generate changelog for Single tags' {
+
+        $result | Should -BeLike '*# Change Log*'
+        $result | Should -BeLike '*Version: v1.0.1-prev001*'
+        $result | Should -Not -BeLike '*## New Features*'
+        $result | Should -Not -BeLike '*- Added new feature*'
+        $result | Should -Not -BeLike '*## Bug Fixes*'
+        $result | Should -Not -BeLike '*- Fixed bug*'
+        $result | Should -Not -BeLike '*## Documentation Changes*'
+        $result | Should -Not -BeLike '*- Updated documentation*'
+        $result | should -Not -belike '*## Code Rewrite/Refactor*'
+        $result | should -BeLike '*## Chore*'
+        $result | should -BeLike '*## Testing*'
+        #>
+    }
+
+    
+    AfterAll{
+        remove-alias git
+    }
 
 
-#>
+}

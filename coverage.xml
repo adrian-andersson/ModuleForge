@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd"[]>
-<report name="Pester (02/15/2025 14:38:11)">
-  <sessioninfo id="this" start="1739630273386" dump="1739630291554" />
+<report name="Pester (05/16/2025 14:25:03)">
+  <sessioninfo id="this" start="1747405477311" dump="1747405503995" />
   <package name="functions">
     <class name="functions/add-mfRepositoryXmlData" sourcefilename="add-mfRepositoryXmlData.ps1">
       <method name="add-mfRepositoryXmlData" desc="()" line="48">
-        <counter type="INSTRUCTION" missed="9" covered="51" />
-        <counter type="LINE" missed="9" covered="43" />
+        <counter type="INSTRUCTION" missed="14" covered="46" />
+        <counter type="LINE" missed="12" covered="40" />
         <counter type="METHOD" missed="0" covered="1" />
       </method>
-      <counter type="INSTRUCTION" missed="9" covered="51" />
-      <counter type="LINE" missed="9" covered="43" />
+      <counter type="INSTRUCTION" missed="14" covered="46" />
+      <counter type="LINE" missed="12" covered="40" />
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </class>
@@ -52,6 +52,17 @@
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </class>
+    <class name="functions/get-mfGitChangeLog" sourcefilename="get-mfGitChangeLog.ps1">
+      <method name="get-mfGitChangeLog" desc="()" line="58">
+        <counter type="INSTRUCTION" missed="6" covered="55" />
+        <counter type="LINE" missed="6" covered="39" />
+        <counter type="METHOD" missed="0" covered="1" />
+      </method>
+      <counter type="INSTRUCTION" missed="6" covered="55" />
+      <counter type="LINE" missed="6" covered="39" />
+      <counter type="METHOD" missed="0" covered="1" />
+      <counter type="CLASS" missed="0" covered="1" />
+    </class>
     <class name="functions/get-mfNextSemver" sourcefilename="get-mfNextSemver.ps1">
       <method name="get-mfNextSemver" desc="()" line="81">
         <counter type="INSTRUCTION" missed="8" covered="80" />
@@ -65,12 +76,12 @@
     </class>
     <class name="functions/new-mfProject" sourcefilename="new-mfProject.ps1">
       <method name="new-mfProject" desc="()" line="59">
-        <counter type="INSTRUCTION" missed="11" covered="44" />
-        <counter type="LINE" missed="7" covered="33" />
+        <counter type="INSTRUCTION" missed="8" covered="47" />
+        <counter type="LINE" missed="6" covered="34" />
         <counter type="METHOD" missed="0" covered="1" />
       </method>
-      <counter type="INSTRUCTION" missed="11" covered="44" />
-      <counter type="LINE" missed="7" covered="33" />
+      <counter type="INSTRUCTION" missed="8" covered="47" />
+      <counter type="LINE" missed="6" covered="34" />
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </class>
@@ -118,17 +129,17 @@
       <line nr="77" mi="1" ci="0" mb="0" cb="0" />
       <line nr="80" mi="0" ci="2" mb="0" cb="0" />
       <line nr="83" mi="0" ci="2" mb="0" cb="0" />
-      <line nr="85" mi="1" ci="0" mb="0" cb="0" />
-      <line nr="86" mi="1" ci="0" mb="0" cb="0" />
-      <line nr="88" mi="0" ci="2" mb="0" cb="0" />
-      <line nr="89" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="85" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="86" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="88" mi="2" ci="0" mb="0" cb="0" />
+      <line nr="89" mi="1" ci="0" mb="0" cb="0" />
       <line nr="91" mi="1" ci="0" mb="0" cb="0" />
       <line nr="92" mi="1" ci="0" mb="0" cb="0" />
       <line nr="94" mi="1" ci="0" mb="0" cb="0" />
       <line nr="96" mi="1" ci="0" mb="0" cb="0" />
-      <line nr="99" mi="0" ci="1" mb="0" cb="0" />
-      <line nr="102" mi="0" ci="2" mb="0" cb="0" />
-      <line nr="103" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="99" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="102" mi="2" ci="0" mb="0" cb="0" />
+      <line nr="103" mi="1" ci="0" mb="0" cb="0" />
       <line nr="108" mi="0" ci="1" mb="0" cb="0" />
       <line nr="109" mi="0" ci="1" mb="0" cb="0" />
       <line nr="110" mi="0" ci="1" mb="0" cb="0" />
@@ -160,8 +171,8 @@
       <line nr="156" mi="0" ci="1" mb="0" cb="0" />
       <line nr="157" mi="0" ci="1" mb="0" cb="0" />
       <line nr="160" mi="1" ci="0" mb="0" cb="0" />
-      <counter type="INSTRUCTION" missed="9" covered="51" />
-      <counter type="LINE" missed="9" covered="43" />
+      <counter type="INSTRUCTION" missed="14" covered="46" />
+      <counter type="LINE" missed="12" covered="40" />
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </sourcefile>
@@ -202,8 +213,8 @@
       <line nr="148" mi="1" ci="0" mb="0" cb="0" />
       <line nr="153" mi="0" ci="4" mb="0" cb="0" />
       <line nr="154" mi="0" ci="1" mb="0" cb="0" />
-      <line nr="156" mi="0" ci="1" mb="0" cb="0" />
-      <line nr="158" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="156" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="158" mi="0" ci="1" mb="0" cb="0" />
       <line nr="161" mi="0" ci="2" mb="0" cb="0" />
       <line nr="164" mi="0" ci="2" mb="0" cb="0" />
       <line nr="167" mi="0" ci="1" mb="0" cb="0" />
@@ -494,6 +505,57 @@
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </sourcefile>
+    <sourcefile name="get-mfGitChangeLog.ps1">
+      <line nr="58" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="59" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="60" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="61" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="62" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="69" mi="0" ci="2" mb="0" cb="0" />
+      <line nr="71" mi="0" ci="3" mb="0" cb="0" />
+      <line nr="78" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="80" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="81" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="82" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="85" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="88" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="90" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="92" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="94" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="98" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="100" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="101" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="102" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="105" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="106" mi="0" ci="3" mb="0" cb="0" />
+      <line nr="107" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="109" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="110" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="113" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="117" mi="0" ci="6" mb="0" cb="0" />
+      <line nr="118" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="121" mi="0" ci="3" mb="0" cb="0" />
+      <line nr="122" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="124" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="125" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="126" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="128" mi="0" ci="3" mb="0" cb="0" />
+      <line nr="130" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="132" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="133" mi="0" ci="3" mb="0" cb="0" />
+      <line nr="134" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="135" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="138" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="139" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="140" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="141" mi="0" ci="1" mb="0" cb="0" />
+      <line nr="144" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="148" mi="1" ci="0" mb="0" cb="0" />
+      <counter type="INSTRUCTION" missed="6" covered="55" />
+      <counter type="LINE" missed="6" covered="39" />
+      <counter type="METHOD" missed="0" covered="1" />
+      <counter type="CLASS" missed="0" covered="1" />
+    </sourcefile>
     <sourcefile name="get-mfNextSemver.ps1">
       <line nr="81" mi="0" ci="2" mb="0" cb="0" />
       <line nr="83" mi="0" ci="3" mb="0" cb="0" />
@@ -580,7 +642,7 @@
       <line nr="118" mi="0" ci="1" mb="0" cb="0" />
       <line nr="134" mi="0" ci="3" mb="0" cb="0" />
       <line nr="135" mi="0" ci="1" mb="0" cb="0" />
-      <line nr="137" mi="3" ci="0" mb="0" cb="0" />
+      <line nr="137" mi="0" ci="3" mb="0" cb="0" />
       <line nr="140" mi="0" ci="1" mb="0" cb="0" />
       <line nr="141" mi="0" ci="1" mb="0" cb="0" />
       <line nr="143" mi="0" ci="1" mb="0" cb="0" />
@@ -601,8 +663,8 @@
       <line nr="164" mi="0" ci="1" mb="0" cb="0" />
       <line nr="166" mi="0" ci="2" mb="0" cb="0" />
       <line nr="168" mi="1" ci="0" mb="0" cb="0" />
-      <counter type="INSTRUCTION" missed="11" covered="44" />
-      <counter type="LINE" missed="7" covered="33" />
+      <counter type="INSTRUCTION" missed="8" covered="47" />
+      <counter type="LINE" missed="6" covered="34" />
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </sourcefile>
@@ -730,13 +792,13 @@
       <counter type="METHOD" missed="0" covered="1" />
       <counter type="CLASS" missed="0" covered="1" />
     </sourcefile>
-    <counter type="INSTRUCTION" missed="113" covered="680" />
-    <counter type="LINE" missed="85" covered="484" />
-    <counter type="METHOD" missed="0" covered="10" />
-    <counter type="CLASS" missed="0" covered="9" />
+    <counter type="INSTRUCTION" missed="121" covered="733" />
+    <counter type="LINE" missed="93" covered="521" />
+    <counter type="METHOD" missed="0" covered="11" />
+    <counter type="CLASS" missed="0" covered="10" />
   </package>
-  <counter type="INSTRUCTION" missed="113" covered="680" />
-  <counter type="LINE" missed="85" covered="484" />
-  <counter type="METHOD" missed="0" covered="10" />
-  <counter type="CLASS" missed="0" covered="9" />
+  <counter type="INSTRUCTION" missed="121" covered="733" />
+  <counter type="LINE" missed="93" covered="521" />
+  <counter type="METHOD" missed="0" covered="11" />
+  <counter type="CLASS" missed="0" covered="10" />
 </report>
