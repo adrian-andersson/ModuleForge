@@ -1,16 +1,7 @@
 BeforeAll{
-
-    #Reference Current Path
-    $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
-
     
     #Load This File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
-
-    $tempCopyLocation = join-path -Path $currentPath -ChildPath 'TempCopy'
-
-    $privatePath = join-path $sourcePath -ChildPath 'private'
 
 }
 
