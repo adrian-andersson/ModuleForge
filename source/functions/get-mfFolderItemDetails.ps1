@@ -20,17 +20,6 @@ function get-mfFolderItemDetails
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-27 AA
-                    - First Refactor
-                2024-08-12 AA
-                    - Improve the relativePath code
-                    - Add a folderGroup passthrough
-                    - Need to figure out a better way for importing the module
-                    
     #>
 
     [CmdletBinding()]

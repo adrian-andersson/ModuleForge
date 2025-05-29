@@ -18,17 +18,8 @@ function get-mfDependencyTree
             #### DESCRIPTION
             Show files and any dependencies
             
-            
-            
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-            2024-08-11 - AA
-                - Initial script
-                - Bit of an experimental function this one
                     
     #>
 

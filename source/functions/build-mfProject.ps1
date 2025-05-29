@@ -23,31 +23,6 @@ function build-mfProject
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Refactored from Bartender
-                    - Added necessary joining functions
-                    - Minimum Parameters
-                    - Test with no externals
-                
-                2024-07-29 - AA
-                    - Test with all classes,enums,validators as external
-                    - Revert to just Validators as external after testing
-                    - Expand parameters
-                    - Make Pre-release work
-                    - Decided that short-term, DSC modules are not supported
-
-                2024-08-12 - AA
-                    - Change the way we handle prereleases, get it from the supplied semver
-                        - Will allow easier passing through of get-mfNextSemver output
-                    - Change the way we get script details
-
-                2024-08-23 - AA
-                    - Change the build to use the folderItemDetails, should lead to a faster pass
-                    - Added informational output stream to the build, should make for nice Orchestration stream
                     
     #>
 

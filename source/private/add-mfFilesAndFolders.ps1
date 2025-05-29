@@ -15,11 +15,6 @@ function add-mfFilesAndFolders
             
             
             Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    - Tried to make Operating Agnostic by using join-path
-                    
     #>
 
     [CmdletBinding()]
