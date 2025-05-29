@@ -1,0 +1,95 @@
+---
+external help file: ModuleForge-help.xml
+Module Name: moduleforge
+online version:
+schema: 2.0.0
+---
+
+# remove-mfLocalPsResourceRepository
+
+## SYNOPSIS
+Remove the local test repository that was created with register-mfLocalPsResourceRepository
+
+## SYNTAX
+
+```
+remove-mfLocalPsResourceRepository [[-repositoryName] <String>] [[-path] <String>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+## DESCRIPTION
+If a local test repository was created with the register-mfLocalPsResourceRepository, this command will remove it
+It will also remove the directory that hosted the local repository
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+remove-mfLocalPsResourceRepository
+```
+
+## PARAMETERS
+
+### -path
+Root path of the module.
+Uses Temp Path by default
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 2
+Default value: [System.IO.Path]::GetTempPath()
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -repositoryName
+Name of the repository
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: LocalTestRepository
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+## NOTES
+Author: Adrian Andersson
+
+
+Changelog:
+
+    2024-07-26 - AA
+        - Created function to clean-up repository
+
+## RELATED LINKS
