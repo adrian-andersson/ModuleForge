@@ -24,16 +24,6 @@ function get-mfFolderItems
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    - Made much faster and more modern
-
-                2024-08-23 - AA
-                    - Added the .bt files as exclusions to help with Bartender backwards compatibility
                     
     #>
 
@@ -43,11 +33,14 @@ function get-mfFolderItems
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Default')]
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Copy')]
         [string]$path,
+        #Flag to copy scripts only
         [parameter(ParameterSetName ='Default')]
         [parameter(ParameterSetName ='Copy')]
         [switch]$psScriptsOnly,
+        #Flag to copy scripts only
         [parameter(ParameterSetName ='Copy')]
         [string]$destination,
+        #Flag to actually copy files and not just output like a fancy Get-ChildItem
         [parameter(ParameterSetName ='Copy')]
         [switch]$copy
 

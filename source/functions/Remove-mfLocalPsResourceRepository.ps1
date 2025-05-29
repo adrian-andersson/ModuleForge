@@ -16,13 +16,6 @@ function remove-mfLocalPsResourceRepository
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Created function to clean-up repository
-                    
     #>
 
     [CmdletBinding()]

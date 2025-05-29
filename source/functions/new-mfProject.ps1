@@ -27,12 +27,6 @@ function new-mfProject
         .NOTES
             Author: Adrian Andersson
             
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    
     #>
 
     [CmdletBinding()]

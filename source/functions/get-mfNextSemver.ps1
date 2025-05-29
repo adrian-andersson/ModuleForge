@@ -30,19 +30,6 @@ function get-mfNextSemver
 
     .NOTES
         Author: Adrian Andersson
-
-        Changelog:
-
-            2024-08-10 - AA
-                - First attempt at incrementing the Semver
-
-            2024-08-24 - AA
-                - Have discovered that PSGallery only supports SemVer v1. So need to remove the prerelese Version
-                - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
-                    - I.e. 1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
-
-            2024-08-26 - AA
-                - Added functionality to be able to drop pre-release tag
     #>
 
     [CmdletBinding(DefaultParameterSetName='default')]

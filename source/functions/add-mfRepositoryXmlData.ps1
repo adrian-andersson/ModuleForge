@@ -23,16 +23,6 @@ function add-mfRepositoryXmlData
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-08-08 - AA
-                    - Initial Attempt
-
-                2024-08-28 - AA
-                    - Need to fix the xml space, I put in type but it should be repository
-                    
     #>
 
     [CmdletBinding()]
