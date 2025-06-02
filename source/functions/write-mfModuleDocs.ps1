@@ -11,13 +11,13 @@ function write-mfModuleDocs
             Additionally, if specified, it includes a changelog based on Git commits.
 
         .EXAMPLE
-            build-mfFunctionDocsAndIndex -ModuleName 'MyCustomModule' -includeChangeLog
+            write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
 
             #### DESCRIPTION
             Builds documentation for `MyCustomModule` and includes a full Git-based changelog (`changeLog.md`) alongside function help files.
 
         .EXAMPLE
-            build-mfFunctionDocsAndIndex -ModuleName 'MyCustomModule' -skipIndex
+            write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
 
             #### DESCRIPTION
             Generates function documentation without updating `index.md`.
@@ -127,9 +127,10 @@ function write-mfModuleDocs
         {
             write-verbose 'Creating releaseNotes file'
             $changeLog = get-mfGitChangeLog -all
+            write-verbose "ChangeLog: `n$($changeLog)"
             if($changeLog)
             {
-                $changeLogPath = Join-Path $docsFolder -ChildPath 'changeLog.md'
+                $changeLogPath = Join-Path $DocsFullPath -ChildPath 'changeLog.md'
                 $changeLog | Out-File -FilePath $changeLogPath -Force 
             }else{
                 write-warning 'changeLog notes were not captured as none existed, or something went wrong'
@@ -157,7 +158,7 @@ function write-mfModuleDocs
                 }
             }
             write-verbose 'Create Index File'
-            $indexPath = Join-Path $docsFolder -ChildPath 'index.md'
+            $indexPath = Join-Path $DocsFullPath -ChildPath 'index.md'
             $indexContent -join "`n"|out-file $indexPath -Force
         }
         
