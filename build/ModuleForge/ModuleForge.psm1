@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.1.0
-	BuildDate: 2025-06-02T23:01:10
+	BuildDate: 2025-06-02T23:20:56
 #>
 function add-mfGithubScaffold
 {
@@ -101,7 +101,9 @@ function add-mfGithubScaffold
 
         $childItemSource = get-childitem $resourceFolderGithub -Recurse
         $childItemSource.foreach{
+            write-verbose "Checking file: $($_.name)"
             $destinationPath = $_.FullName.replace($resourceFolderGithub,$moduleGitFolder)
+            write-verbose 'DestinationPath: $destinationPath'
             if(test-path $destinationPath){
                 if($force)
                 {
@@ -111,7 +113,7 @@ function add-mfGithubScaffold
                     write-warning "Skipping $destinationPath as it exists"
                 }
             }else{
-                write-verbose "Copying destinationPath"
+                write-verbose "Copying $($_) to $destinationPath"
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
