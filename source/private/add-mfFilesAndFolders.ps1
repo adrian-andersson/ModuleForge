@@ -27,7 +27,7 @@ function add-mfFilesAndFolders
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $rootDirectories = @('docs','source')
+        $rootDirectories = @('source')
         $sourceDirectories = @('functions','enums','classes','filters','validationClasses','private','bin','resource')
         $emptyFiles = @('.gitignore','.mfignore')
         
