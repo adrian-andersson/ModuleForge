@@ -1,8 +1,123 @@
 <#
 Module created by ModuleForge
-	 ModuleForge Version: 1.0.1
-	BuildDate: 2025-05-17T13:23:39
+	 ModuleForge Version: 1.1.0
+	BuildDate: 2025-06-02T23:01:10
 #>
+function add-mfGithubScaffold
+{
+
+    <#
+        .SYNOPSIS
+            Initialises a `.GitHub` scaffold in a PowerShell module.
+
+            
+        .DESCRIPTION
+            This function copies the `.GitHub` folder from a module's resource directory to a target module path.
+            It maintains the directory structure and only overwrites existing files if the `-Force` switch is provided.
+            This is useful for setting up GitHub workflows, PR templates, and other repository configurations.
+
+
+            
+        .EXAMPLE
+            Add-mfGithubScaffold
+
+            #### DESCRIPTION
+            Copies the `.GitHub` folder from the module's `resource` directory to the current module, skipping existing files.
+
+            #### OUTPUT
+            Should have a .github folder, with workflows and a PR template
+
+        .EXAMPLE
+            Add-mfGithubScaffold -Force
+
+            #### DESCRIPTION
+            Copies the `.GitHub` scaffold and overwrites existing files in `.github` directory
+
+            #### OUTPUT
+            Should have a .github folder, with workflows and a PR template
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
+        [Parameter()]
+        [alias('path')]
+        [string]$modulePath = $(get-location).path,
+        #Module Config reference
+        [Parameter(DontShow)]
+        [string]$configFile = 'moduleForgeConfig.xml',
+        #githubFolder
+        [Parameter(DontShow)]
+        [string]$githubFolder = '.github',
+        #Should we overwrite if files exist?
+        [switch]$force
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+        if($mockPsScriptRoot)
+        {
+            #Assume we are in pester test, and use the $mockPsScriptRoot param
+            write-warning 'Assuming PSScriptRoot from $mockPsScriptRoot. This should only be done for testing'
+            $resourceFolder = Join-Path $mockPsScriptRoot 'resource'
+            
+        }else{
+            $resourceFolder = Join-Path $PSScriptRoot 'resource'
+        }
+        write-verbose "ResourceFolder:  $resourceFolder"
+        
+        if(!(test-path  $resourceFolder))
+        {
+            throw 'Err: Unable to find resource folder in ModuleForge module'
+        }
+
+        $resourceFolderGithub = join-path $resourceFolder 'github'
+        if(!(test-path  $resourceFolderGithub))
+        {
+            throw 'Err: Found resource folder, but not Github folder in ModuleForge module'
+        }
+
+        $mfConfigFile = join-path $modulePath $configFile
+        if(!(test-path $mfConfigFile))
+        {
+            throw 'Err: No Moduleforge Config File found. Please check your module path'
+        }
+
+        $moduleGitFolder = join-path $modulePath $githubFolder
+
+    }
+    
+    process{
+        if(!(test-path $moduleGitFolder)){
+            write-verbose "$moduleGitFolder does not exist, creating"
+            new-item -ItemType Directory -Path $moduleGitFolder
+        }
+
+        $childItemSource = get-childitem $resourceFolderGithub -Recurse
+        $childItemSource.foreach{
+            $destinationPath = $_.FullName.replace($resourceFolderGithub,$moduleGitFolder)
+            if(test-path $destinationPath){
+                if($force)
+                {
+                    write-warning "Overwrite $destinationPath"
+                    copy-item -Path $_.FullName -Destination $destinationPath -Force
+                }else{
+                    write-warning "Skipping $destinationPath as it exists"
+                }
+            }else{
+                write-verbose "Copying destinationPath"
+                copy-item -Path $_.FullName -Destination $destinationPath
+            }
+        }
+    }
+    
+}
 function add-mfRepositoryXmlData
 {
 
@@ -28,16 +143,6 @@ function add-mfRepositoryXmlData
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-08-08 - AA
-                    - Initial Attempt
-
-                2024-08-28 - AA
-                    - Need to fix the xml space, I put in type but it should be repository
-                    
     #>
 
     [CmdletBinding()]
@@ -194,31 +299,6 @@ function build-mfProject
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Refactored from Bartender
-                    - Added necessary joining functions
-                    - Minimum Parameters
-                    - Test with no externals
-                
-                2024-07-29 - AA
-                    - Test with all classes,enums,validators as external
-                    - Revert to just Validators as external after testing
-                    - Expand parameters
-                    - Make Pre-release work
-                    - Decided that short-term, DSC modules are not supported
-
-                2024-08-12 - AA
-                    - Change the way we handle prereleases, get it from the supplied semver
-                        - Will allow easier passing through of get-mfNextSemver output
-                    - Change the way we get script details
-
-                2024-08-23 - AA
-                    - Change the build to use the folderItemDetails, should lead to a faster pass
-                    - Added informational output stream to the build, should make for nice Orchestration stream
                     
     #>
 
@@ -713,17 +793,8 @@ function get-mfDependencyTree
             #### DESCRIPTION
             Show files and any dependencies
             
-            
-            
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-            2024-08-11 - AA
-                - Initial script
-                - Bit of an experimental function this one
                     
     #>
 
@@ -834,17 +905,6 @@ function get-mfFolderItemDetails
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-27 AA
-                    - First Refactor
-                2024-08-12 AA
-                    - Improve the relativePath code
-                    - Add a folderGroup passthrough
-                    - Need to figure out a better way for importing the module
-                    
     #>
 
     [CmdletBinding()]
@@ -1141,16 +1201,6 @@ function get-mfFolderItems
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    - Made much faster and more modern
-
-                2024-08-23 - AA
-                    - Added the .bt files as exclusions to help with Bartender backwards compatibility
                     
     #>
 
@@ -1160,11 +1210,14 @@ function get-mfFolderItems
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Default')]
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Copy')]
         [string]$path,
+        #Flag to copy scripts only
         [parameter(ParameterSetName ='Default')]
         [parameter(ParameterSetName ='Copy')]
         [switch]$psScriptsOnly,
+        #Flag to copy scripts only
         [parameter(ParameterSetName ='Copy')]
         [string]$destination,
+        #Flag to actually copy files and not just output like a fancy Get-ChildItem
         [parameter(ParameterSetName ='Copy')]
         [switch]$copy
 
@@ -1371,6 +1424,29 @@ function get-mfGitChangeLog
         ## Test Changes
         - Added test to user login function
 
+         .EXAMPLE
+            get-mfGitChangeLog -All
+
+            DESCRIPTION
+            Generates a full markdown changelog with all versions.
+
+            #### OUTPUT
+            # Change Log
+            ## Version: v1.0.0 --> v1.1.0
+            ### New Features
+            - Added new authentication module
+            ### Bug Fixes
+            - Fixed issue with user login
+            ### Chore and Pipeline work
+            - Updated GH Pipeline AutoBuildv3
+            ### Test Changes
+            - Added test to user login function
+            ## Version: v1.0.0-prev001 --> v1.1.0
+            ### New Features
+            - Added function
+
+
+
         .NOTES
         Author: Adrian Andersson
         Date: 2025-05-14
@@ -1389,7 +1465,12 @@ function get-mfGitChangeLog
             'perf' = 'Performance Improvements'
             #'chore' = 'Chore and Pipeline work'
             #'test' = 'Testing'
-        }
+        },
+        #Switch to get a full changelog for ALL tags
+        [Parameter()]
+        [switch]$all
+
+
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -1397,7 +1478,8 @@ function get-mfGitChangeLog
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        
+        $markDown = [System.Collections.Generic.List[string]]::new()
+        $markDown.add("# Change Log`n")
         
     }
     
@@ -1421,60 +1503,282 @@ function get-mfGitChangeLog
             throw 'Git not recognised as inside work tree'
         }
 
-
         write-verbose 'Get the Git Tags. Use the count of tags to determine if we are bundling for a release'
         #If you run this after tests and build, then creating a new release w/ tag, then you will KNOW that the tag is the new version
         $tags = git tag --sort=-creatordate
         $tagCount  = $tags.count
+        write-verbose "Got $tagCount total tags; ($($tags -join ','))"
         if($tagCount  -gt 1)
         {
-            #Only get between the latest and previous release based on tag
-            write-verbose "Found $tagCount total tags. Sorting to get latest and previous"
-            $commitMessages = git log "$($tags[1])..$($tags[0])" --pretty=format:"%s"
-        }elseIf($tagCount  -eq 1){
-            #Get all and assume this is the first tag
-            write-verbose 'Single Tag found. Get all Commit messages to this point'
-            $commitMessages = git log --pretty=format:"%s"
-        }else{
-            #Assume there isn't any tags and we aren't bundling this up for a release
-            Write-Warning 'No tags found. May not be a release. This function gets the change log between the previous tag and latest tag. If you are not using Tags this function will not work'
-        }
-
-
-        $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
-        if($commitObjects.count -ge 1){
-
             
-            $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
-            if($grouped.count -ge 1)
+            if($all)
             {
-                $markDown = [System.Collections.Generic.List[string]]::new()
-                $markDown.add("# Change Log`n")
-                if($tagCount -gt 1)
-                {
-                    $markDown.add("Version: $($tags[1]) --> $($tags[0])`n")
-                }else{
-                    $markDown.add("Version: $tags`n")
+                write-verbose 'AllFlag set. Getting complete Change Log'
+                $tagRef = 1 #We need a marker to know what the next tag is. Since we start at 0, the ref should start at 1
+                $tags.foreach{
+                    write-verbose "Getting contents for $_. Reference: $tagRef"
+                    $t1 = $_
+                    $markDown.add("## Version: $t1`n")
+                    if($tagRef -eq $tagCount){
+                        write-verbose 'Last Entry?'
+                        write-verbose "git log `"$($t1)`" --pretty=format:`"%s`""
+                        $commitMessages = git log "$($t1)" --pretty=format:"%s"
+                    }else{
+                        $t2 = $tags[$tagRef]
+                        write-verbose "git log `"$($t2)..$($t1)`" --pretty=format:`"%s`""
+                        $commitMessages = git log "$($t2)..$($t1)" --pretty=format:"%s"
+                    }
+                        
+                    $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+                    $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+                    $grouped.forEach{
+                        $markDown.Add("`n### $($changeLogTypes.$($_.name))`n")
+                        $_.group.Message.ForEach{
+                            $markDown.Add("- $_")
+                        }
+                        $markDown.Add("`n")
+                    }
+                    
+                    $tagRef++
                 }
+            }else{
+                #Only get between the latest and previous release based on tag
+                write-verbose "Found $tagCount total tags. Sorting to get latest and previous"
+                $commitMessages = git log "$($tags[1])..$($tags[0])" --pretty=format:"%s"
+                $markDown.add("Version: $($tags[1]) --> $($tags[0])`n")
+                $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+                $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
                 $grouped.forEach{
                     $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
                     $_.group.Message.ForEach{
                         $markDown.Add("- $_")
                     }
                 }
-                write-verbose 'Building Markdown Message'
-                $markDownText = $markDown -join "`n" 
-                if($markDownText){
-                    return $markDownText
-                }
-            }else{
-                Write-warning 'No Relevant Commit Messages'
             }
-        
+            
+        }elseIf($tagCount  -eq 1){
+            #Get all and assume this is the first tag
+            write-verbose 'Single Tag found. Get all Commit messages to this point'
+            $commitMessages = git log --pretty=format:"%s"
+            $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+            $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+            $grouped.forEach{
+                $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
+                $markDown.add("Version: $($tags)`n")
+                $_.group.Message.ForEach{
+                    $markDown.Add("- $_")
+                }
+            }
+            
         }else{
-            write-warning 'No Relevant Commit Messages Found'
+            #Assume there isn't any tags and we aren't bundling this up for a release
+            Write-Warning 'No tags found. May not be a release. This function gets the change log between the previous tag and latest tag. If you are not using Tags this function will not work'
+            #Break here as nothing to action
+            return
+        }
+
+        $markDownText = $markDown -join "`n" 
+        if($markDownText){
+            return $markDownText
+        }
+
+    }
+    
+}
+function get-mfGitLatestVersion
+{
+
+    <#
+        .SYNOPSIS
+            Retrieves the latest Git tag version in semantic version format.
+            
+        .DESCRIPTION
+            This function queries Git for available tags and processes them as semantic versions.
+            If no tags are found, it initializes a new version starting from `1.0.0`.
+            If Git is unavailable or returns an error, a warning is displayed, and processing continues gracefully.
+            
+        ------------
+        .EXAMPLE
+            get-mfGitLatestVersion
+
+            #### DESCRIPTION
+            Queries the current Git repository for version tags, identifies the latest version,
+            and returns it in `major.minor.patch` format.
+
+            #### OUTPUT
+            1.2.3
+            (Example: If Git tags include `v1.0.0`, `v1.2.3`, `v1.1.0`, the function returns `1.2.3` as the latest.)
+
+        .EXAMPLE
+            get-mfGitLatestVersion -Verbose
+
+            #### DESCRIPTION
+            Runs the function with verbose output, providing detailed debugging information
+            about the Git command execution and version determination.
+
+            #### OUTPUT
+            ```
+            ===========Executing get-mfGitLatestVersion===========
+            Got VersionTags: v1.0.0 v1.2.3 v1.1.0
+            Latest Tag Version: 1.2.3
+            ```
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+        
+    }
+    
+    process{
+        try{
+            $versionTags = git tag --list 2>&1
+            if ($LASTEXITCODE -ne 0 -or $versionTags -match "fatal:") {
+                throw "Git Error: $versionTags"
+            }
+        }catch{
+            Write-Warning "Error with git command: $_"
+            $versionTags = $null
         }
         
+        write-verbose "Got VersionTags: $versionTags"
+        if($versionTags) {
+        $versions = $versionTags.ForEach{[semver]::new($_.TrimStart("v"))}
+            $latest = ($versions | Sort-Object -Descending | Select-Object -First 1)
+        Write-Verbose "Latest Tag Version: $($latest.tostring())"
+        } else {
+        Write-Verbose 'Generating new version from scratch at 1'
+            $latest = [semver]::new(1,0,0)
+        }
+        return $latest
+    }
+    
+}
+function get-mfLatestSemverFromBuildManifest
+{
+
+    <#
+        .SYNOPSIS
+            If you are manually building, and you have access to the \build folder, you can use this to get the next semver
+            
+        .DESCRIPTION
+            Detailed Description
+            
+        ------------
+        .EXAMPLE
+            verb-noun param1
+            
+            #### DESCRIPTION
+            Line by line of what this example will do
+            
+            
+            #### OUTPUT
+            Copy of the output of this line
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Root path of the module. Uses the current working directory by default
+        [Parameter()]
+        [alias('path')]
+        [string]$modulePath  = $(get-location).path,
+        [Parameter(DontShow)]
+        [string]$configFile = 'moduleForgeConfig.xml',
+        [Parameter(DontShow)]
+        [string]$moduleNameOverride
+
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+       
+
+        if(! $moduleNameOverride)
+        {
+            #Read the config file
+            write-verbose 'Importing config file'
+            $configPath = join-path -path $modulePath -ChildPath $configFile
+
+            if(!(test-path $configPath))
+            {
+                throw "Unable to find config file at: $configPath"
+            }
+            $config = import-clixml $configPath -erroraction stop
+            $moduleName = $config.moduleName
+        }else{
+            $moduleName = $moduleNameOverride
+        }
+        
+        
+        $buildFolder = Join-Path $modulePath 'build'
+        write-verbose "build folder: $buildFolder"
+        $moduleFolder = join-path $buildFolder $moduleName
+        $manifestFile = get-childItem -Path $moduleFolder -Filter "$moduleName.psd1"
+        if(!$manifestFile){
+            throw 'Manifest file not found in build folder'
+        }else{
+            write-verbose "Found manifest at $($manifestFile.FullName)"
+            $ManifestPath = $manifestFile.fullname
+        }
+
+
+        
+    }
+    
+    process{
+        write-verbose 'Try and import manifest as datafile'
+        try{
+            $manifest = Import-PowerShellDataFile -Path $ManifestPath
+        }catch{
+            throw 'Manifest was found but unable to import as PSDataFile'
+        }
+
+        write-verbose 'Get Module Version'
+        $moduleVersion = $manifest.ModuleVersion
+        if(!$moduleVersion){
+            throw 'Err: Unable to get moduleVersion'
+        }else{
+            write-verbose "Found Version: $moduleVersion"
+        }
+
+        write-verbose 'Check for PreRelease'
+        $preRelease = $manifest.PrivateData.PSData.Prerelease
+        if($preRelease)
+        {
+            write-verbose "Found Prerelease tag: $($preRelease)"
+            $versionString = "$($moduleVersion)-$($preRelease)"
+        }else{
+            write-verbose 'No Prerelease was found'
+            $versionString = $moduleVersion
+        }
+
+        write-verbose 'Attempt to make semver from string'
+        try{
+            [semver]::new($versionString)
+        }catch{
+            throw "Err: Could not convert $versionString to semver object"
+        }
     }
     
 }
@@ -1510,19 +1814,6 @@ function get-mfNextSemver
 
     .NOTES
         Author: Adrian Andersson
-
-        Changelog:
-
-            2024-08-10 - AA
-                - First attempt at incrementing the Semver
-
-            2024-08-24 - AA
-                - Have discovered that PSGallery only supports SemVer v1. So need to remove the prerelese Version
-                - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
-                    - I.e. 1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
-
-            2024-08-26 - AA
-                - Added functionality to be able to drop pre-release tag
     #>
 
     [CmdletBinding(DefaultParameterSetName='default')]
@@ -1705,12 +1996,6 @@ function new-mfProject
         .NOTES
             Author: Adrian Andersson
             
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    
     #>
 
     [CmdletBinding()]
@@ -1869,12 +2154,6 @@ function register-mfLocalPsResourceRepository
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Created function to register repository
                     
     #>
 
@@ -1974,13 +2253,6 @@ function remove-mfLocalPsResourceRepository
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Created function to clean-up repository
-                    
     #>
 
     [CmdletBinding()]
@@ -2079,13 +2351,6 @@ function update-mfProject
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    
     #>
 
     [CmdletBinding()]
@@ -2249,6 +2514,173 @@ function update-mfProject
         }
     }
 }
+function write-mfModuleDocs
+{
+
+    <#
+        .SYNOPSIS
+            Generates and updates function documentation using PlatyPS, and creates an index for module functions.
+
+        .DESCRIPTION
+            This function automates documentation generation based on module functions, leveraging PlatyPS to create and update Markdown help files.
+            It also builds an `index.md` file for organizing documentation, making it easier to integrate with GitHub Pages or other documentation platforms.
+            Additionally, if specified, it includes a changelog based on Git commits.
+
+        .EXAMPLE
+            write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
+
+            #### DESCRIPTION
+            Builds documentation for `MyCustomModule` and includes a full Git-based changelog (`changeLog.md`) alongside function help files.
+
+        .EXAMPLE
+            write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
+
+            #### DESCRIPTION
+            Generates function documentation without updating `index.md`.
+
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #The root path where documentation should be stored. Defaults to the current directory.
+        [Parameter()]
+        [string]$Path = $(get-item .).fullname,
+        #The name of the PowerShell module for which documentation should be generated.
+        [Parameter(Mandatory)]
+        [alias('module')]
+        [ValidateScript({ Get-Module -Name $_ -ErrorAction SilentlyContinue })]
+        [string]$ModuleName,
+        #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
+        [Parameter()]
+        [alias('docsPath')]
+        [string]$docsFolder = 'docs',
+        #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
+        [Parameter()]
+        [alias('functionsPath')]
+        [string]$functionsFolder = 'functions',
+        #If specified, retrieves and includes a Markdown changelog based on Git commit history.
+        [Parameter()]
+        [switch]$includeChangeLog,
+        #If specified, skips creating or updating the `index.md` file.
+        [Parameter()]
+        [switch]$skipIndex
+        
+        
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        write-verbose "In path $path"
+        $DocsFullPath = join-path -Path $Path -ChildPath $docsFolder
+        if(!(test-path $DocsFullPath))
+        {
+            write-verbose 'Need to make docs folder as it does not exist'
+            New-Item -ItemType Directory -Path $DocsFullPath
+        }
+
+        $platyPs = (get-module -Name PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
+        if($platyPs)
+        {
+            write-verbose "Build Function Documentation with PlatyPS Version $($platyPs.version)"
+        }else{
+            throw "This function relies on module PlatyPS. Please install it from the PSGallery"
+        }
+
+        $module = (get-module -Name $ModuleName|Sort-Object -Property version -Descending|select-object -first 1)
+        if($module)
+        {
+            write-verbose "Build Function Documentation for Module $ModuleName - version: $($module.version)"
+        }else{
+            throw "Module is not pre-loaded. Please import the module first"
+        }
+
+        $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $functionsFolder
+        if(!(test-path $functionsFullPath))
+        {
+            write-verbose 'Need to make functions folder as it does not exist'
+            New-Item -ItemType Directory -Path $functionsFullPath
+        }else{
+            write-verbose 'Recreating Functions Folder'
+            try{
+                remove-item $functionsFullPath -ErrorAction Stop -Force -Recurse
+            }catch{
+                throw 'Error cleaning up existing functions folder'
+            }
+            New-Item -ItemType Directory -Path $functionsFullPath
+        }
+
+        $customFolderSelect = @(
+            'name'
+            'basename'
+            @{
+                name = 'baseFolder'
+                expression = {$($_.Directory.FullName.replace($DocsFullPath,''))}
+            }
+            @{
+                name = 'leaf'
+                expression = {$(split-path -path $_.Directory.FullName -leaf)}
+            }
+            @{
+                name = 'relLink'
+                expression = {("./$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))/$($_.name)").replace('//','/')}
+            }
+        )
+
+        
+    }
+    
+    process{
+        write-verbose 'Create markdown help from module help'
+        New-MarkdownHelp -Module $module.Name -Force -OutputFolder $functionsFullPath
+
+        if($includeChangeLog)
+        {
+            write-verbose 'Creating releaseNotes file'
+            $changeLog = get-mfGitChangeLog -all
+            write-verbose "ChangeLog: `n$($changeLog)"
+            if($changeLog)
+            {
+                $changeLogPath = Join-Path $DocsFullPath -ChildPath 'changeLog.md'
+                $changeLog | Out-File -FilePath $changeLogPath -Force 
+            }else{
+                write-warning 'changeLog notes were not captured as none existed, or something went wrong'
+            }
+        }
+
+        if($skipIndex){
+            Write-Verbose 'Skipping Index File'
+        }else{
+            $indexContent = [System.Collections.Generic.List[string]]::new()
+            $indexContent.add("# Documentation Index`n")
+            $folderContent = Get-ChildItem -Path  $DocsFullPath -Filter '*.md' -Recurse|Select-Object $customFolderSelect
+            $folderGroup = $folderContent|Group-Object -Property 'leaf'
+            ($folderGroup.where{$_.'name' -eq $docsFolder}.group).foreach{
+                if($_.'basename' -ne 'index')
+                {
+                    $indexContent.add("- [$($_.baseName)]($($_.relLink))")
+                }
+    
+            }
+            $folderGroup.where{$_.'name' -ne $docsFolder}.forEach{
+                $indexContent.add("`n## $($_.name)`n")
+                $_.group.foreach{
+                    $indexContent.add("- [$($_.baseName)]($($_.relLink))")
+                }
+            }
+            write-verbose 'Create Index File'
+            $indexPath = Join-Path $DocsFullPath -ChildPath 'index.md'
+            $indexContent -join "`n"|out-file $indexPath -Force
+        }
+        
+    }
+    
+}
 function add-mfFilesAndFolders
 {
 
@@ -2266,11 +2698,6 @@ function add-mfFilesAndFolders
             
             
             Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    - Tried to make Operating Agnostic by using join-path
-                    
     #>
 
     [CmdletBinding()]
