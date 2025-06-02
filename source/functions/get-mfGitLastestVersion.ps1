@@ -56,7 +56,6 @@ function get-mfGitLatestVersion
     
     process{
         try{
-            #$versionTags = gittt tag --list 2>&1
             $versionTags = git tag --list 2>&1
             if ($LASTEXITCODE -ne 0 -or $versionTags -match "fatal:") {
                 throw "Git Error: $versionTags"
