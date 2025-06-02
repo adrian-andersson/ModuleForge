@@ -1,6 +1,6 @@
 ---
 external help file: ModuleForge-help.xml
-Module Name: moduleforge
+Module Name: ModuleForge
 online version:
 schema: 2.0.0
 ---
@@ -54,9 +54,8 @@ The function will update the module name and description in the module project c
 
 ## PARAMETERS
 
-### -companyName
-Company Name.
-If you are building this module for your organisation, this is where it goes
+### -ModuleName
+The name of your module
 
 ```yaml
 Type: String
@@ -64,37 +63,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 5
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -configFile
-{{ Fill configFile Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 15
-Default value: ModuleForgeConfig.xml
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -DefaultCommandPrefix
-{{ Fill DefaultCommandPrefix Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 12
+Position: 1
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -111,52 +80,6 @@ Aliases:
 
 Required: False
 Position: 2
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ExternalModuleDependencies
-Modules that must be imported into the global environment prior to importing this module
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 11
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -iconUri
-A URL to an icon representing this module.
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 8
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -licenseUri
-URI to use for your projects license.
-Will try and use the license file if a projectUri is found
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 9
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -194,8 +117,9 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ModuleName
-The name of your module
+### -companyName
+Company Name.
+If you are building this module for your organisation, this is where it goes
 
 ```yaml
 Type: String
@@ -203,24 +127,8 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 1
+Position: 5
 Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -modulePath
-Root path of the module.
-Uses the current working directory by default
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 14
-Default value: $(get-location).path
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -236,36 +144,6 @@ Aliases:
 
 Required: False
 Position: 6
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -PrivateData
-{{ Fill PrivateData Description }}
-
-```yaml
-Type: Object[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 13
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -287,6 +165,37 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -iconUri
+A URL to an icon representing this module.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 8
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -licenseUri
+URI to use for your projects license.
+Will try and use the license file if a projectUri is found
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 9
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -RequiredModules
 Modules that must be imported into the global environment prior to importing this module
 
@@ -302,6 +211,97 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -ExternalModuleDependencies
+Modules that must be imported into the global environment prior to importing this module
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 11
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DefaultCommandPrefix
+{{ Fill DefaultCommandPrefix Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 12
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -PrivateData
+{{ Fill PrivateData Description }}
+
+```yaml
+Type: Object[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 13
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -modulePath
+Root path of the module.
+Uses the current working directory by default
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 14
+Default value: $(get-location).path
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -configFile
+{{ Fill configFile Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 15
+Default value: ModuleForgeConfig.xml
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -311,11 +311,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Author: Adrian Andersson
-
-
-Changelog:
-
-    2024-07-22 - AA
-        - Refactored from Bartender
 
 ## RELATED LINKS

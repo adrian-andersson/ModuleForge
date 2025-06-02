@@ -1,0 +1,164 @@
+---
+external help file: ModuleForge-help.xml
+Module Name: ModuleForge
+online version:
+schema: 2.0.0
+---
+
+# write-mfModuleDocs
+
+## SYNOPSIS
+Generates and updates function documentation using PlatyPS, and creates an index for module functions.
+
+## SYNTAX
+
+```
+write-mfModuleDocs [[-Path] <String>] [-ModuleName] <String> [[-docsFolder] <String>]
+ [[-functionsFolder] <String>] [-includeChangeLog] [-skipIndex] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
+```
+
+## DESCRIPTION
+This function automates documentation generation based on module functions, leveraging PlatyPS to create and update Markdown help files.
+It also builds an \`index.md\` file for organizing documentation, making it easier to integrate with GitHub Pages or other documentation platforms.
+Additionally, if specified, it includes a changelog based on Git commits.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
+```
+
+#### DESCRIPTION
+Builds documentation for \`MyCustomModule\` and includes a full Git-based changelog (\`changeLog.md\`) alongside function help files.
+
+### EXAMPLE 2
+```
+write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
+```
+
+#### DESCRIPTION
+Generates function documentation without updating \`index.md\`.
+
+## PARAMETERS
+
+### -Path
+The root path where documentation should be stored.
+Defaults to the current directory.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: $(get-item .).fullname
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ModuleName
+The name of the PowerShell module for which documentation should be generated.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: module
+
+Required: True
+Position: 2
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -docsFolder
+Specifies the subfolder within \`docsFolder\` where function-specific documentation should be stored.
+Defaults to \`functions\`.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: docsPath
+
+Required: False
+Position: 3
+Default value: Docs
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -functionsFolder
+Specifies the subfolder within \`docsFolder\` where function-specific documentation should be stored.
+Defaults to \`functions\`.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: functionsPath
+
+Required: False
+Position: 4
+Default value: Functions
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -includeChangeLog
+If specified, retrieves and includes a Markdown changelog based on Git commit history.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -skipIndex
+If specified, skips creating or updating the \`index.md\` file.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+## NOTES
+Author: Adrian Andersson
+
+## RELATED LINKS

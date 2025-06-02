@@ -1,6 +1,6 @@
 ---
 external help file: ModuleForge-help.xml
-Module Name: moduleforge
+Module Name: ModuleForge
 online version:
 schema: 2.0.0
 ---
@@ -44,47 +44,16 @@ It will also set up the specified metadata and dependencies.
 
 ## PARAMETERS
 
-### -companyName
-Company Name.
-If you are building this module for your organisation, this is where it goes
+### -ModuleName
+The name of your module
 
 ```yaml
 Type: String
 Parameter Sets: (All)
 Aliases:
 
-Required: False
-Position: 5
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -configFile
-{{ Fill configFile Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 11
-Default value: ModuleForgeConfig.xml
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -DefaultCommandPrefix
-{{ Fill DefaultCommandPrefix Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 14
+Required: True
+Position: 1
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -101,52 +70,6 @@ Aliases:
 
 Required: True
 Position: 2
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ExternalModuleDependencies
-Modules that must be imported into the global environment prior to importing this module
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 13
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -iconUri
-A URL to an icon representing this module.
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 9
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -licenseUri
-URI to use for your projects license.
-Will try and use the license file if a projectUri is found
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 10
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -184,16 +107,33 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ModuleName
-The name of your module
+### -companyName
+Company Name.
+If you are building this module for your organisation, this is where it goes
 
 ```yaml
 Type: String
 Parameter Sets: (All)
 Aliases:
 
-Required: True
-Position: 1
+Required: False
+Position: 5
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -moduleTags
+Module Tags.
+Used to help discoverability and compatibility in package repositories
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 6
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -215,9 +155,85 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -moduleTags
-Module Tags.
-Used to help discoverability and compatibility in package repositories
+### -projectUri
+Project URI.
+Will try and read from Git if your using a git repository.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 8
+Default value: $(try{git config remote.origin.url}catch{$null})
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -iconUri
+A URL to an icon representing this module.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 9
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -licenseUri
+URI to use for your projects license.
+Will try and use the license file if a projectUri is found
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 10
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -configFile
+{{ Fill configFile Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 11
+Default value: ModuleForgeConfig.xml
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RequiredModules
+Modules that must be imported into the global environment prior to importing this module
+
+```yaml
+Type: Object[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 12
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ExternalModuleDependencies
+Modules that must be imported into the global environment prior to importing this module
 
 ```yaml
 Type: String[]
@@ -225,7 +241,22 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 6
+Position: 13
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DefaultCommandPrefix
+{{ Fill DefaultCommandPrefix Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 14
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -261,37 +292,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -projectUri
-Project URI.
-Will try and read from Git if your using a git repository.
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 8
-Default value: $(try{git config remote.origin.url}catch{$null})
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -RequiredModules
-Modules that must be imported into the global environment prior to importing this module
-
-```yaml
-Type: Object[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 12
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -301,11 +301,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Author: Adrian Andersson
-
-
-Changelog:
-
-    2024-07-22 - AA
-        - Refactored from Bartender
 
 ## RELATED LINKS

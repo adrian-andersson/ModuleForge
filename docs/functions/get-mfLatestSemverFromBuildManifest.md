@@ -5,54 +5,57 @@ online version:
 schema: 2.0.0
 ---
 
-# register-mfLocalPsResourceRepository
+# get-mfLatestSemverFromBuildManifest
 
 ## SYNOPSIS
-Add a local file-based PowerShell repository into the systems temp location
+If you are manually building, and you have access to the \build folder, you can use this to get the next semver
 
 ## SYNTAX
 
 ```
-register-mfLocalPsResourceRepository [[-repositoryName] <String>] [[-path] <String>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+get-mfLatestSemverFromBuildManifest [[-modulePath] <String>] [[-configFile] <String>]
+ [[-moduleNameOverride] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-Allows you to test psresourceGet, as well as directly manipulate the nuget package,
-for example, to add git data to the nuspec
+Detailed Description
+
+------------
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-register-mfLocalPsResourceRepository            
-#### DESCRIPTION
-Create a powershell file repository using default values.
+verb-noun param1
 ```
 
-Repository will be called: LocalTestRepository
-Path will be where-ever \[System.IO.Path\]::GetTempPath() points
+#### DESCRIPTION
+Line by line of what this example will do
+
+
+#### OUTPUT
+Copy of the output of this line
 
 ## PARAMETERS
 
-### -repositoryName
-Name of the repository
+### -modulePath
+Root path of the module.
+Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: path
 
 Required: False
 Position: 1
-Default value: LocalTestRepository
+Default value: $(get-location).path
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
-Root path of the module.
-Uses Temp Path by default
+### -configFile
+{{ Fill configFile Description }}
 
 ```yaml
 Type: String
@@ -61,7 +64,22 @@ Aliases:
 
 Required: False
 Position: 2
-Default value: [System.IO.Path]::GetTempPath()
+Default value: ModuleForgeConfig.xml
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -moduleNameOverride
+{{ Fill moduleNameOverride Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

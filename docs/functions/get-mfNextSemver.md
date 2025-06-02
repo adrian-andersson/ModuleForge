@@ -1,6 +1,6 @@
 ---
 external help file: ModuleForge-help.xml
-Module Name: moduleforge
+Module Name: ModuleForge
 online version:
 schema: 2.0.0
 ---
@@ -65,6 +65,21 @@ The output will be '3.0.0'.
 
 ## PARAMETERS
 
+### -version
+Semver Version
+
+```yaml
+Type: SemanticVersion
+Parameter Sets: default, preRelease
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -increment
 What are we incrementing
 
@@ -80,12 +95,12 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -initialPreRelease
-Is this the initial prerelease
+### -prerelease
+Is this a prerelease
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Initial
+Parameter Sets: preRelease
 Aliases:
 
 Required: False
@@ -95,12 +110,12 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -prerelease
+### -stableRelease
 Is this a prerelease
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: preRelease
+Parameter Sets: default
 Aliases:
 
 Required: False
@@ -126,6 +141,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -initialPreRelease
+Is this the initial prerelease
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Initial
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
@@ -141,36 +171,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -stableRelease
-Is this a prerelease
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: default
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -version
-Semver Version
-
-```yaml
-Type: SemanticVersion
-Parameter Sets: default, preRelease
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -180,20 +180,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Author: Adrian Andersson
-
-Changelog:
-
-    2024-08-10 - AA
-        - First attempt at incrementing the Semver
-
-    2024-08-24 - AA
-        - Have discovered that PSGallery only supports SemVer v1.
-So need to remove the prerelese Version
-        - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
-            - I.e.
-1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
-
-    2024-08-26 - AA
-        - Added functionality to be able to drop pre-release tag
 
 ## RELATED LINKS

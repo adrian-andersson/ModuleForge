@@ -1,6 +1,6 @@
 ---
 external help file: ModuleForge-help.xml
-Module Name: moduleforge
+Module Name: ModuleForge
 online version:
 schema: 2.0.0
 ---
@@ -48,36 +48,6 @@ get-mfFolderItems '.\source\functions\example.ps1'
 
 ## PARAMETERS
 
-### -copy
-{{ Fill copy Description }}
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: Copy
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -destination
-{{ Fill destination Description }}
-
-```yaml
-Type: String
-Parameter Sets: Copy
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -path
 Path to start in
 
@@ -90,6 +60,51 @@ Required: True
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -psScriptsOnly
+Flag to copy scripts only
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -destination
+Flag to copy scripts only
+
+```yaml
+Type: String
+Parameter Sets: Copy
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -copy
+Flag to actually copy files and not just output like a fancy Get-ChildItem
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Copy
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -108,21 +123,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -psScriptsOnly
-{{ Fill psScriptsOnly Description }}
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -132,15 +132,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Author: Adrian Andersson
-
-
-Changelog:
-
-    2024-07-22 - AA
-        - Refactored from Bartender
-        - Made much faster and more modern
-
-    2024-08-23 - AA
-        - Added the .bt files as exclusions to help with Bartender backwards compatibility
 
 ## RELATED LINKS

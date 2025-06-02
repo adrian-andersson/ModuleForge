@@ -1,6 +1,6 @@
 ---
 external help file: ModuleForge-help.xml
-Module Name: moduleforge
+Module Name: ModuleForge
 online version:
 schema: 2.0.0
 ---
@@ -29,6 +29,21 @@ remove-mfLocalPsResourceRepository
 ```
 
 ## PARAMETERS
+
+### -repositoryName
+Name of the repository
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: LocalTestRepository
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ### -path
 Root path of the module.
@@ -61,21 +76,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -repositoryName
-Name of the repository
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
-Default value: LocalTestRepository
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -85,11 +85,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Author: Adrian Andersson
-
-
-Changelog:
-
-    2024-07-26 - AA
-        - Created function to clean-up repository
 
 ## RELATED LINKS

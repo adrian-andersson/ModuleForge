@@ -1,6 +1,6 @@
 ---
 external help file: ModuleForge-help.xml
-Module Name: moduleforge
+Module Name: ModuleForge
 online version:
 schema: 2.0.0
 ---
@@ -37,6 +37,22 @@ Show files and any dependencies
 
 ## PARAMETERS
 
+### -referenceData
+What Reference Data are we looking at.
+See function example for how to retrieve
+
+```yaml
+Type: Object[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -outputType
 {{ Fill outputType Description }}
 
@@ -67,22 +83,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -referenceData
-What Reference Data are we looking at.
-See function example for how to retrieve
-
-```yaml
-Type: Object[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 1
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -92,12 +92,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Author: Adrian Andersson
-
-
-Changelog:
-
-2024-08-11 - AA
-    - Initial script
-    - Bit of an experimental function this one
 
 ## RELATED LINKS
