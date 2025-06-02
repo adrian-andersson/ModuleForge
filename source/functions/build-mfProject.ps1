@@ -136,7 +136,7 @@ function build-mfProject
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
        
         #Better Order
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
+        [array]$folders = @('enums','validationClasses','classes','functions','private')
 
 
         $sourceFolder = join-path -path $modulePath -childPath 'source'
