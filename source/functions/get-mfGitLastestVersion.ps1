@@ -35,7 +35,8 @@ function get-mfGitLatestVersion
             Got VersionTags: v1.0.0 v1.2.3 v1.1.0
             Latest Tag Version: 1.2.3
             ```
-            
+        .OUTPUTS
+            [semver] - Returns a Semantec Version object
             
         .NOTES
             Author: Adrian Andersson

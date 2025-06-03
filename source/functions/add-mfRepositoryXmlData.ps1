@@ -20,9 +20,11 @@ function add-mfRepositoryXmlData
             #### DESCRIPTION
             Unpack module.1.2.3-beta.4.nupkg to a temp location, open the NUSPEC xml and append a repository element with URL, Type, Branch and Commit attributes, repack the nupkg
             
+        .INPUTS
+            [String] - This function accepts string values for `repositoryUri` and `NugetPackagePath` via pipeline input by property name.
             
         .NOTES
-            Author: Adrian Andersson
+        Author: Adrian Andersson
     #>
 
     [CmdletBinding()]

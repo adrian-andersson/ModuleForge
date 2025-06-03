@@ -20,7 +20,7 @@ function update-mfProject
             #### OUTPUT
             The function will update the specified parameters in the module project configuration file.
             
-         .EXAMPLE
+        .EXAMPLE
             update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module"
 
             #### DESCRIPTION
@@ -54,7 +54,7 @@ function update-mfProject
         #Module Tags. Used to help discoverability and compatibility in package repositories
         [Parameter()]
         [String[]]$moduleTags,
-        #Root path of the module. Uses the current working directory by default
+        #Source Code Repository to use, i.e. your repositories github/azure devops uri
         [Parameter()]
         [string]$projectUri,
         # A URL to an icon representing this module.
@@ -69,12 +69,17 @@ function update-mfProject
         #Modules that must be imported into the global environment prior to importing this module
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
+        #If you are specifying a Default Command Prefix via your manifest, this will update that prefix
         [Parameter()]
         [String[]]$DefaultCommandPrefix,
+        #If you have any additional Private Data you want to add to your module manifest, add it here
         [Parameter()]
         [object[]]$PrivateData,
-         #Root path of the module. Uses the current working directory by default
-        [string]$modulePath = $(get-location).path,
+        #Root path of the module. Uses the current working directory by default
+        [Parameter()]
+        [Alias('modulePath')]
+        [string]$path = $(get-location).path,
+        #Module Config File
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml'
 
@@ -86,17 +91,17 @@ function update-mfProject
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         write-verbose 'Testing module path'
-        $moduleTest = get-item $modulePath
+        $moduleTest = get-item $path
         if(!$moduleTest){
-            throw "Unable to read from $modulePath"
+            throw "Unable to read from $path"
         }
 
-        $modulePath = $moduleTest.FullName
-        write-verbose "Building from: $modulePath"
+        $path = $moduleTest.FullName
+        write-verbose "update module config in: $path"
 
         #Read the config file
         write-verbose 'Importing config file'
-        $configPath = join-path -path $modulePath -ChildPath $configFile
+        $configPath = join-path -path $path -ChildPath $configFile
 
         if(!(test-path $configPath))
         {

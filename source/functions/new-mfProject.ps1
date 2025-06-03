@@ -22,8 +22,6 @@ function new-mfProject
             The function will create the directory structure and essential files for the new module "MyModule" in the current working directory. 
             It will also set up the specified metadata and dependencies.
             
-            
-            
         .NOTES
             Author: Adrian Andersson
             
@@ -50,7 +48,8 @@ function new-mfProject
         [Parameter()]
         [String[]]$moduleTags,
         #Root path of the module. Uses the current working directory by default
-        [string]$modulePath = $(get-location).path,
+        [alias('modulePath')]
+        [string]$path = $(get-location).path,
         #Project URI. Will try and read from Git if your using a git repository.
         [Parameter()]
         [string]$projectUri = $(try{git config remote.origin.url}catch{$null}),
@@ -82,23 +81,23 @@ function new-mfProject
 
 
         #I'm not sure why I had this in here. Cannot remember.
-        if($modulePath -like '*\' -or $modulePath -like '*/' )
+        if($path -like '*\' -or $path -like '*/' )
         {
             Write-Verbose 'Superfluous \ or / character found at end of modulePath, removing'
-            $modulePath = $modulePath.Substring(0,$($modulePath.Length-1))
-            Write-Verbose "New path = $modulePath"
+            $path = $path.Substring(0,$($path.Length-1))
+            Write-Verbose "New path = $path"
         }
 
-        $configPath = join-path -path $modulePath -childpath $configFile
+        $configPath = join-path -path $path -childpath $configFile
 
     }
     
     process{
 
         write-verbose 'Validating Module Path'
-        if(!(test-path $modulePath))
+        if(!(test-path $path))
         {
-            throw "ModulePath: $modulePath not found"
+            throw "ModulePath: $path not found"
         }
 
         write-verbose 'Checking for Existing Config'
@@ -109,14 +108,14 @@ function new-mfProject
 
 
         write-verbose 'Create Folder Scaffold'
-        add-mfFilesAndFolders -moduleRoot $modulePath
+        add-mfFilesAndFolders -moduleRoot $path
 
        
         <#
         if($projectUri -and !$licenseUri)
         {
             write-verbose 'Auto-checking for license'
-            if(test-path $(join-path -path $modulePath -childPath 'LICENSE'))
+            if(test-path $(join-path -path $path -childPath 'LICENSE'))
             {
                 $licenseUri = "$projectUri\LICENSE"
             }

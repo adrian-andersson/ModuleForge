@@ -22,6 +22,9 @@ function write-mfModuleDocs
             #### DESCRIPTION
             Generates function documentation without updating `index.md`.
 
+        .INPUTS
+            [string] - Path is accepted as pipeline input or via direct assignment. It has a defaulf value and does not need to be set
+
         .NOTES
             Author: Adrian Andersson
             
@@ -30,7 +33,8 @@ function write-mfModuleDocs
     [CmdletBinding()]
     PARAM(
         #The root path where documentation should be stored. Defaults to the current directory.
-        [Parameter()]
+        [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [alias('modulePath')]
         [string]$Path = $(get-item .).fullname,
         #The name of the PowerShell module for which documentation should be generated.
         [Parameter(Mandatory)]
@@ -51,22 +55,12 @@ function write-mfModuleDocs
         #If specified, skips creating or updating the `index.md` file.
         [Parameter()]
         [switch]$skipIndex
-        
-        
     )
     begin{
         #Return the script name when running verbose, makes it tidier
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
-        write-verbose "In path $path"
-        $DocsFullPath = join-path -Path $Path -ChildPath $docsFolder
-        if(!(test-path $DocsFullPath))
-        {
-            write-verbose 'Need to make docs folder as it does not exist'
-            New-Item -ItemType Directory -Path $DocsFullPath
-        }
 
         $platyPs = (get-module -Name PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
         if($platyPs)
@@ -82,21 +76,6 @@ function write-mfModuleDocs
             write-verbose "Build Function Documentation for Module $ModuleName - version: $($module.version)"
         }else{
             throw "Module is not pre-loaded. Please import the module first"
-        }
-
-        $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $functionsFolder
-        if(!(test-path $functionsFullPath))
-        {
-            write-verbose 'Need to make functions folder as it does not exist'
-            New-Item -ItemType Directory -Path $functionsFullPath
-        }else{
-            write-verbose 'Recreating Functions Folder'
-            try{
-                remove-item $functionsFullPath -ErrorAction Stop -Force -Recurse
-            }catch{
-                throw 'Error cleaning up existing functions folder'
-            }
-            New-Item -ItemType Directory -Path $functionsFullPath
         }
 
         $customFolderSelect = @(
@@ -120,6 +99,31 @@ function write-mfModuleDocs
     }
     
     process{
+        #Checks and parses
+        write-verbose "In path $path"
+        $DocsFullPath = join-path -Path $Path -ChildPath $docsFolder
+        if(!(test-path $DocsFullPath))
+        {
+            write-verbose 'Need to make docs folder as it does not exist'
+            New-Item -ItemType Directory -Path $DocsFullPath
+        }
+
+        $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $functionsFolder
+        if(!(test-path $functionsFullPath))
+        {
+            write-verbose 'Need to make functions folder as it does not exist'
+            New-Item -ItemType Directory -Path $functionsFullPath
+        }else{
+            write-verbose 'Recreating Functions Folder'
+            try{
+                remove-item $functionsFullPath -ErrorAction Stop -Force -Recurse
+            }catch{
+                throw 'Error cleaning up existing functions folder'
+            }
+            New-Item -ItemType Directory -Path $functionsFullPath
+        }
+        
+        #Actual Process
         write-verbose 'Create markdown help from module help'
         New-MarkdownHelp -Module $module.Name -Force -OutputFolder $functionsFullPath
 
