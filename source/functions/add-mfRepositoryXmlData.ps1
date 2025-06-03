@@ -22,9 +22,9 @@ function add-mfRepositoryXmlData
             
         .INPUTS
             [String] - This function accepts string values for `repositoryUri` and `NugetPackagePath` via pipeline input by property name.
-            
+
         .NOTES
-        Author: Adrian Andersson
+            Author: Adrian Andersson
     #>
 
     [CmdletBinding()]
