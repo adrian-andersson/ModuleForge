@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.1.0
-	BuildDate: 2025-06-03T14:09:17
+	BuildDate: 2025-06-03T16:51:33
 #>
 function add-mfGithubScaffold
 {
@@ -148,9 +148,9 @@ function add-mfRepositoryXmlData
             
         .INPUTS
             [String] - This function accepts string values for `repositoryUri` and `NugetPackagePath` via pipeline input by property name.
-            
+
         .NOTES
-        Author: Adrian Andersson
+            Author: Adrian Andersson
     #>
 
     [CmdletBinding()]
@@ -2682,6 +2682,10 @@ function write-mfModuleDocs
                 name = 'relLink'
                 expression = {("./$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))/$($_.name)").replace('//','/')}
             }
+            @{
+                name = 'subjectGroup'
+                expression = {("$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))").replace('//','/').trimStart('/')}
+            }
         )
 
         
@@ -2736,16 +2740,17 @@ function write-mfModuleDocs
             $indexContent = [System.Collections.Generic.List[string]]::new()
             $indexContent.add("# Documentation Index`n")
             $folderContent = Get-ChildItem -Path  $DocsFullPath -Filter '*.md' -Recurse|Select-Object $customFolderSelect
-            $folderGroup = $folderContent|Group-Object -Property 'leaf'
-            ($folderGroup.where{$_.'name' -eq $docsFolder}.group).foreach{
+            $folderGroup = $folderContent|Group-Object -Property 'subjectGroup'
+            ($folderGroup.where{$_.'name' -eq ''}.group).foreach{
                 if($_.'basename' -ne 'index')
                 {
                     $indexContent.add("- [$($_.baseName)]($($_.relLink))")
                 }
     
             }
-            $folderGroup.where{$_.'name' -ne $docsFolder}.forEach{
-                $indexContent.add("`n## $($_.name)`n")
+            $folderGroup.where{$_.'name' -ne ''}.forEach{
+
+                $indexContent.add("`n## $($_.'name')`n")
                 $_.group.foreach{
                     $indexContent.add("- [$($_.baseName)]($($_.relLink))")
                 }
