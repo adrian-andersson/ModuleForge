@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.1.0
-	BuildDate: 2025-06-03T16:51:33
+	BuildDate: 2025-06-04T01:19:07
 #>
 function add-mfGithubScaffold
 {
