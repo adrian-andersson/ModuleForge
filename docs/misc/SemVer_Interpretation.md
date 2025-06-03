@@ -9,7 +9,7 @@ A change to a function that is likely to break backwards compatibility and exist
 #### Major Change Examples
 
 - Changing a parameter to be mandatory
-- Changing a parameter name
+- Changing a parameter name without an alias
 - Breaking change to the output object
 - Rewrite or refactor
 
@@ -21,7 +21,7 @@ Introduction of a new function that does not significantly alter the result outp
 
 - Moving a block of code or subfunction into a separate function and calling that from the primary function
 - Creation of an entirely new function that does not alter the result output object or parameters of existing functions
-- Change to input validation of a parameter
+- Change to input validation of a parameter that may lead to unexpected circumstances
 
 ### Patch
 
@@ -46,7 +46,7 @@ Specifically these points:
 - The prerelease string may contain only ASCII alphanumerics [0-9A-Za-z-]. It is a best practice to begin the prerelease string with an alpha character, as it will be easier to identify that this is a prerelease version when scanning a list of packages.
 - prerelease string may only be specified when the ModuleVersion is 3 segments for Major.Minor.Build. This aligns with SemVer v1.0.0.
 
-As such, care must be taken to ensure that newer preRelease versions are not incorrectly ordered, and that we are adhereing to something that is compatible. For example:
+As such, care must be taken to ensure that newer preRelease versions are not incorrectly ordered, and that we are adhering to something that is compatible. For example:
 
 `1.0.0-prev2` will order more recently than than `1.0.0-prev10`, even though from a readability stand-point v2 is much lower than v10.
 
@@ -72,7 +72,19 @@ $versions|sort-object
 
 ```
 
- > Special Note o prerelease label casing: There is a small, obsucre bug in PSResourceGet (Issue:Status: #1787) that occurs if uppercase is used in prerelease tags. I would prefer to use upper-case pre as I think it looks a little better, but to avoid this bug, I will stick to lower-case labels, and recommend for custom labels that others do the same.
+Here is a table that helps demonstrate the results of the above:
+
+|version|Order|Should be|
+|-|-|-|
+|1.0.0-prev1|✅ 1st| 1st|
+|1.0.0-prev10|❌ 2nd|10th|
+|1.0.0-prev11|❌ 3rd|11th|
+|1.0.0-prev2|❌ 4th|2nd|
+|1.0.0-prev3|❌ 4th|3rd|
+
+
+
+ > Special Note on prerelease label casing: There is a small, obscure bug in PSResourceGet (Issue:Status: #1787) that occurs if uppercase is used in prerelease tags. I would prefer to use upper-case pre as I think it looks a little better, but to avoid this bug, I will stick to lower-case labels, and recommend for custom labels that others do the same.
 
 As such, in order to clearly identify correct versions whilst maintaining simplicity and compatibility with SEMVER v1 will be to use the following formatting:
 

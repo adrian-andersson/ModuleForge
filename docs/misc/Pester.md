@@ -2,7 +2,6 @@
 
 You should be trying to achieve the default pester code-coverage for all your functions, it will absolutely save you time, especially if your modules are being built with an orchestration tool like Github Actions.
 
-
 The process might look like this:
 
 1. Checkout the repository
@@ -14,9 +13,9 @@ The process might look like this:
 
 ## Some problems with testing modules
 
-You can in theory pester-test your module psm1 file. That would ensure all your related functions, classes and enums are all together, but then your effectively compiling the module first and testing later. Also, doing it this way also causes code-coverage problems with scoping. If you use pesters inModuleScope, you get complicated code coverage problems. And it's not very flexible. How do you know if the problem was in the dependent function or the main function?
+You can in theory pester-test your module psm1 file. That would ensure all your related functions, classes and enums are all together, but then you are effectively compiling the module first and testing later. Also, doing it this way also causes code-coverage problems with scoping. If you use Pester's inModuleScope, you get complicated code coverage problems. And it's not very flexible. How do you know if the problem was in the dependent function or the main function?
 
-A better way, and the way Pester was meant to work, would be to run Pester on the source/functions folder, but that also presents a scoping and dependency problem. For example, if you have function1 in functions/function1.ps1, and it relies on privatefunction2 in private/function2.ps1, you need to either Mock privatefunction2, or you need to reference it in your BeforeAll. That seems simple enough, but suppose you went hard on dependencies, you have lots of smaller functions and one big main function that calls all those little functions, dot sourcing them all could be complicated, and quickly get unmanigible for each test your writing.
+A better way, and the way Pester was meant to work, would be to run Pester on the source/functions folder, but that also presents a scoping and dependency problem. For example, if you have function1 in functions/function1.ps1, and it relies on privatefunction2 in private/function2.ps1, you need to either Mock privatefunction2, or you need to reference it in your BeforeAll. That seems simple enough, but suppose you went hard on dependencies, you have lots of smaller functions and one big main function that calls all those little functions, dot sourcing them all could be complicated, and quickly get unmanageable for each test your writing.
 
 I've solved this by adding a `get-mfDependencyTree` function to moduleForge, you can use it like this
 

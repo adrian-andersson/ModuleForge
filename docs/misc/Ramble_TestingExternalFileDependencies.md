@@ -4,13 +4,13 @@
 
 When you want to use Classes, Enums and custom Validator extensions in your PowerShell module, you need to be aware of the scoping concerns and problems that such objects bring. Essentially
 
-- Classes with Inheritence need to be loaded in the right order, a child class won't compile if it is loaded before it's parent
+- Classes with Inheritance need to be loaded in the right order, a child class won't compile if it is loaded before it's parent
 - Enums should just about in every scenario load first
 - All things need to be loaded and compiled correctly before your functions are parsed
-- Things that are not explicitely exported in the module manifest aren't going to be scoped to the terminal/session, and instead will only be scoped to the module
+- Things that are not explicitly exported in the module manifest aren't going to be scoped to the terminal/session, and instead will only be scoped to the module
 - There is no way to export anything other than functions and aliases, which means that effectively all your classes, enums, validators etc are forever going to be Module Scoped, unless you figure out a way to _break them out_, and there is no clean way to do so with a high level of confidence
 - Classes and Enums _probably should_ be scoped to the module anyway
-  - Unless your doing a Domain-Specific Language module, in which case it might make sense
+  - Unless you are doing a Domain-Specific Language module, in which case it might make sense
 
 To stop too much repeating, we will just refer to all classes, enums and validators as _special snowflakes_
 
@@ -50,4 +50,4 @@ Just some special notes on previous testing (Circa 2018) external files with DSC
 - Validators always get imported as nested modules
 - Put enums and classes at the top of the PSM1 root module
 - If you _really really_ want to make them available outside the module, load them in _scriptstoprocess_ instead
-- Probably avoid custom validators if your also exporting _DSC Resources_. I don't know how that would go
+- Probably avoid custom validators if you are also exporting _DSC Resources_. I don't know how that would go
