@@ -8,7 +8,7 @@ schema: 2.0.0
 # add-mfGithubScaffold
 
 ## SYNOPSIS
-Initialises a \`.GitHub\` scaffold in a PowerShell module.
+Initialises a \`.GitHub\` scaffold in a PowerShell module, including GH Actions workflows for pester testing and build and release
 
 ## SYNTAX
 
@@ -18,9 +18,16 @@ add-mfGithubScaffold [[-modulePath] <String>] [[-configFile] <String>] [[-github
 ```
 
 ## DESCRIPTION
-This function copies the \`.GitHub\` folder from a module's resource directory to a target module path.
-It maintains the directory structure and only overwrites existing files if the \`-Force\` switch is provided.
-This is useful for setting up GitHub workflows, PR templates, and other repository configurations.
+This function will create a '.github' folder in the moduleforge root (if one does not exist).
+It will create 2 github actions workflows, 1 for Pester testing, 1 for buildAndRelease
+It will create 1 Pull Request template.
+
+The buildAndRelease template will use Git Tags to mark versions.
+If you stick with this template you should refrain from
+using tags for other purposes.
+
+The purpose of these workflows and templates is to get you started, creating a quick and easy workflow scaffold. 
+Please feel free to change the workflows and template to your own needs and preferences.
 
 ## EXAMPLES
 

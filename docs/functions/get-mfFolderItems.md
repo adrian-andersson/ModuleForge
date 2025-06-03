@@ -8,7 +8,7 @@ schema: 2.0.0
 # get-mfFolderItems
 
 ## SYNOPSIS
-Get a list of files from a folder - whilst processing the .mfignore and .mforder files
+Retrieves a filtered list of files from a specified folder, processing \`.mfignore\` and \`.mforder\` rules.
 
 ## SYNTAX
 
@@ -24,42 +24,49 @@ get-mfFolderItems -path <String> [-psScriptsOnly] [-destination <String>] [-copy
 ```
 
 ## DESCRIPTION
-Get the files out of a folder.
-Adds a bit of smarts to it such as:
-- Ignore anything in the .mfignore file
-- Filter out anything that isn't a PS1 file if, with a switch
-- Ignore files with .test.ps1 - These are assumed to be pester files
-- Ignore files with .tests.ps1 - These are assumed to be pester files
-- Ignore files with .skip.ps1 - These are assumed to be skippable
+The \`get-mfFolderItems\` function scans a folder and applies filtering rules to return a curated list of files.
+It offers additional filtering logic, such as:
+- Ignoring entries specified in \`.mfignore\`.
+- Filtering out non-PS1 files using a switch (\`-psScriptsOnly\`).
+- Excluding test-related files (\`*.test.ps1\`, \`*.tests.ps1\`, \`*.skip.ps1\`).
+- Handling optional file copying (\`-destination\` and \`-copy\` parameters).
 
-
-
-
- Will always return a full path name
-
-------------
+The function ensures all returned paths are fully qualified.
+This function is primarily used to assist the get-mfFolderItemDetails as well as build-mfProject.
+The -copy switch is added to cleanly copy resources and binaries with build-mfProject
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-get-mfFolderItems '.\source\functions\example.ps1'
+get-mfFolderItems -path '.\source\functions' -psScriptsOnly
 ```
+
+#### DESCRIPTION
+Scans \`.\source\functions\`, retrieves only \`.ps1\` files, and excludes files matching \`.mfignore\` rules.
+
+### EXAMPLE 2
+```
+get-mfFolderItems -path '.\source\functions' -destination '.\build\functions' -copy
+```
+
+#### DESCRIPTION
+Scans \`.\source\functions\`, retrieves filtered files, and copies them to \`.\build\functions\`.
 
 ## PARAMETERS
 
 ### -path
-Path to start in
+Path to get items from
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: s
 
 Required: True
 Position: Named
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -94,7 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -copy
-Flag to actually copy files and not just output like a fancy Get-ChildItem
+Flag to actually copy files and not just output
 
 ```yaml
 Type: SwitchParameter
@@ -128,6 +135,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [String] - Accepts a folder path via parameter or pipeline (`ValueFromPipelineByPropertyName`).
+### OUTPUTS
+### [Object[]] - Returns an array of objects containing:
+###     - **Name** (`[String]`) - Name of the file.
+###     - **Path** (`[String]`) - Full file path.
+###     - **RelativePath** (`[String]`) - Path relative to the source folder.
+###     - **Folder** (`[String]`) - Name of the source folder.
+###     - **(Optional) newPath** (`[String]`) - Destination path if copying.
+###     - **(Optional) newFolder** (`[String]`) - Destination folder name if copying.
 ## OUTPUTS
 
 ## NOTES

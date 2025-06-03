@@ -26,10 +26,10 @@ It ensures the Git environment is correctly set up and handles errors if Git is 
 ### EXAMPLE 1
 ```
 get-mfGitChangeLog
-            
+        
 DESCRIPTION
 Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
-            
+        
 #### OUTPUT
 # Change Log
 Version: v1.0.0 --> v1.1.0
@@ -47,10 +47,10 @@ get-mfGitChangeLog -changeLogTypes @{
     'chore' = 'Chore and Pipeline work'
     'test' = 'Test Changes'
 }
-            
+        
 DESCRIPTION
 This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
-            
+        
 #### OUTPUT
 # Change Log
 Version: v1.0.0 --> v1.1.0
@@ -112,7 +112,7 @@ Default value: @{
             #'chore' = 'Chore and Pipeline work'
             #'test' = 'Testing'
         }
-Accept pipeline input: False
+Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
@@ -151,10 +151,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [hashtable] - Accepts changeLogTypes hashtable via parameter or pipeline
 ## OUTPUTS
 
+### [STRING] - Returns a Markdown Compatible string output that can be redirected to a file
 ## NOTES
 Author: Adrian Andersson
-Date: 2025-05-14
 
 ## RELATED LINKS

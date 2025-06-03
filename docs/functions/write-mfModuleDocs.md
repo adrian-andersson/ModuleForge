@@ -50,12 +50,12 @@ Defaults to the current directory.
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: modulePath
 
 Required: False
 Position: 1
 Default value: $(get-item .).fullname
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -156,6 +156,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [string] - Path is accepted as pipeline input or via direct assignment. It has a defaulf value and does not need to be set
 ## OUTPUTS
 
 ## NOTES

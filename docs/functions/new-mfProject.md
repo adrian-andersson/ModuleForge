@@ -14,7 +14,7 @@ Capture some basic parameters, and create the scaffold file structure
 
 ```
 new-mfProject [-ModuleName] <String> [-description] <String> [[-minimumPsVersion] <Version>]
- [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-modulePath] <String>]
+ [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-path] <String>]
  [[-projectUri] <String>] [[-iconUri] <String>] [[-licenseUri] <String>] [[-configFile] <String>]
  [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String>]
  [[-PrivateData] <Object[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
@@ -139,14 +139,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -modulePath
+### -path
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: modulePath
 
 Required: False
 Position: 7

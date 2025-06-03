@@ -1,10 +1,9 @@
 # Documentation Index
 
-- [Pester](./Pester.md)
-- [Ramble_TestingExternalFileDependencies](./Ramble_TestingExternalFileDependencies.md)
-- [RequiredModules_vs_ExternalModuleDependencies](./RequiredModules_vs_ExternalModuleDependencies.md)
-- [SemVer_Interpretation](./SemVer_Interpretation.md)
-- [tutorial](./tutorial.md)
+
+## azureDevOps
+
+- [tutorial](./tutorials/azureDevOps/tutorial.md)
 
 ## functions
 
@@ -23,3 +22,14 @@
 - [remove-mfLocalPsResourceRepository](./functions/remove-mfLocalPsResourceRepository.md)
 - [update-mfProject](./functions/update-mfProject.md)
 - [write-mfModuleDocs](./functions/write-mfModuleDocs.md)
+
+## github
+
+- [tutorial](./tutorials/github/tutorial.md)
+
+## misc
+
+- [Pester](./misc/Pester.md)
+- [Ramble_TestingExternalFileDependencies](./misc/Ramble_TestingExternalFileDependencies.md)
+- [RequiredModules_vs_ExternalModuleDependencies](./misc/RequiredModules_vs_ExternalModuleDependencies.md)
+- [SemVer_Interpretation](./misc/SemVer_Interpretation.md)

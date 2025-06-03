@@ -17,7 +17,7 @@ update-mfProject [[-ModuleName] <String>] [[-description] <String>] [[-minimumPs
  [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-projectUri] <String>]
  [[-iconUri] <String>] [[-licenseUri] <String>] [[-RequiredModules] <Object[]>]
  [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String[]>] [[-PrivateData] <Object[]>]
- [[-modulePath] <String>] [[-configFile] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [[-path] <String>] [[-configFile] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -150,8 +150,8 @@ Accept wildcard characters: False
 ```
 
 ### -projectUri
-Root path of the module.
-Uses the current working directory by default
+Source Code Repository to use, i.e.
+your repositories github/azure devops uri
 
 ```yaml
 Type: String
@@ -227,7 +227,7 @@ Accept wildcard characters: False
 ```
 
 ### -DefaultCommandPrefix
-{{ Fill DefaultCommandPrefix Description }}
+If you are specifying a Default Command Prefix via your manifest, this will update that prefix
 
 ```yaml
 Type: String[]
@@ -242,7 +242,7 @@ Accept wildcard characters: False
 ```
 
 ### -PrivateData
-{{ Fill PrivateData Description }}
+If you have any additional Private Data you want to add to your module manifest, add it here
 
 ```yaml
 Type: Object[]
@@ -256,14 +256,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -modulePath
+### -path
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: modulePath
 
 Required: False
 Position: 14
@@ -273,7 +273,7 @@ Accept wildcard characters: False
 ```
 
 ### -configFile
-{{ Fill configFile Description }}
+Module Config File
 
 ```yaml
 Type: String

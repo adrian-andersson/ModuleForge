@@ -13,8 +13,8 @@ Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal
 ## SYNTAX
 
 ```
-get-mfDependencyTree [-referenceData] <Object[]> [[-outputType] <String>] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+get-mfDependencyTree [[-referenceData] <Object[]>] [[-outputType] <String>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -46,10 +46,10 @@ Type: Object[]
 Parameter Sets: (All)
 Aliases:
 
-Required: True
+Required: False
 Position: 1
-Default value: None
-Accept pipeline input: False
+Default value: (get-mfFolderItemDetails -path (get-item source).fullname)
+Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
@@ -88,8 +88,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [OBJECT[]] - ReferenceData Object Array (Resulting from get-mfFolderItemDetails) accepted as pipeline input
 ## OUTPUTS
 
+### [STRING] - Returns a formatted string representing the dependency tree, Output format can be:
+###             - Multi-line string expected to print to terminal (Default Behaviour)
+###             - A mermaid chart (If specified with Output Type 'Mermaid') 
+###             - A mermaid chart encapsulated in a markdown code block ('MermaidMarkdown')
 ## NOTES
 Author: Adrian Andersson
 

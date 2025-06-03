@@ -13,16 +13,19 @@ This function analyses a PS1 file, returning its content, any functions, classes
 ## SYNTAX
 
 ```
-get-mfFolderItemDetails [-path] <String> [-ProgressAction <ActionPreference>] [<CommonParameters>]
+get-mfFolderItemDetails [[-path] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 The \`get-mfFolderItemDetails\` function takes a path to source folder
 
 It creates a job that generates a details about all found PS1 files,
-including: The content of PS1 files, the names of any functions, any dependencies
+including: The content of PS1 files, the names of any functions, the names of any classes, and any inter-related dependencies
 
-This function uses a job to import all the ps1 items so that all types can be reflected correctly without having to load the module
+This function uses a job to import all the ps1 items so that all types can be reflected correctly without having to load the module,
+So it works without having to build the manifest etc
+
+This function is primary used to build dependency trees and during build to get file contents
 
 ------------
 
@@ -43,9 +46,9 @@ Type: String
 Parameter Sets: (All)
 Aliases:
 
-Required: True
+Required: False
 Position: 1
-Default value: None
+Default value: ((get-item 'source').fullname)
 Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
@@ -70,8 +73,30 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [STRING] - Path to Source Folder is accepted as Pipeline Input or direct assignment
 ## OUTPUTS
 
+### [Object[]] - Returns an array of objects with detailed file metadata, including:
+###     - **Name** (`[String]`) - Name of the file.
+###     - **Path** (`[String]`) - Full file path.
+###     - **FileSize** (`[Int]`) - File size in kilobytes.
+###     - **FunctionDetails** (`[Object[]]`) - Details of functions within the file.
+###     - **ClassDetails** (`[Object[]]`) - Details of classes within the file.
+###     - **Contents** (`[String]`) - Entire script content.
+###     - **Group** (`[String]`) - Subfolder grouping.
+###     - **Dependencies** (`[Object[]]`) - References to other files with name and full path.
+### Child Object Details:
+### #### FunctionDetails (`[Object]`)
+###     - **functionName** (`[String]`) - Name of the function.
+###     - **cmdLets** (`[Object]`) - Functions/cmdlets called, with name and usage count.
+###     - **types** (`[Object]`) - Classes referenced, with name and usage count.
+###     - **parameterTypes** (`[Object]`) - Enums used.
+###     - **Validators** (`[Object]`) - Validator classes used.
+###     - **Properties** (`[String[]]`) - Properties within the function.
+### #### ClassDetails (`[Object]`)
+###     - **ClassName** (`[String]`) - Name of the class.
+###     - **Methods** (`[String]`) - Methods defined in the class.
+###     - **Properties** (`[String[]]`) - Properties within the class.
 ## NOTES
 Author: Adrian Andersson
 

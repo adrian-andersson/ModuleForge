@@ -148,6 +148,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [String] - This function accepts string values for `repositoryUri` and `NugetPackagePath` via pipeline input by property name.
 ## OUTPUTS
 
 ## NOTES

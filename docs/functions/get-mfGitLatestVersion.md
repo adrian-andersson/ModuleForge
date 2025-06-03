@@ -78,6 +78,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
+### [semver] - Returns a Semantec Version object
 ## NOTES
 Author: Adrian Andersson
 

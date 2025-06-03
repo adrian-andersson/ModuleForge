@@ -13,7 +13,7 @@ If you are manually building, and you have access to the \build folder, you can 
 ## SYNTAX
 
 ```
-get-mfLatestSemverFromBuildManifest [[-modulePath] <String>] [[-configFile] <String>]
+get-mfLatestSemverFromBuildManifest [[-path] <String>] [[-configFile] <String>]
  [[-moduleNameOverride] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -26,31 +26,36 @@ Detailed Description
 
 ### EXAMPLE 1
 ```
-verb-noun param1
+get-mfLatestSemverFromBuildManifest
 ```
 
 #### DESCRIPTION
-Line by line of what this example will do
+Import build\module\modulemanifest.psd1
+Find the prerelease tag(if present) and module version.
+I.e.
+module version 1.1.0 prerelease tag prev003 = 1.1.0-prrev003
 
 
 #### OUTPUT
-Copy of the output of this line
+Major  Minor  Patch  PreReleaseLabel BuildLabel
+-----  -----  -----  --------------- ----------
+1      1      0      prev003
 
 ## PARAMETERS
 
-### -modulePath
+### -path
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: path
+Aliases: modulePath
 
 Required: False
 Position: 1
 Default value: $(get-location).path
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -106,6 +111,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
+### [semver] - Returns a Semantec Version object
 ## NOTES
 Author: Adrian Andersson
 

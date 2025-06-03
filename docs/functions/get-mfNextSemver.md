@@ -31,8 +31,8 @@ get-mfNextSemver [-preReleaseLabel <String>] [-initialPreRelease] [-ProgressActi
 ```
 
 ## DESCRIPTION
-The \`get-mfNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter.
-It can handle major, minor, and patch increments.
+The \`get-mfNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+It can handle major, minor, and patch increments. 
 The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
 ## EXAMPLES
@@ -76,7 +76,7 @@ Aliases:
 Required: True
 Position: Named
 Default value: None
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -176,8 +176,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### [semver] - Will accept a Semver from pipeline or via direct assignment
 ## OUTPUTS
 
+### [semver] - Returns a Semantec Version object that should increment, based on the other parameters, the input semver
 ## NOTES
 Author: Adrian Andersson
 

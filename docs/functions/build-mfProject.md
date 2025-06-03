@@ -13,7 +13,7 @@ Grab all the files from source, compile them into a single PowerShell module fil
 ## SYNTAX
 
 ```
-build-mfProject [-version] <SemanticVersion> [[-modulePath] <String>] [[-configFile] <String>] [-exportClasses]
+build-mfProject [-version] <SemanticVersion> [[-path] <String>] [[-configFile] <String>] [-exportClasses]
  [-exportEnums] [-noExternalFiles] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -52,14 +52,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -modulePath
+### -path
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: ModulePath
 
 Required: False
 Position: 2
