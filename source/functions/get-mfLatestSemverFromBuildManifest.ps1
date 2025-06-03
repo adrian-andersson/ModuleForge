@@ -10,16 +10,20 @@ function get-mfLatestSemverFromBuildManifest
             
         ------------
         .EXAMPLE
-            verb-noun param1
+            get-mfLatestSemverFromBuildManifest
             
             #### DESCRIPTION
-            Line by line of what this example will do
+            Import build\module\modulemanifest.psd1
+            Find the prerelease tag(if present) and module version. I.e. module version 1.1.0 prerelease tag prev003 = 1.1.0-prrev003
             
             
             #### OUTPUT
-            Copy of the output of this line
+            Major  Minor  Patch  PreReleaseLabel BuildLabel
+            -----  -----  -----  --------------- ----------
+            1      1      0      prev003
             
-            
+        .OUTPUTS
+            [semver] - Returns a Semantec Version object    
             
         .NOTES
             Author: Adrian Andersson
@@ -29,9 +33,9 @@ function get-mfLatestSemverFromBuildManifest
     [CmdletBinding()]
     PARAM(
         #Root path of the module. Uses the current working directory by default
-        [Parameter()]
-        [alias('path')]
-        [string]$modulePath  = $(get-location).path,
+        [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [alias('modulePath')]
+        [string]$path  = $(get-location).path,
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
         [Parameter(DontShow)]
@@ -44,14 +48,15 @@ function get-mfLatestSemverFromBuildManifest
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
-       
-
+    }
+    
+    process{
+        #Do some checks and parsing
         if(! $moduleNameOverride)
         {
             #Read the config file
             write-verbose 'Importing config file'
-            $configPath = join-path -path $modulePath -ChildPath $configFile
+            $configPath = join-path -path $path -ChildPath $configFile
 
             if(!(test-path $configPath))
             {
@@ -64,7 +69,7 @@ function get-mfLatestSemverFromBuildManifest
         }
         
         
-        $buildFolder = Join-Path $modulePath 'build'
+        $buildFolder = Join-Path $path 'build'
         write-verbose "build folder: $buildFolder"
         $moduleFolder = join-path $buildFolder $moduleName
         $manifestFile = get-childItem -Path $moduleFolder -Filter "$moduleName.psd1"
@@ -75,11 +80,8 @@ function get-mfLatestSemverFromBuildManifest
             $ManifestPath = $manifestFile.fullname
         }
 
+        #Actual processing
 
-        
-    }
-    
-    process{
         write-verbose 'Try and import manifest as datafile'
         try{
             $manifest = Import-PowerShellDataFile -Path $ManifestPath

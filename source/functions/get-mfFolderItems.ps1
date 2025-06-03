@@ -2,25 +2,42 @@ function get-mfFolderItems
 {
     <#
         .SYNOPSIS
-            Get a list of files from a folder - whilst processing the .mfignore and .mforder files
+            Retrieves a filtered list of files from a specified folder, processing `.mfignore` and `.mforder` rules.
             
         .DESCRIPTION
-             Get the files out of a folder. Adds a bit of smarts to it such as:
-             - Ignore anything in the .mfignore file
-             - Filter out anything that isn't a PS1 file if, with a switch
-             - Ignore files with .test.ps1 - These are assumed to be pester files
-             - Ignore files with .tests.ps1 - These are assumed to be pester files
-             - Ignore files with .skip.ps1 - These are assumed to be skippable
+            The `get-mfFolderItems` function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
+            - Ignoring entries specified in `.mfignore`.
+            - Filtering out non-PS1 files using a switch (`-psScriptsOnly`).
+            - Excluding test-related files (`*.test.ps1`, `*.tests.ps1`, `*.skip.ps1`).
+            - Handling optional file copying (`-destination` and `-copy` parameters).
 
+            The function ensures all returned paths are fully qualified.
+            This function is primarily used to assist the get-mfFolderItemDetails as well as build-mfProject.
+            The -copy switch is added to cleanly copy resources and binaries with build-mfProject
             
-           
-
-              Will always return a full path name
-            
-        ------------
         .EXAMPLE
-            get-mfFolderItems '.\source\functions\example.ps1'
+            get-mfFolderItems -path '.\source\functions' -psScriptsOnly
             
+            #### DESCRIPTION
+            Scans `.\source\functions`, retrieves only `.ps1` files, and excludes files matching `.mfignore` rules.
+
+        .EXAMPLE
+            get-mfFolderItems -path '.\source\functions' -destination '.\build\functions' -copy
+
+            #### DESCRIPTION
+            Scans `.\source\functions`, retrieves filtered files, and copies them to `.\build\functions`.
+
+        .INPUTS
+            [String] - Accepts a folder path via parameter or pipeline (`ValueFromPipelineByPropertyName`).
+
+        OUTPUTS
+            [Object[]] - Returns an array of objects containing:
+                - **Name** (`[String]`) – Name of the file.
+                - **Path** (`[String]`) – Full file path.
+                - **RelativePath** (`[String]`) – Path relative to the source folder.
+                - **Folder** (`[String]`) – Name of the source folder.
+                - **(Optional) newPath** (`[String]`) – Destination path if copying.
+                - **(Optional) newFolder** (`[String]`) – Destination folder name if copying.
             
         .NOTES
             Author: Adrian Andersson
@@ -29,9 +46,10 @@ function get-mfFolderItems
 
     [CmdletBinding(DefaultParameterSetName='Default')]
     PARAM(
-        #Path to start in
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Default')]
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Copy')]
+        #Path to get items from
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Default')]
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Copy')]
+        [alias('s')]
         [string]$path,
         #Flag to copy scripts only
         [parameter(ParameterSetName ='Default')]
@@ -40,7 +58,7 @@ function get-mfFolderItems
         #Flag to copy scripts only
         [parameter(ParameterSetName ='Copy')]
         [string]$destination,
-        #Flag to actually copy files and not just output like a fancy Get-ChildItem
+        #Flag to actually copy files and not just output
         [parameter(ParameterSetName ='Copy')]
         [switch]$copy
 
@@ -50,50 +68,7 @@ function get-mfFolderItems
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
-
-        if($path[-1] -eq '\' -or $path[-1] -eq '/')
-        {
-            write-verbose 'Removing extra \ or / from path'
-            $path = $path.Substring(0,$($path.length-1))
-            write-verbose "New Path $path"
-        }
-
-        try{
-            $folderItem = get-item $path -erroraction stop
-            #Ensure we have the full path
-
-            $folder = $folderItem.FullName
-            write-verbose "Folder Fullname: $folder"
-            $folderShortName = $folderItem.Name
-            write-verbose "Folder Shortname: $folderShortName"
-
-        }catch{
-            throw "Unable to get folder at $path"
-        }
-
-
-        #Include the older bartender bits so we have backwards compatibility
-        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
-
-
-        if($destination)
-        {
-            if($destination[-1] -eq '\' -or $destination[-1] -eq '/')
-            {
-                write-verbose 'Removing extra \ or / from destination'
-                $path = $path.Substring(0,$($destination.length-1))
-                write-verbose "New destination $destination"
-            }
-
-            if(!(test-path $destination))
-            {
-                throw "Unable to resolve destination path: $destination"
-            }
-
-
-        }
-
+        write-verbose "ParameterSet: $($PSCmdlet.ParameterSetName)"
 
         $fileListSelect = @(
             'Name'
@@ -128,7 +103,50 @@ function get-mfFolderItems
     }
     
     process{
+
+        #Check the Parameters and do some lite parsing
+        write-verbose "Path set to: $path"
         
+        if($path[-1] -eq '\' -or $path[-1] -eq '/')
+        {
+            write-verbose 'Removing extra \ or / from path'
+            $path = $path.Substring(0,$($path.length-1))
+            write-verbose "New Path $path"
+        }
+
+        try{
+            $folderItem = get-item $path -erroraction stop
+            #Ensure we have the full path
+
+            $folder = $folderItem.FullName
+            write-verbose "Folder Fullname: $folder"
+            $folderShortName = $folderItem.Name
+            write-verbose "Folder Shortname: $folderShortName"
+
+        }catch{
+            throw "Unable to get folder at $path"
+        }
+
+
+        #Include the older bartender bits so we have backwards compatibility
+        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
+
+        if($destination)
+        {
+            if($destination[-1] -eq '\' -or $destination[-1] -eq '/')
+            {
+                write-verbose 'Removing extra \ or / from destination'
+                $path = $path.Substring(0,$($destination.length-1))
+                write-verbose "New destination $destination"
+            }
+
+            if(!(test-path $destination))
+            {
+                throw "Unable to resolve destination path: $destination"
+            }
+
+
+        }
 
         $mfIgnorePath = join-path -path $folder -childpath '.mfignore'
         if(test-path $mfIgnorePath)
@@ -140,13 +158,10 @@ function get-mfFolderItems
             }
         }
 
-
         write-verbose "Full Exclude List: `n`n$($excludeList|format-list|Out-String)"
+
+        #Actual processing
         
-
-        
-
-
         write-verbose 'Getting Folder files'
         if($psScriptsOnly)
         {

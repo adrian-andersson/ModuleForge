@@ -2,47 +2,47 @@ function get-mfGitChangeLog
 {
     <#
         .SYNOPSIS
-        Generates a markdown changelog from Git commit messages between the latest and previous tags.
+            Generates a markdown changelog from Git commit messages between the latest and previous tags.
 
         .DESCRIPTION
-        This function retrieves Git commit messages between the latest and previous tags, categorizes them based on predefined types, and formats them into a markdown changelog. It ensures the Git environment is correctly set up and handles errors if Git is not recognized or tags are not found.
+            This function retrieves Git commit messages between the latest and previous tags, categorizes them based on predefined types, and formats them into a markdown changelog. It ensures the Git environment is correctly set up and handles errors if Git is not recognized or tags are not found.
 
         .EXAMPLE
-        get-mfGitChangeLog
+            get-mfGitChangeLog
                     
-        DESCRIPTION
-        Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
+            DESCRIPTION
+            Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
                     
-        #### OUTPUT
-        # Change Log
-        Version: v1.0.0 --> v1.1.0
-        ## New Features
-        - Added new authentication module
-        ## Bug Fixes
-        - Fixed issue with user login
+            #### OUTPUT
+            # Change Log
+            Version: v1.0.0 --> v1.1.0
+            ## New Features
+            - Added new authentication module
+            ## Bug Fixes
+            - Fixed issue with user login
 
         .EXAMPLE
-        get-mfGitChangeLog -changeLogTypes @{
-            'feat' = 'New Features'
-            'fix' = 'Bug Fixes'
-            'chore' = 'Chore and Pipeline work'
-            'test' = 'Test Changes'
-        }
+            get-mfGitChangeLog -changeLogTypes @{
+                'feat' = 'New Features'
+                'fix' = 'Bug Fixes'
+                'chore' = 'Chore and Pipeline work'
+                'test' = 'Test Changes'
+            }
                     
-        DESCRIPTION
-        This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
+            DESCRIPTION
+            This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
                     
-        #### OUTPUT
-        # Change Log
-        Version: v1.0.0 --> v1.1.0
-        ## New Features
-        - Added new authentication module
-        ## Bug Fixes
-        - Fixed issue with user login
-        ## Chore and Pipeline work
-        - Updated GH Pipeline AutoBuildv3
-        ## Test Changes
-        - Added test to user login function
+            #### OUTPUT
+            # Change Log
+            Version: v1.0.0 --> v1.1.0
+            ## New Features
+            - Added new authentication module
+            ## Bug Fixes
+            - Fixed issue with user login
+            ## Chore and Pipeline work
+            - Updated GH Pipeline AutoBuildv3
+            ## Test Changes
+            - Added test to user login function
 
          .EXAMPLE
             get-mfGitChangeLog -All
@@ -65,18 +65,20 @@ function get-mfGitChangeLog
             ### New Features
             - Added function
 
+        .INPUTS
+            [hashtable] - Accepts changeLogTypes hashtable via parameter or pipeline
 
+        .OUTPUTS
+            [STRING] - Returns a Markdown Compatible string output that can be redirected to a file
 
         .NOTES
-        Author: Adrian Andersson
-        Date: 2025-05-14
+            Author: Adrian Andersson
     #>
-
 
     [CmdletBinding()]
     PARAM(
         #Change Logs Types and corresponding Heading. Hashtable/Key Value Pair expected. Key = git type; Value = Heading
-        [Parameter()]
+        [Parameter(ValueFromPipeline)]
         [hashtable]$changeLogTypes = @{
             'feat' = 'New Features'
             'fix' = 'Bug Fixes'

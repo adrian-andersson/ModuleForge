@@ -6,7 +6,9 @@ function get-mfNextSemver
         Increments the version of a Semantic Version (SemVer) object.
 
     .DESCRIPTION
-        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. It can handle major, minor, and patch increments. The function also handles pre-release versions and allows the user to optionally override the pre-release label.
+        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+        It can handle major, minor, and patch increments. 
+        The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
     .EXAMPLE
         $version = [SemVer]::new('1.0.0')
@@ -28,6 +30,12 @@ function get-mfNextSemver
         #### OUTPUT
         '3.0.0'
 
+    .INPUTS
+        [semver] - Will accept a Semver from pipeline or via direct assignment
+
+    .OUTPUTS
+        [semver] - Returns a Semantec Version object that should increment, based on the other parameters, the input semver
+
     .NOTES
         Author: Adrian Andersson
     #>
@@ -35,8 +43,8 @@ function get-mfNextSemver
     [CmdletBinding(DefaultParameterSetName='default')]
     PARAM(
         #Semver Version
-        [Parameter(Mandatory,ParameterSetName='default')]
-        [Parameter(Mandatory,ParameterSetName='preRelease')]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='default')]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='preRelease')]
         [SemVer]$version,
 
         #What are we incrementing
