@@ -1,0 +1,1 @@
+build-mfProject -version $(get-mfNextSemver -version $(get-mfLatestSemverFromBuildManifest) -prerelease) -Verbose
