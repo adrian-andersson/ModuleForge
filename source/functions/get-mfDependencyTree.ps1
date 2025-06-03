@@ -17,26 +17,26 @@ function get-mfDependencyTree
             
             #### DESCRIPTION
             Show files and any dependencies
-            
-            
+
+        .INPUTS
+            [OBJECT[]] - ReferenceData Object Array (Resulting from get-mfFolderItemDetails) accepted as pipeline input
+
+        .OUTPUTS
+            [STRING] - Returns a formatted string representing the dependency tree, Output format can be:
+                        - Multi-line string expected to print to terminal (Default Behaviour)
+                        - A mermaid chart (If specified with Output Type 'Mermaid') 
+                        - A mermaid chart encapsulated in a markdown code block ('MermaidMarkdown')
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-            2024-08-11 - AA
-                - Initial script
-                - Bit of an experimental function this one
-                    
+                        
     #>
 
     [CmdletBinding()]
     PARAM(
         #What Reference Data are we looking at. See function example for how to retrieve
-        [Parameter(Mandatory)]
-        [object[]]$referenceData,
+        [Parameter(ValueFromPipeline)]
+        [object[]]$referenceData = (get-mfFolderItemDetails -path (get-item source).fullname),
         [Parameter()]
         [ValidateSet('Mermaid','MermaidMarkdown','Terminal')]
         [string]$outputType = 'Terminal'
@@ -48,21 +48,6 @@ function get-mfDependencyTree
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
         
         $dependencies = New-Object System.Collections.Generic.List[object]
-
-        function printTree {
-            param(
-                [string]$node,
-                [int]$level = 0
-            )
-
-            $indent = '    ' * $level
-            write-output "$indent >--DEPENDS-ON--> $node"
-            if ($tree.ContainsKey($node)) {
-                foreach ($child in $tree[$node]) {
-                    printTree -node $child -level ($level + 1)
-                }
-            }
-        }
     }
     
     process {

@@ -1,0 +1,44 @@
+name: Execute Pester Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+jobs:
+  pesterTest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -Force -SkipPublisherCheck
+          $moduleList = @('Pester')
+          import-module $moduleList
+          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+      
+      - name: Run Pester tests
+        shell: pwsh
+        id: pester_tests
+        run: |
+          $pesterConfigHash = @{
+              Run = @{
+                  Passthru = $true
+                  Path = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+              }
+              CodeCoverage = @{
+                  Enabled = $true
+                  Path = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+              }
+              Output = @{
+                  Verbosity = 'Detailed'
+              }
+          }
+          $pesterConfig = New-PesterConfiguration -hashtable $pesterConfigHash
+          Invoke-Pester -Configuration $pesterConfig

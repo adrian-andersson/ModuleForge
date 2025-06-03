@@ -19,35 +19,8 @@ function build-mfProject
             #### DESCRIPTION
             Make a PowerShell module from the current folder, and mark it as a pre-release version
             
-            
-            
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Refactored from Bartender
-                    - Added necessary joining functions
-                    - Minimum Parameters
-                    - Test with no externals
-                
-                2024-07-29 - AA
-                    - Test with all classes,enums,validators as external
-                    - Revert to just Validators as external after testing
-                    - Expand parameters
-                    - Make Pre-release work
-                    - Decided that short-term, DSC modules are not supported
-
-                2024-08-12 - AA
-                    - Change the way we handle prereleases, get it from the supplied semver
-                        - Will allow easier passing through of get-mfNextSemver output
-                    - Change the way we get script details
-
-                2024-08-23 - AA
-                    - Change the build to use the folderItemDetails, should lead to a faster pass
-                    - Added informational output stream to the build, should make for nice Orchestration stream
                     
     #>
 
@@ -58,7 +31,8 @@ function build-mfProject
         [semver]$version,
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
-        [string]$modulePath = $(get-location).path,
+        [alias('ModulePath')]
+        [string]$path = $(get-location).path,
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
         #Use this flag to put any classes in ScriptsToProcess
@@ -81,21 +55,21 @@ function build-mfProject
 
         write-verbose 'Testing module path'
         try{
-            $moduleTest = get-item $modulePath -ErrorAction SilentlyContinue
+            $moduleTest = get-item $path -ErrorAction SilentlyContinue
         }catch{
             $moduleTest = $null
         }
         
         if(!$moduleTest){
-            throw "Unable to read from $modulePath"
+            throw "Unable to read from $path"
         }
 
-        $modulePath = $moduleTest.FullName
-        write-verbose "Building from: $modulePath"
+        $path = $moduleTest.FullName
+        write-verbose "Building from: $path"
 
         #Read the config file
         write-verbose 'Importing config file'
-        $configPath = join-path -path $modulePath -ChildPath $configFile
+        $configPath = join-path -path $path -ChildPath $configFile
 
         if(!(test-path $configPath))
         {
@@ -113,7 +87,7 @@ function build-mfProject
         $versionString = $version.tostring()
 
         write-verbose 'Checking for a build and module folder'
-        $buildFolder = join-path -path $modulePath -childPath 'build'
+        $buildFolder = join-path -path $path -childPath 'build'
         if(!(test-path $buildFolder))
         {
             write-verbose "Build folder not found at: $($buildFolder), creating"
@@ -161,10 +135,10 @@ function build-mfProject
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
        
         #Better Order
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
+        [array]$folders = @('enums','validationClasses','classes','functions','private')
 
 
-        $sourceFolder = join-path -path $modulePath -childPath 'source'
+        $sourceFolder = join-path -path $path -childPath 'source'
 
         #What folders do we need to copy the files directly in
         [array]$copyFolders = @('resource','bin')
@@ -221,16 +195,22 @@ function build-mfProject
         # - DSC Resources are being reworked by MicroSoft so this is a moving target at the moment 
         write-verbose 'Checking for DSC Resources. DSC Resources add nuance to module build'
         $dscResourcesFolder = join-path -path $sourceFolder -ChildPath 'dscClasses'
-        $dscResourceFiles = get-mfFolderItems -path $dscResourcesFolder -psScriptsOnly
-        if($dscResourceFiles.count -ge 1)
+        if(test-path $dscResourcesFolder)
         {
-            write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
-            #See above comments
-            throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
-            $noExternalFiles = $true
+            $dscResourceFiles = get-mfFolderItems -path $dscResourcesFolder -psScriptsOnly
+            if($dscResourceFiles.count -ge 1)
+            {
+                write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
+                #See above comments
+                throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
+                $noExternalFiles = $true
+            }else{
+                write-verbose 'No DSC Resources found'
+            }
         }else{
-            write-verbose 'No DSC Resources found'
+            write-verbose 'No DSC folder found'
         }
+        
 
         write-verbose 'Getting all the Script Details'
         $folderItemDetails = get-mfFolderItemDetails -path $sourceFolder

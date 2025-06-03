@@ -9,35 +9,55 @@ function get-mfFolderItemDetails
             The `get-mfFolderItemDetails` function takes a path to source folder
             
             It creates a job that generates a details about all found PS1 files,
-            including: The content of PS1 files, the names of any functions, any dependencies
+            including: The content of PS1 files, the names of any functions, the names of any classes, and any inter-related dependencies
 
-            This function uses a job to import all the ps1 items so that all types can be reflected correctly without having to load the module
+            This function uses a job to import all the ps1 items so that all types can be reflected correctly without having to load the module,
+            So it works without having to build the manifest etc
+
+            This function is primary used to build dependency trees and during build to get file contents
             
         ------------
         .EXAMPLE
             get-mfFolderItemDetails .\source
-            
+        
+        .INPUTS
+            [STRING] - Path to Source Folder is accepted as Pipeline Input or direct assignment
+
+        .OUTPUTS
+            [Object[]] - Returns an array of objects with detailed file metadata, including:
+                - **Name** (`[String]`) – Name of the file.
+                - **Path** (`[String]`) – Full file path.
+                - **FileSize** (`[Int]`) – File size in kilobytes.
+                - **FunctionDetails** (`[Object[]]`) – Details of functions within the file.
+                - **ClassDetails** (`[Object[]]`) – Details of classes within the file.
+                - **Contents** (`[String]`) – Entire script content.
+                - **Group** (`[String]`) – Subfolder grouping.
+                - **Dependencies** (`[Object[]]`) – References to other files with name and full path.
+
+            Child Object Details:
+            #### FunctionDetails (`[Object]`)
+                - **functionName** (`[String]`) – Name of the function.
+                - **cmdLets** (`[Object]`) – Functions/cmdlets called, with name and usage count.
+                - **types** (`[Object]`) – Classes referenced, with name and usage count.
+                - **parameterTypes** (`[Object]`) – Enums used.
+                - **Validators** (`[Object]`) – Validator classes used.
+                - **Properties** (`[String[]]`) – Properties within the function.
+
+            #### ClassDetails (`[Object]`)
+                - **ClassName** (`[String]`) – Name of the class.
+                - **Methods** (`[String]`) – Methods defined in the class.
+                - **Properties** (`[String[]]`) – Properties within the class.
+
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-27 AA
-                    - First Refactor
-                2024-08-12 AA
-                    - Improve the relativePath code
-                    - Add a folderGroup passthrough
-                    - Need to figure out a better way for importing the module
-                    
     #>
 
     [CmdletBinding()]
     PARAM(
         #Path to source folder.
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline)]
-        [string]$path
+        [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
+        [string]$path = ((get-item 'source').fullname)
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -80,11 +100,14 @@ function get-mfFolderItemDetails
                 }
                 process{
                     $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+                    
+                    
                     #$Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
-
                     #The above was the original way to do this
                     #However it was so efficient it also returned subfunctions AND functions in scriptblocks
                     #Since we don't want to do that, we cycle through and look at the start and end line numbers and only return top-level functions
+                    #Leaving it here as a reminder 
+
                     $AllFunctions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
                     $TopLevelFunctions = New-Object System.Collections.Generic.List[Object]
                     foreach($func in $allFunctions){
@@ -242,8 +265,6 @@ function get-mfFolderItemDetails
 
             foreach($item in $itemDetails)
             {
-                #Clumsy way of doing this list, could just do array with +
-                #Feel like this is slightly neater and easier to turn bits off or expand
                 write-verbose "Checking dependencies for file: $($item.name)"
                 $compareList =New-Object System.Collections.Generic.List[string]
                 $item.ClassDetails.methods.name.foreach{$compareList.add($_)}
@@ -275,11 +296,7 @@ function get-mfFolderItemDetails
                 #Add dependencies as an item
                 $item|add-member -MemberType NoteProperty -Name 'Dependencies' -Value $dependenciesList
                 $item
-
-
             }
-            
-
         }
         $global:dbgScriptBlock = $sblock
 
@@ -288,11 +305,17 @@ function get-mfFolderItemDetails
         [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
         $folderItems = $folders.ForEach{
             $folderPath = Join-Path $path -ChildPath $_
-            get-mfFolderItems -path $folderPath -psScriptsOnly
+            if(!(test-path $folderPath))
+            {
+                write-verbose "$folderPath not found. Skipping"
+            }else{
+                write-verbose "Getting items from $folderPath"
+                get-mfFolderItems -path $folderPath -psScriptsOnly
+            }
         }
 
-        write-verbose 'Starting Job'
-        $job = Start-Job -ScriptBlock $sblock -ArgumentList @($path, $folderItems)
+        write-verbose "Starting Job; arguments `nPath:$($path|out-string)`nFiles:`n$($folderItems.name|out-string))"
+        $job = Start-Job -ScriptBlock $sblock -ArgumentList @($path, $folderItems) -WorkingDirectory $path
         $job|Wait-Job|out-null
         write-verbose 'Retrieving output and returning result'
         $output = Receive-Job -Job $job

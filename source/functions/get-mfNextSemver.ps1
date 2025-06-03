@@ -6,7 +6,9 @@ function get-mfNextSemver
         Increments the version of a Semantic Version (SemVer) object.
 
     .DESCRIPTION
-        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. It can handle major, minor, and patch increments. The function also handles pre-release versions and allows the user to optionally override the pre-release label.
+        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+        It can handle major, minor, and patch increments. 
+        The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
     .EXAMPLE
         $version = [SemVer]::new('1.0.0')
@@ -28,28 +30,21 @@ function get-mfNextSemver
         #### OUTPUT
         '3.0.0'
 
+    .INPUTS
+        [semver] - Will accept a Semver from pipeline or via direct assignment
+
+    .OUTPUTS
+        [semver] - Returns a Semantec Version object that should increment, based on the other parameters, the input semver
+
     .NOTES
         Author: Adrian Andersson
-
-        Changelog:
-
-            2024-08-10 - AA
-                - First attempt at incrementing the Semver
-
-            2024-08-24 - AA
-                - Have discovered that PSGallery only supports SemVer v1. So need to remove the prerelese Version
-                - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
-                    - I.e. 1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
-
-            2024-08-26 - AA
-                - Added functionality to be able to drop pre-release tag
     #>
 
     [CmdletBinding(DefaultParameterSetName='default')]
     PARAM(
         #Semver Version
-        [Parameter(Mandatory,ParameterSetName='default')]
-        [Parameter(Mandatory,ParameterSetName='preRelease')]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='default')]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='preRelease')]
         [SemVer]$version,
 
         #What are we incrementing

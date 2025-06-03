@@ -1,8 +1,129 @@
 <#
 Module created by ModuleForge
-	 ModuleForge Version: 1.0.1
-	BuildDate: 2025-02-19T09:31:00
+	 ModuleForge Version: 1.1.0
+	BuildDate: 2025-06-03T16:51:33
 #>
+function add-mfGithubScaffold
+{
+
+    <#
+        .SYNOPSIS
+            Initialises a `.GitHub` scaffold in a PowerShell module, including GH Actions workflows for pester testing and build and release
+
+            
+        .DESCRIPTION
+            This function will create a '.github' folder in the moduleforge root (if one does not exist).
+            It will create 2 github actions workflows, 1 for Pester testing, 1 for buildAndRelease
+            It will create 1 Pull Request template.
+
+            The buildAndRelease template will use Git Tags to mark versions. If you stick with this template you should refrain from
+            using tags for other purposes.
+            
+            The purpose of these workflows and templates is to get you started, creating a quick and easy workflow scaffold. 
+            Please feel free to change the workflows and template to your own needs and preferences.
+            
+        .EXAMPLE
+            Add-mfGithubScaffold
+
+            #### DESCRIPTION
+            Copies the `.GitHub` folder from the module's `resource` directory to the current module, skipping existing files.
+
+            #### OUTPUT
+            Should have a .github folder, with workflows and a PR template
+
+        .EXAMPLE
+            Add-mfGithubScaffold -Force
+
+            #### DESCRIPTION
+            Copies the `.GitHub` scaffold and overwrites existing files in `.github` directory
+
+            #### OUTPUT
+            Should have a .github folder, with workflows and a PR template
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
+        [Parameter()]
+        [alias('path')]
+        [string]$modulePath = $(get-location).path,
+        #Module Config reference
+        [Parameter(DontShow)]
+        [string]$configFile = 'moduleForgeConfig.xml',
+        #githubFolder
+        [Parameter(DontShow)]
+        [string]$githubFolder = '.github',
+        #Should we overwrite if files exist?
+        [switch]$force
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+        if($mockPsScriptRoot)
+        {
+            #Assume we are in pester test, and use the $mockPsScriptRoot param
+            write-warning 'Assuming PSScriptRoot from $mockPsScriptRoot. This should only be done for testing'
+            $resourceFolder = Join-Path $mockPsScriptRoot 'resource'
+            
+        }else{
+            $resourceFolder = Join-Path $PSScriptRoot 'resource'
+        }
+        write-verbose "ResourceFolder:  $resourceFolder"
+        
+        if(!(test-path  $resourceFolder))
+        {
+            throw 'Err: Unable to find resource folder in ModuleForge module'
+        }
+
+        $resourceFolderGithub = join-path $resourceFolder 'github'
+        if(!(test-path  $resourceFolderGithub))
+        {
+            throw 'Err: Found resource folder, but not Github folder in ModuleForge module'
+        }
+
+        $mfConfigFile = join-path $modulePath $configFile
+        if(!(test-path $mfConfigFile))
+        {
+            throw 'Err: No Moduleforge Config File found. Please check your module path'
+        }
+
+        $moduleGitFolder = join-path $modulePath $githubFolder
+
+    }
+    
+    process{
+        if(!(test-path $moduleGitFolder)){
+            write-verbose "$moduleGitFolder does not exist, creating"
+            new-item -ItemType Directory -Path $moduleGitFolder
+        }
+
+        $childItemSource = get-childitem $resourceFolderGithub -Recurse
+        $childItemSource.foreach{
+            write-verbose "Checking file: $($_.name)"
+            $destinationPath = $_.FullName.replace($resourceFolderGithub,$moduleGitFolder)
+            write-verbose 'DestinationPath: $destinationPath'
+            if(test-path $destinationPath){
+                if($force)
+                {
+                    write-warning "Overwrite $destinationPath"
+                    copy-item -Path $_.FullName -Destination $destinationPath -Force
+                }else{
+                    write-warning "Skipping $destinationPath as it exists"
+                }
+            }else{
+                write-verbose "Copying $($_) to $destinationPath"
+                copy-item -Path $_.FullName -Destination $destinationPath
+            }
+        }
+    }
+    
+}
 function add-mfRepositoryXmlData
 {
 
@@ -25,19 +146,11 @@ function add-mfRepositoryXmlData
             #### DESCRIPTION
             Unpack module.1.2.3-beta.4.nupkg to a temp location, open the NUSPEC xml and append a repository element with URL, Type, Branch and Commit attributes, repack the nupkg
             
-            
+        .INPUTS
+            [String] - This function accepts string values for `repositoryUri` and `NugetPackagePath` via pipeline input by property name.
+
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-08-08 - AA
-                    - Initial Attempt
-
-                2024-08-28 - AA
-                    - Need to fix the xml space, I put in type but it should be repository
-                    
     #>
 
     [CmdletBinding()]
@@ -190,35 +303,8 @@ function build-mfProject
             #### DESCRIPTION
             Make a PowerShell module from the current folder, and mark it as a pre-release version
             
-            
-            
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Refactored from Bartender
-                    - Added necessary joining functions
-                    - Minimum Parameters
-                    - Test with no externals
-                
-                2024-07-29 - AA
-                    - Test with all classes,enums,validators as external
-                    - Revert to just Validators as external after testing
-                    - Expand parameters
-                    - Make Pre-release work
-                    - Decided that short-term, DSC modules are not supported
-
-                2024-08-12 - AA
-                    - Change the way we handle prereleases, get it from the supplied semver
-                        - Will allow easier passing through of get-mfNextSemver output
-                    - Change the way we get script details
-
-                2024-08-23 - AA
-                    - Change the build to use the folderItemDetails, should lead to a faster pass
-                    - Added informational output stream to the build, should make for nice Orchestration stream
                     
     #>
 
@@ -229,7 +315,8 @@ function build-mfProject
         [semver]$version,
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
-        [string]$modulePath = $(get-location).path,
+        [alias('ModulePath')]
+        [string]$path = $(get-location).path,
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
         #Use this flag to put any classes in ScriptsToProcess
@@ -252,21 +339,21 @@ function build-mfProject
 
         write-verbose 'Testing module path'
         try{
-            $moduleTest = get-item $modulePath -ErrorAction SilentlyContinue
+            $moduleTest = get-item $path -ErrorAction SilentlyContinue
         }catch{
             $moduleTest = $null
         }
         
         if(!$moduleTest){
-            throw "Unable to read from $modulePath"
+            throw "Unable to read from $path"
         }
 
-        $modulePath = $moduleTest.FullName
-        write-verbose "Building from: $modulePath"
+        $path = $moduleTest.FullName
+        write-verbose "Building from: $path"
 
         #Read the config file
         write-verbose 'Importing config file'
-        $configPath = join-path -path $modulePath -ChildPath $configFile
+        $configPath = join-path -path $path -ChildPath $configFile
 
         if(!(test-path $configPath))
         {
@@ -284,7 +371,7 @@ function build-mfProject
         $versionString = $version.tostring()
 
         write-verbose 'Checking for a build and module folder'
-        $buildFolder = join-path -path $modulePath -childPath 'build'
+        $buildFolder = join-path -path $path -childPath 'build'
         if(!(test-path $buildFolder))
         {
             write-verbose "Build folder not found at: $($buildFolder), creating"
@@ -332,10 +419,10 @@ function build-mfProject
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
        
         #Better Order
-        [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
+        [array]$folders = @('enums','validationClasses','classes','functions','private')
 
 
-        $sourceFolder = join-path -path $modulePath -childPath 'source'
+        $sourceFolder = join-path -path $path -childPath 'source'
 
         #What folders do we need to copy the files directly in
         [array]$copyFolders = @('resource','bin')
@@ -392,16 +479,22 @@ function build-mfProject
         # - DSC Resources are being reworked by MicroSoft so this is a moving target at the moment 
         write-verbose 'Checking for DSC Resources. DSC Resources add nuance to module build'
         $dscResourcesFolder = join-path -path $sourceFolder -ChildPath 'dscClasses'
-        $dscResourceFiles = get-mfFolderItems -path $dscResourcesFolder -psScriptsOnly
-        if($dscResourceFiles.count -ge 1)
+        if(test-path $dscResourcesFolder)
         {
-            write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
-            #See above comments
-            throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
-            $noExternalFiles = $true
+            $dscResourceFiles = get-mfFolderItems -path $dscResourcesFolder -psScriptsOnly
+            if($dscResourceFiles.count -ge 1)
+            {
+                write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
+                #See above comments
+                throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
+                $noExternalFiles = $true
+            }else{
+                write-verbose 'No DSC Resources found'
+            }
         }else{
-            write-verbose 'No DSC Resources found'
+            write-verbose 'No DSC folder found'
         }
+        
 
         write-verbose 'Getting all the Script Details'
         $folderItemDetails = get-mfFolderItemDetails -path $sourceFolder
@@ -712,26 +805,26 @@ function get-mfDependencyTree
             
             #### DESCRIPTION
             Show files and any dependencies
-            
-            
+
+        .INPUTS
+            [OBJECT[]] - ReferenceData Object Array (Resulting from get-mfFolderItemDetails) accepted as pipeline input
+
+        .OUTPUTS
+            [STRING] - Returns a formatted string representing the dependency tree, Output format can be:
+                        - Multi-line string expected to print to terminal (Default Behaviour)
+                        - A mermaid chart (If specified with Output Type 'Mermaid') 
+                        - A mermaid chart encapsulated in a markdown code block ('MermaidMarkdown')
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-            2024-08-11 - AA
-                - Initial script
-                - Bit of an experimental function this one
-                    
+                        
     #>
 
     [CmdletBinding()]
     PARAM(
         #What Reference Data are we looking at. See function example for how to retrieve
-        [Parameter(Mandatory)]
-        [object[]]$referenceData,
+        [Parameter(ValueFromPipeline)]
+        [object[]]$referenceData = (get-mfFolderItemDetails -path (get-item source).fullname),
         [Parameter()]
         [ValidateSet('Mermaid','MermaidMarkdown','Terminal')]
         [string]$outputType = 'Terminal'
@@ -743,21 +836,6 @@ function get-mfDependencyTree
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
         
         $dependencies = New-Object System.Collections.Generic.List[object]
-
-        function printTree {
-            param(
-                [string]$node,
-                [int]$level = 0
-            )
-
-            $indent = '    ' * $level
-            write-output "$indent >--DEPENDS-ON--> $node"
-            if ($tree.ContainsKey($node)) {
-                foreach ($child in $tree[$node]) {
-                    printTree -node $child -level ($level + 1)
-                }
-            }
-        }
     }
     
     process {
@@ -823,35 +901,55 @@ function get-mfFolderItemDetails
             The `get-mfFolderItemDetails` function takes a path to source folder
             
             It creates a job that generates a details about all found PS1 files,
-            including: The content of PS1 files, the names of any functions, any dependencies
+            including: The content of PS1 files, the names of any functions, the names of any classes, and any inter-related dependencies
 
-            This function uses a job to import all the ps1 items so that all types can be reflected correctly without having to load the module
+            This function uses a job to import all the ps1 items so that all types can be reflected correctly without having to load the module,
+            So it works without having to build the manifest etc
+
+            This function is primary used to build dependency trees and during build to get file contents
             
         ------------
         .EXAMPLE
             get-mfFolderItemDetails .\source
-            
+        
+        .INPUTS
+            [STRING] - Path to Source Folder is accepted as Pipeline Input or direct assignment
+
+        .OUTPUTS
+            [Object[]] - Returns an array of objects with detailed file metadata, including:
+                - **Name** (`[String]`) – Name of the file.
+                - **Path** (`[String]`) – Full file path.
+                - **FileSize** (`[Int]`) – File size in kilobytes.
+                - **FunctionDetails** (`[Object[]]`) – Details of functions within the file.
+                - **ClassDetails** (`[Object[]]`) – Details of classes within the file.
+                - **Contents** (`[String]`) – Entire script content.
+                - **Group** (`[String]`) – Subfolder grouping.
+                - **Dependencies** (`[Object[]]`) – References to other files with name and full path.
+
+            Child Object Details:
+            #### FunctionDetails (`[Object]`)
+                - **functionName** (`[String]`) – Name of the function.
+                - **cmdLets** (`[Object]`) – Functions/cmdlets called, with name and usage count.
+                - **types** (`[Object]`) – Classes referenced, with name and usage count.
+                - **parameterTypes** (`[Object]`) – Enums used.
+                - **Validators** (`[Object]`) – Validator classes used.
+                - **Properties** (`[String[]]`) – Properties within the function.
+
+            #### ClassDetails (`[Object]`)
+                - **ClassName** (`[String]`) – Name of the class.
+                - **Methods** (`[String]`) – Methods defined in the class.
+                - **Properties** (`[String[]]`) – Properties within the class.
+
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-27 AA
-                    - First Refactor
-                2024-08-12 AA
-                    - Improve the relativePath code
-                    - Add a folderGroup passthrough
-                    - Need to figure out a better way for importing the module
-                    
     #>
 
     [CmdletBinding()]
     PARAM(
         #Path to source folder.
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline)]
-        [string]$path
+        [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
+        [string]$path = ((get-item 'source').fullname)
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -894,11 +992,14 @@ function get-mfFolderItemDetails
                 }
                 process{
                     $AST = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+                    
+                    
                     #$Functions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
-
                     #The above was the original way to do this
                     #However it was so efficient it also returned subfunctions AND functions in scriptblocks
                     #Since we don't want to do that, we cycle through and look at the start and end line numbers and only return top-level functions
+                    #Leaving it here as a reminder 
+
                     $AllFunctions = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
                     $TopLevelFunctions = New-Object System.Collections.Generic.List[Object]
                     foreach($func in $allFunctions){
@@ -1056,8 +1157,6 @@ function get-mfFolderItemDetails
 
             foreach($item in $itemDetails)
             {
-                #Clumsy way of doing this list, could just do array with +
-                #Feel like this is slightly neater and easier to turn bits off or expand
                 write-verbose "Checking dependencies for file: $($item.name)"
                 $compareList =New-Object System.Collections.Generic.List[string]
                 $item.ClassDetails.methods.name.foreach{$compareList.add($_)}
@@ -1089,11 +1188,7 @@ function get-mfFolderItemDetails
                 #Add dependencies as an item
                 $item|add-member -MemberType NoteProperty -Name 'Dependencies' -Value $dependenciesList
                 $item
-
-
             }
-            
-
         }
         $global:dbgScriptBlock = $sblock
 
@@ -1102,11 +1197,17 @@ function get-mfFolderItemDetails
         [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
         $folderItems = $folders.ForEach{
             $folderPath = Join-Path $path -ChildPath $_
-            get-mfFolderItems -path $folderPath -psScriptsOnly
+            if(!(test-path $folderPath))
+            {
+                write-verbose "$folderPath not found. Skipping"
+            }else{
+                write-verbose "Getting items from $folderPath"
+                get-mfFolderItems -path $folderPath -psScriptsOnly
+            }
         }
 
-        write-verbose 'Starting Job'
-        $job = Start-Job -ScriptBlock $sblock -ArgumentList @($path, $folderItems)
+        write-verbose "Starting Job; arguments `nPath:$($path|out-string)`nFiles:`n$($folderItems.name|out-string))"
+        $job = Start-Job -ScriptBlock $sblock -ArgumentList @($path, $folderItems) -WorkingDirectory $path
         $job|Wait-Job|out-null
         write-verbose 'Retrieving output and returning result'
         $output = Receive-Job -Job $job
@@ -1119,52 +1220,63 @@ function get-mfFolderItems
 {
     <#
         .SYNOPSIS
-            Get a list of files from a folder - whilst processing the .mfignore and .mforder files
+            Retrieves a filtered list of files from a specified folder, processing `.mfignore` and `.mforder` rules.
             
         .DESCRIPTION
-             Get the files out of a folder. Adds a bit of smarts to it such as:
-             - Ignore anything in the .mfignore file
-             - Filter out anything that isn't a PS1 file if, with a switch
-             - Ignore files with .test.ps1 - These are assumed to be pester files
-             - Ignore files with .tests.ps1 - These are assumed to be pester files
-             - Ignore files with .skip.ps1 - These are assumed to be skippable
+            The `get-mfFolderItems` function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
+            - Ignoring entries specified in `.mfignore`.
+            - Filtering out non-PS1 files using a switch (`-psScriptsOnly`).
+            - Excluding test-related files (`*.test.ps1`, `*.tests.ps1`, `*.skip.ps1`).
+            - Handling optional file copying (`-destination` and `-copy` parameters).
 
+            The function ensures all returned paths are fully qualified.
+            This function is primarily used to assist the get-mfFolderItemDetails as well as build-mfProject.
+            The -copy switch is added to cleanly copy resources and binaries with build-mfProject
             
-           
-
-              Will always return a full path name
-            
-        ------------
         .EXAMPLE
-            get-mfFolderItems '.\source\functions\example.ps1'
+            get-mfFolderItems -path '.\source\functions' -psScriptsOnly
             
+            #### DESCRIPTION
+            Scans `.\source\functions`, retrieves only `.ps1` files, and excludes files matching `.mfignore` rules.
+
+        .EXAMPLE
+            get-mfFolderItems -path '.\source\functions' -destination '.\build\functions' -copy
+
+            #### DESCRIPTION
+            Scans `.\source\functions`, retrieves filtered files, and copies them to `.\build\functions`.
+
+        .INPUTS
+            [String] - Accepts a folder path via parameter or pipeline (`ValueFromPipelineByPropertyName`).
+
+        OUTPUTS
+            [Object[]] - Returns an array of objects containing:
+                - **Name** (`[String]`) – Name of the file.
+                - **Path** (`[String]`) – Full file path.
+                - **RelativePath** (`[String]`) – Path relative to the source folder.
+                - **Folder** (`[String]`) – Name of the source folder.
+                - **(Optional) newPath** (`[String]`) – Destination path if copying.
+                - **(Optional) newFolder** (`[String]`) – Destination folder name if copying.
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    - Made much faster and more modern
-
-                2024-08-23 - AA
-                    - Added the .bt files as exclusions to help with Bartender backwards compatibility
                     
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
     PARAM(
-        #Path to start in
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Default')]
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName ='Copy')]
+        #Path to get items from
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Default')]
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Copy')]
+        [alias('s')]
         [string]$path,
+        #Flag to copy scripts only
         [parameter(ParameterSetName ='Default')]
         [parameter(ParameterSetName ='Copy')]
         [switch]$psScriptsOnly,
+        #Flag to copy scripts only
         [parameter(ParameterSetName ='Copy')]
         [string]$destination,
+        #Flag to actually copy files and not just output
         [parameter(ParameterSetName ='Copy')]
         [switch]$copy
 
@@ -1174,50 +1286,7 @@ function get-mfFolderItems
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
-
-        if($path[-1] -eq '\' -or $path[-1] -eq '/')
-        {
-            write-verbose 'Removing extra \ or / from path'
-            $path = $path.Substring(0,$($path.length-1))
-            write-verbose "New Path $path"
-        }
-
-        try{
-            $folderItem = get-item $path -erroraction stop
-            #Ensure we have the full path
-
-            $folder = $folderItem.FullName
-            write-verbose "Folder Fullname: $folder"
-            $folderShortName = $folderItem.Name
-            write-verbose "Folder Shortname: $folderShortName"
-
-        }catch{
-            throw "Unable to get folder at $path"
-        }
-
-
-        #Include the older bartender bits so we have backwards compatibility
-        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
-
-
-        if($destination)
-        {
-            if($destination[-1] -eq '\' -or $destination[-1] -eq '/')
-            {
-                write-verbose 'Removing extra \ or / from destination'
-                $path = $path.Substring(0,$($destination.length-1))
-                write-verbose "New destination $destination"
-            }
-
-            if(!(test-path $destination))
-            {
-                throw "Unable to resolve destination path: $destination"
-            }
-
-
-        }
-
+        write-verbose "ParameterSet: $($PSCmdlet.ParameterSetName)"
 
         $fileListSelect = @(
             'Name'
@@ -1252,7 +1321,50 @@ function get-mfFolderItems
     }
     
     process{
+
+        #Check the Parameters and do some lite parsing
+        write-verbose "Path set to: $path"
         
+        if($path[-1] -eq '\' -or $path[-1] -eq '/')
+        {
+            write-verbose 'Removing extra \ or / from path'
+            $path = $path.Substring(0,$($path.length-1))
+            write-verbose "New Path $path"
+        }
+
+        try{
+            $folderItem = get-item $path -erroraction stop
+            #Ensure we have the full path
+
+            $folder = $folderItem.FullName
+            write-verbose "Folder Fullname: $folder"
+            $folderShortName = $folderItem.Name
+            write-verbose "Folder Shortname: $folderShortName"
+
+        }catch{
+            throw "Unable to get folder at $path"
+        }
+
+
+        #Include the older bartender bits so we have backwards compatibility
+        [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
+
+        if($destination)
+        {
+            if($destination[-1] -eq '\' -or $destination[-1] -eq '/')
+            {
+                write-verbose 'Removing extra \ or / from destination'
+                $path = $path.Substring(0,$($destination.length-1))
+                write-verbose "New destination $destination"
+            }
+
+            if(!(test-path $destination))
+            {
+                throw "Unable to resolve destination path: $destination"
+            }
+
+
+        }
 
         $mfIgnorePath = join-path -path $folder -childpath '.mfignore'
         if(test-path $mfIgnorePath)
@@ -1264,13 +1376,10 @@ function get-mfFolderItems
             }
         }
 
-
         write-verbose "Full Exclude List: `n`n$($excludeList|format-list|Out-String)"
+
+        #Actual processing
         
-
-        
-
-
         write-verbose 'Getting Folder files'
         if($psScriptsOnly)
         {
@@ -1325,6 +1434,415 @@ function get-mfFolderItems
     }
     
 }
+function get-mfGitChangeLog
+{
+    <#
+        .SYNOPSIS
+            Generates a markdown changelog from Git commit messages between the latest and previous tags.
+
+        .DESCRIPTION
+            This function retrieves Git commit messages between the latest and previous tags, categorizes them based on predefined types, and formats them into a markdown changelog. It ensures the Git environment is correctly set up and handles errors if Git is not recognized or tags are not found.
+
+        .EXAMPLE
+            get-mfGitChangeLog
+                    
+            DESCRIPTION
+            Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
+                    
+            #### OUTPUT
+            # Change Log
+            Version: v1.0.0 --> v1.1.0
+            ## New Features
+            - Added new authentication module
+            ## Bug Fixes
+            - Fixed issue with user login
+
+        .EXAMPLE
+            get-mfGitChangeLog -changeLogTypes @{
+                'feat' = 'New Features'
+                'fix' = 'Bug Fixes'
+                'chore' = 'Chore and Pipeline work'
+                'test' = 'Test Changes'
+            }
+                    
+            DESCRIPTION
+            This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
+                    
+            #### OUTPUT
+            # Change Log
+            Version: v1.0.0 --> v1.1.0
+            ## New Features
+            - Added new authentication module
+            ## Bug Fixes
+            - Fixed issue with user login
+            ## Chore and Pipeline work
+            - Updated GH Pipeline AutoBuildv3
+            ## Test Changes
+            - Added test to user login function
+
+         .EXAMPLE
+            get-mfGitChangeLog -All
+
+            DESCRIPTION
+            Generates a full markdown changelog with all versions.
+
+            #### OUTPUT
+            # Change Log
+            ## Version: v1.0.0 --> v1.1.0
+            ### New Features
+            - Added new authentication module
+            ### Bug Fixes
+            - Fixed issue with user login
+            ### Chore and Pipeline work
+            - Updated GH Pipeline AutoBuildv3
+            ### Test Changes
+            - Added test to user login function
+            ## Version: v1.0.0-prev001 --> v1.1.0
+            ### New Features
+            - Added function
+
+        .INPUTS
+            [hashtable] - Accepts changeLogTypes hashtable via parameter or pipeline
+
+        .OUTPUTS
+            [STRING] - Returns a Markdown Compatible string output that can be redirected to a file
+
+        .NOTES
+            Author: Adrian Andersson
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Change Logs Types and corresponding Heading. Hashtable/Key Value Pair expected. Key = git type; Value = Heading
+        [Parameter(ValueFromPipeline)]
+        [hashtable]$changeLogTypes = @{
+            'feat' = 'New Features'
+            'fix' = 'Bug Fixes'
+            'docs' = 'Documentation Changes'
+            'refactor' = 'Code Rewrite/Refactor'
+            'perf' = 'Performance Improvements'
+            #'chore' = 'Chore and Pipeline work'
+            #'test' = 'Testing'
+        },
+        #Switch to get a full changelog for ALL tags
+        [Parameter()]
+        [switch]$all
+
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        $markDown = [System.Collections.Generic.List[string]]::new()
+        $markDown.add("# Change Log`n")
+        
+    }
+    
+    process{
+        write-verbose 'Check git commandline and directory is going to work the way we expect it to. Throw if it does not'
+        try{
+            $gitVer = git --version
+            $gitFolder = git rev-parse --is-inside-work-tree
+            $gitFolder = $gitFolder.trim()
+            
+        }catch{
+            throw 'Error getting Git Version or working directory.'
+        }
+
+        if(!$gitVer)
+        {
+            throw 'Git Version undetermined'
+        }
+        if(!$gitFolder -or $gitFolder -notlike '*true*')
+        {
+            throw 'Git not recognised as inside work tree'
+        }
+
+        write-verbose 'Get the Git Tags. Use the count of tags to determine if we are bundling for a release'
+        #If you run this after tests and build, then creating a new release w/ tag, then you will KNOW that the tag is the new version
+        $tags = git tag --sort=-creatordate
+        $tagCount  = $tags.count
+        write-verbose "Got $tagCount total tags; ($($tags -join ','))"
+        if($tagCount  -gt 1)
+        {
+            
+            if($all)
+            {
+                write-verbose 'AllFlag set. Getting complete Change Log'
+                $tagRef = 1 #We need a marker to know what the next tag is. Since we start at 0, the ref should start at 1
+                $tags.foreach{
+                    write-verbose "Getting contents for $_. Reference: $tagRef"
+                    $t1 = $_
+                    $markDown.add("## Version: $t1`n")
+                    if($tagRef -eq $tagCount){
+                        write-verbose 'Last Entry?'
+                        write-verbose "git log `"$($t1)`" --pretty=format:`"%s`""
+                        $commitMessages = git log "$($t1)" --pretty=format:"%s"
+                    }else{
+                        $t2 = $tags[$tagRef]
+                        write-verbose "git log `"$($t2)..$($t1)`" --pretty=format:`"%s`""
+                        $commitMessages = git log "$($t2)..$($t1)" --pretty=format:"%s"
+                    }
+                        
+                    $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+                    $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+                    $grouped.forEach{
+                        $markDown.Add("`n### $($changeLogTypes.$($_.name))`n")
+                        $_.group.Message.ForEach{
+                            $markDown.Add("- $_")
+                        }
+                        $markDown.Add("`n")
+                    }
+                    
+                    $tagRef++
+                }
+            }else{
+                #Only get between the latest and previous release based on tag
+                write-verbose "Found $tagCount total tags. Sorting to get latest and previous"
+                $commitMessages = git log "$($tags[1])..$($tags[0])" --pretty=format:"%s"
+                $markDown.add("Version: $($tags[1]) --> $($tags[0])`n")
+                $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+                $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+                $grouped.forEach{
+                    $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
+                    $_.group.Message.ForEach{
+                        $markDown.Add("- $_")
+                    }
+                }
+            }
+            
+        }elseIf($tagCount  -eq 1){
+            #Get all and assume this is the first tag
+            write-verbose 'Single Tag found. Get all Commit messages to this point'
+            $commitMessages = git log --pretty=format:"%s"
+            $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+            $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+            $grouped.forEach{
+                $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
+                $markDown.add("Version: $($tags)`n")
+                $_.group.Message.ForEach{
+                    $markDown.Add("- $_")
+                }
+            }
+            
+        }else{
+            #Assume there isn't any tags and we aren't bundling this up for a release
+            Write-Warning 'No tags found. May not be a release. This function gets the change log between the previous tag and latest tag. If you are not using Tags this function will not work'
+            #Break here as nothing to action
+            return
+        }
+
+        $markDownText = $markDown -join "`n" 
+        if($markDownText){
+            return $markDownText
+        }
+
+    }
+    
+}
+function get-mfGitLatestVersion
+{
+
+    <#
+        .SYNOPSIS
+            Retrieves the latest Git tag version in semantic version format.
+            
+        .DESCRIPTION
+            This function queries Git for available tags and processes them as semantic versions.
+            If no tags are found, it initializes a new version starting from `1.0.0`.
+            If Git is unavailable or returns an error, a warning is displayed, and processing continues gracefully.
+            
+        ------------
+        .EXAMPLE
+            get-mfGitLatestVersion
+
+            #### DESCRIPTION
+            Queries the current Git repository for version tags, identifies the latest version,
+            and returns it in `major.minor.patch` format.
+
+            #### OUTPUT
+            1.2.3
+            (Example: If Git tags include `v1.0.0`, `v1.2.3`, `v1.1.0`, the function returns `1.2.3` as the latest.)
+
+        .EXAMPLE
+            get-mfGitLatestVersion -Verbose
+
+            #### DESCRIPTION
+            Runs the function with verbose output, providing detailed debugging information
+            about the Git command execution and version determination.
+
+            #### OUTPUT
+            ```
+            ===========Executing get-mfGitLatestVersion===========
+            Got VersionTags: v1.0.0 v1.2.3 v1.1.0
+            Latest Tag Version: 1.2.3
+            ```
+        .OUTPUTS
+            [semver] - Returns a Semantec Version object
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+        
+    }
+    
+    process{
+        try{
+            $versionTags = git tag --list 2>&1
+            if ($LASTEXITCODE -ne 0 -or $versionTags -match "fatal:") {
+                throw "Git Error: $versionTags"
+            }
+        }catch{
+            Write-Warning "Error with git command: $_"
+            $versionTags = $null
+        }
+        
+        write-verbose "Got VersionTags: $versionTags"
+        if($versionTags) {
+        $versions = $versionTags.ForEach{[semver]::new($_.TrimStart("v"))}
+            $latest = ($versions | Sort-Object -Descending | Select-Object -First 1)
+        Write-Verbose "Latest Tag Version: $($latest.tostring())"
+        } else {
+        Write-Verbose 'Generating new version from scratch at 1'
+            $latest = [semver]::new(1,0,0)
+        }
+        return $latest
+    }
+    
+}
+function get-mfLatestSemverFromBuildManifest
+{
+
+    <#
+        .SYNOPSIS
+            If you are manually building, and you have access to the \build folder, you can use this to get the next semver
+            
+        .DESCRIPTION
+            Detailed Description
+            
+        ------------
+        .EXAMPLE
+            get-mfLatestSemverFromBuildManifest
+            
+            #### DESCRIPTION
+            Import build\module\modulemanifest.psd1
+            Find the prerelease tag(if present) and module version. I.e. module version 1.1.0 prerelease tag prev003 = 1.1.0-prrev003
+            
+            
+            #### OUTPUT
+            Major  Minor  Patch  PreReleaseLabel BuildLabel
+            -----  -----  -----  --------------- ----------
+            1      1      0      prev003
+            
+        .OUTPUTS
+            [semver] - Returns a Semantec Version object    
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Root path of the module. Uses the current working directory by default
+        [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [alias('modulePath')]
+        [string]$path  = $(get-location).path,
+        [Parameter(DontShow)]
+        [string]$configFile = 'moduleForgeConfig.xml',
+        [Parameter(DontShow)]
+        [string]$moduleNameOverride
+
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+    }
+    
+    process{
+        #Do some checks and parsing
+        if(! $moduleNameOverride)
+        {
+            #Read the config file
+            write-verbose 'Importing config file'
+            $configPath = join-path -path $path -ChildPath $configFile
+
+            if(!(test-path $configPath))
+            {
+                throw "Unable to find config file at: $configPath"
+            }
+            $config = import-clixml $configPath -erroraction stop
+            $moduleName = $config.moduleName
+        }else{
+            $moduleName = $moduleNameOverride
+        }
+        
+        
+        $buildFolder = Join-Path $path 'build'
+        write-verbose "build folder: $buildFolder"
+        $moduleFolder = join-path $buildFolder $moduleName
+        $manifestFile = get-childItem -Path $moduleFolder -Filter "$moduleName.psd1"
+        if(!$manifestFile){
+            throw 'Manifest file not found in build folder'
+        }else{
+            write-verbose "Found manifest at $($manifestFile.FullName)"
+            $ManifestPath = $manifestFile.fullname
+        }
+
+        #Actual processing
+
+        write-verbose 'Try and import manifest as datafile'
+        try{
+            $manifest = Import-PowerShellDataFile -Path $ManifestPath
+        }catch{
+            throw 'Manifest was found but unable to import as PSDataFile'
+        }
+
+        write-verbose 'Get Module Version'
+        $moduleVersion = $manifest.ModuleVersion
+        if(!$moduleVersion){
+            throw 'Err: Unable to get moduleVersion'
+        }else{
+            write-verbose "Found Version: $moduleVersion"
+        }
+
+        write-verbose 'Check for PreRelease'
+        $preRelease = $manifest.PrivateData.PSData.Prerelease
+        if($preRelease)
+        {
+            write-verbose "Found Prerelease tag: $($preRelease)"
+            $versionString = "$($moduleVersion)-$($preRelease)"
+        }else{
+            write-verbose 'No Prerelease was found'
+            $versionString = $moduleVersion
+        }
+
+        write-verbose 'Attempt to make semver from string'
+        try{
+            [semver]::new($versionString)
+        }catch{
+            throw "Err: Could not convert $versionString to semver object"
+        }
+    }
+    
+}
 function get-mfNextSemver
 {
 
@@ -1333,7 +1851,9 @@ function get-mfNextSemver
         Increments the version of a Semantic Version (SemVer) object.
 
     .DESCRIPTION
-        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. It can handle major, minor, and patch increments. The function also handles pre-release versions and allows the user to optionally override the pre-release label.
+        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+        It can handle major, minor, and patch increments. 
+        The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
     .EXAMPLE
         $version = [SemVer]::new('1.0.0')
@@ -1355,28 +1875,21 @@ function get-mfNextSemver
         #### OUTPUT
         '3.0.0'
 
+    .INPUTS
+        [semver] - Will accept a Semver from pipeline or via direct assignment
+
+    .OUTPUTS
+        [semver] - Returns a Semantec Version object that should increment, based on the other parameters, the input semver
+
     .NOTES
         Author: Adrian Andersson
-
-        Changelog:
-
-            2024-08-10 - AA
-                - First attempt at incrementing the Semver
-
-            2024-08-24 - AA
-                - Have discovered that PSGallery only supports SemVer v1. So need to remove the prerelese Version
-                - I think we need to change our default label to PRE, and have a 3 digit number afterwards to indicate the prerelease number
-                    - I.e. 1.0.0-PREv001, 1.0.0-PREv002, 1.0.1-PREv001
-
-            2024-08-26 - AA
-                - Added functionality to be able to drop pre-release tag
     #>
 
     [CmdletBinding(DefaultParameterSetName='default')]
     PARAM(
         #Semver Version
-        [Parameter(Mandatory,ParameterSetName='default')]
-        [Parameter(Mandatory,ParameterSetName='preRelease')]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='default')]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='preRelease')]
         [SemVer]$version,
 
         #What are we incrementing
@@ -1547,17 +2060,9 @@ function new-mfProject
             The function will create the directory structure and essential files for the new module "MyModule" in the current working directory. 
             It will also set up the specified metadata and dependencies.
             
-            
-            
         .NOTES
             Author: Adrian Andersson
             
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    
     #>
 
     [CmdletBinding()]
@@ -1581,7 +2086,8 @@ function new-mfProject
         [Parameter()]
         [String[]]$moduleTags,
         #Root path of the module. Uses the current working directory by default
-        [string]$modulePath = $(get-location).path,
+        [alias('modulePath')]
+        [string]$path = $(get-location).path,
         #Project URI. Will try and read from Git if your using a git repository.
         [Parameter()]
         [string]$projectUri = $(try{git config remote.origin.url}catch{$null}),
@@ -1613,23 +2119,23 @@ function new-mfProject
 
 
         #I'm not sure why I had this in here. Cannot remember.
-        if($modulePath -like '*\' -or $modulePath -like '*/' )
+        if($path -like '*\' -or $path -like '*/' )
         {
             Write-Verbose 'Superfluous \ or / character found at end of modulePath, removing'
-            $modulePath = $modulePath.Substring(0,$($modulePath.Length-1))
-            Write-Verbose "New path = $modulePath"
+            $path = $path.Substring(0,$($path.Length-1))
+            Write-Verbose "New path = $path"
         }
 
-        $configPath = join-path -path $modulePath -childpath $configFile
+        $configPath = join-path -path $path -childpath $configFile
 
     }
     
     process{
 
         write-verbose 'Validating Module Path'
-        if(!(test-path $modulePath))
+        if(!(test-path $path))
         {
-            throw "ModulePath: $modulePath not found"
+            throw "ModulePath: $path not found"
         }
 
         write-verbose 'Checking for Existing Config'
@@ -1640,14 +2146,14 @@ function new-mfProject
 
 
         write-verbose 'Create Folder Scaffold'
-        add-mfFilesAndFolders -moduleRoot $modulePath
+        add-mfFilesAndFolders -moduleRoot $path
 
        
         <#
         if($projectUri -and !$licenseUri)
         {
             write-verbose 'Auto-checking for license'
-            if(test-path $(join-path -path $modulePath -childPath 'LICENSE'))
+            if(test-path $(join-path -path $path -childPath 'LICENSE'))
             {
                 $licenseUri = "$projectUri\LICENSE"
             }
@@ -1716,12 +2222,6 @@ function register-mfLocalPsResourceRepository
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Created function to register repository
                     
     #>
 
@@ -1821,13 +2321,6 @@ function remove-mfLocalPsResourceRepository
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-26 - AA
-                    - Created function to clean-up repository
-                    
     #>
 
     [CmdletBinding()]
@@ -1914,7 +2407,7 @@ function update-mfProject
             #### OUTPUT
             The function will update the specified parameters in the module project configuration file.
             
-         .EXAMPLE
+        .EXAMPLE
             update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module"
 
             #### DESCRIPTION
@@ -1926,13 +2419,6 @@ function update-mfProject
             
         .NOTES
             Author: Adrian Andersson
-            
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    
     #>
 
     [CmdletBinding()]
@@ -1955,7 +2441,7 @@ function update-mfProject
         #Module Tags. Used to help discoverability and compatibility in package repositories
         [Parameter()]
         [String[]]$moduleTags,
-        #Root path of the module. Uses the current working directory by default
+        #Source Code Repository to use, i.e. your repositories github/azure devops uri
         [Parameter()]
         [string]$projectUri,
         # A URL to an icon representing this module.
@@ -1970,12 +2456,17 @@ function update-mfProject
         #Modules that must be imported into the global environment prior to importing this module
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
+        #If you are specifying a Default Command Prefix via your manifest, this will update that prefix
         [Parameter()]
         [String[]]$DefaultCommandPrefix,
+        #If you have any additional Private Data you want to add to your module manifest, add it here
         [Parameter()]
         [object[]]$PrivateData,
-         #Root path of the module. Uses the current working directory by default
-        [string]$modulePath = $(get-location).path,
+        #Root path of the module. Uses the current working directory by default
+        [Parameter()]
+        [Alias('modulePath')]
+        [string]$path = $(get-location).path,
+        #Module Config File
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml'
 
@@ -1987,17 +2478,17 @@ function update-mfProject
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         write-verbose 'Testing module path'
-        $moduleTest = get-item $modulePath
+        $moduleTest = get-item $path
         if(!$moduleTest){
-            throw "Unable to read from $modulePath"
+            throw "Unable to read from $path"
         }
 
-        $modulePath = $moduleTest.FullName
-        write-verbose "Building from: $modulePath"
+        $path = $moduleTest.FullName
+        write-verbose "update module config in: $path"
 
         #Read the config file
         write-verbose 'Importing config file'
-        $configPath = join-path -path $modulePath -ChildPath $configFile
+        $configPath = join-path -path $path -ChildPath $configFile
 
         if(!(test-path $configPath))
         {
@@ -2096,6 +2587,182 @@ function update-mfProject
         }
     }
 }
+function write-mfModuleDocs
+{
+
+    <#
+        .SYNOPSIS
+            Generates and updates function documentation using PlatyPS, and creates an index for module functions.
+
+        .DESCRIPTION
+            This function automates documentation generation based on module functions, leveraging PlatyPS to create and update Markdown help files.
+            It also builds an `index.md` file for organizing documentation, making it easier to integrate with GitHub Pages or other documentation platforms.
+            Additionally, if specified, it includes a changelog based on Git commits.
+
+        .EXAMPLE
+            write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
+
+            #### DESCRIPTION
+            Builds documentation for `MyCustomModule` and includes a full Git-based changelog (`changeLog.md`) alongside function help files.
+
+        .EXAMPLE
+            write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
+
+            #### DESCRIPTION
+            Generates function documentation without updating `index.md`.
+
+        .INPUTS
+            [string] - Path is accepted as pipeline input or via direct assignment. It has a defaulf value and does not need to be set
+
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #The root path where documentation should be stored. Defaults to the current directory.
+        [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [alias('modulePath')]
+        [string]$Path = $(get-item .).fullname,
+        #The name of the PowerShell module for which documentation should be generated.
+        [Parameter(Mandatory)]
+        [alias('module')]
+        [ValidateScript({ Get-Module -Name $_ -ErrorAction SilentlyContinue })]
+        [string]$ModuleName,
+        #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
+        [Parameter()]
+        [alias('docsPath')]
+        [string]$docsFolder = 'docs',
+        #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
+        [Parameter()]
+        [alias('functionsPath')]
+        [string]$functionsFolder = 'functions',
+        #If specified, retrieves and includes a Markdown changelog based on Git commit history.
+        [Parameter()]
+        [switch]$includeChangeLog,
+        #If specified, skips creating or updating the `index.md` file.
+        [Parameter()]
+        [switch]$skipIndex
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        $platyPs = (get-module -Name PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
+        if($platyPs)
+        {
+            write-verbose "Build Function Documentation with PlatyPS Version $($platyPs.version)"
+        }else{
+            throw "This function relies on module PlatyPS. Please install it from the PSGallery"
+        }
+
+        $module = (get-module -Name $ModuleName|Sort-Object -Property version -Descending|select-object -first 1)
+        if($module)
+        {
+            write-verbose "Build Function Documentation for Module $ModuleName - version: $($module.version)"
+        }else{
+            throw "Module is not pre-loaded. Please import the module first"
+        }
+
+        $customFolderSelect = @(
+            'name'
+            'basename'
+            @{
+                name = 'baseFolder'
+                expression = {$($_.Directory.FullName.replace($DocsFullPath,''))}
+            }
+            @{
+                name = 'leaf'
+                expression = {$(split-path -path $_.Directory.FullName -leaf)}
+            }
+            @{
+                name = 'relLink'
+                expression = {("./$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))/$($_.name)").replace('//','/')}
+            }
+            @{
+                name = 'subjectGroup'
+                expression = {("$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))").replace('//','/').trimStart('/')}
+            }
+        )
+
+        
+    }
+    
+    process{
+        #Checks and parses
+        write-verbose "In path $path"
+        $DocsFullPath = join-path -Path $Path -ChildPath $docsFolder
+        if(!(test-path $DocsFullPath))
+        {
+            write-verbose 'Need to make docs folder as it does not exist'
+            New-Item -ItemType Directory -Path $DocsFullPath
+        }
+
+        $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $functionsFolder
+        if(!(test-path $functionsFullPath))
+        {
+            write-verbose 'Need to make functions folder as it does not exist'
+            New-Item -ItemType Directory -Path $functionsFullPath
+        }else{
+            write-verbose 'Recreating Functions Folder'
+            try{
+                remove-item $functionsFullPath -ErrorAction Stop -Force -Recurse
+            }catch{
+                throw 'Error cleaning up existing functions folder'
+            }
+            New-Item -ItemType Directory -Path $functionsFullPath
+        }
+        
+        #Actual Process
+        write-verbose 'Create markdown help from module help'
+        New-MarkdownHelp -Module $module.Name -Force -OutputFolder $functionsFullPath
+
+        if($includeChangeLog)
+        {
+            write-verbose 'Creating releaseNotes file'
+            $changeLog = get-mfGitChangeLog -all
+            write-verbose "ChangeLog: `n$($changeLog)"
+            if($changeLog)
+            {
+                $changeLogPath = Join-Path $DocsFullPath -ChildPath 'changeLog.md'
+                $changeLog | Out-File -FilePath $changeLogPath -Force 
+            }else{
+                write-warning 'changeLog notes were not captured as none existed, or something went wrong'
+            }
+        }
+
+        if($skipIndex){
+            Write-Verbose 'Skipping Index File'
+        }else{
+            $indexContent = [System.Collections.Generic.List[string]]::new()
+            $indexContent.add("# Documentation Index`n")
+            $folderContent = Get-ChildItem -Path  $DocsFullPath -Filter '*.md' -Recurse|Select-Object $customFolderSelect
+            $folderGroup = $folderContent|Group-Object -Property 'subjectGroup'
+            ($folderGroup.where{$_.'name' -eq ''}.group).foreach{
+                if($_.'basename' -ne 'index')
+                {
+                    $indexContent.add("- [$($_.baseName)]($($_.relLink))")
+                }
+    
+            }
+            $folderGroup.where{$_.'name' -ne ''}.forEach{
+
+                $indexContent.add("`n## $($_.'name')`n")
+                $_.group.foreach{
+                    $indexContent.add("- [$($_.baseName)]($($_.relLink))")
+                }
+            }
+            write-verbose 'Create Index File'
+            $indexPath = Join-Path $DocsFullPath -ChildPath 'index.md'
+            $indexContent -join "`n"|out-file $indexPath -Force
+        }
+        
+    }
+    
+}
 function add-mfFilesAndFolders
 {
 
@@ -2111,13 +2778,6 @@ function add-mfFilesAndFolders
         .NOTES
             Author: Adrian Andersson
             
-            
-            Changelog:
-            
-                2024-07-22 - AA
-                    - Refactored from Bartender
-                    - Tried to make Operating Agnostic by using join-path
-                    
     #>
 
     [CmdletBinding()]
@@ -2132,8 +2792,8 @@ function add-mfFilesAndFolders
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $rootDirectories = @('documentation','source')
-        $sourceDirectories = @('functions','enums','classes','filters','dscClasses','validationClasses','private','bin','resource')
+        $rootDirectories = @('source')
+        $sourceDirectories = @('functions','enums','classes','filters','validationClasses','private','bin','resource')
         $emptyFiles = @('.gitignore','.mfignore')
         
         
@@ -2202,4 +2862,20 @@ function add-mfFilesAndFolders
         
     }
     
+}
+#Support function for get-mfDependencyTree
+
+function printTree {
+    param(
+        [string]$node,
+        [int]$level = 0
+    )
+
+    $indent = '    ' * $level
+    write-output "$indent >--DEPENDS-ON--> $node"
+    if ($tree.ContainsKey($node)) {
+        foreach ($child in $tree[$node]) {
+            printTree -node $child -level ($level + 1)
+        }
+    }
 }

@@ -6,6 +6,7 @@ BeforeAll{
 
     $dependencies = [ordered]@{
         functions = @('get-mfFolderItems.ps1','get-mfFolderItemDetails.ps1')
+        private = @('printTree.ps1')
     }
 
     $dependencies.GetEnumerator().ForEach{
