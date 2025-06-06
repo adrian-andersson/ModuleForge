@@ -21,6 +21,15 @@ on:
         options:
           - stable
           - prerelease
+      moduleforge_release_toggle:
+        description: 'Select ModuleForge Release Type'
+        required: false
+        default: 'stable'
+        type: choice
+        options:
+          - moduleforge-latest-stable-only
+          - moduleforge-latest-prerelease-allowed
+
 
 jobs:
   buildAndRelease:
@@ -102,8 +111,17 @@ jobs:
       - name: Install dependencies #Install the modules we need for the build
         shell: pwsh
         run: |
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck 
-          Install-Module -Name ModuleForge -AllowPrerelease -Force -SkipPublisherCheck
+          $VerbosePreference = 'Continue'
+          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
+          $mfReleaseType="${{ github.event.inputs.moduleforge_release_toggle }}"
+          if($mfReleaseType -eq 'moduleforge-latest-prerelease-allowed')
+          {
+            write-verbose '********WARNING: Will use latest moduleForge, even if it is a prerelease ********'
+            Install-Module -Name ModuleForge -AllowPrerelease -Force -SkipPublisherCheck
+          }else{
+            write-verbose 'Will use latest stable release of moduleForge'
+            Install-Module -Name ModuleForge -Force -SkipPublisherCheck
+          }
           $moduleList = @('Microsoft.PowerShell.PSResourceGet','ModuleForge')
           import-module $moduleList
           get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
