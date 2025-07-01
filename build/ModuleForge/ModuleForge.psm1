@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
-	 ModuleForge Version: 1.1.0
-	BuildDate: 2025-06-06T20:21:22
+	 ModuleForge Version: 1.1.1
+	BuildDate: 2025-07-02T00:58:03
 #>
 function add-mfGithubScaffold
 {
@@ -1480,7 +1480,7 @@ function get-mfGitChangeLog
             ## Test Changes
             - Added test to user login function
 
-         .EXAMPLE
+        .EXAMPLE
             get-mfGitChangeLog -All
 
             DESCRIPTION
@@ -1501,6 +1501,24 @@ function get-mfGitChangeLog
             ### New Features
             - Added function
 
+        .EXAMPLE
+            get-mfGitChangeLog -fromLastTag
+
+            DESCRIPTION
+            Generates markdown changelog from commit messages from the last tag until now (Head)
+
+            #### OUTPUT
+            # Change Log
+
+            ### New Features
+            - Added new authentication module
+            ### Bug Fixes
+            - Fixed issue with user login
+            ### Chore and Pipeline work
+            - Updated GH Pipeline AutoBuildv3
+            ### Test Changes
+            - Added test to user login function
+
         .INPUTS
             [hashtable] - Accepts changeLogTypes hashtable via parameter or pipeline
 
@@ -1511,10 +1529,12 @@ function get-mfGitChangeLog
             Author: Adrian Andersson
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
     PARAM(
         #Change Logs Types and corresponding Heading. Hashtable/Key Value Pair expected. Key = git type; Value = Heading
-        [Parameter(ValueFromPipeline)]
+        [Parameter(ValueFromPipeline, ParameterSetName = 'Default')]
+        [Parameter(ValueFromPipeline, ParameterSetName = 'All')]
+        [Parameter(ValueFromPipeline, ParameterSetName = 'FromLastTag')]
         [hashtable]$changeLogTypes = @{
             'feat' = 'New Features'
             'fix' = 'Bug Fixes'
@@ -1525,10 +1545,11 @@ function get-mfGitChangeLog
             #'test' = 'Testing'
         },
         #Switch to get a full changelog for ALL tags
-        [Parameter()]
-        [switch]$all
-
-
+        [Parameter(ParameterSetName = 'All', Mandatory)]
+        [switch]$all,
+        #Switch to get the changelog from the last tag until this point.
+        [Parameter(ParameterSetName = 'FromLastTag', Mandatory)]
+        [switch]$fromLastTag
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -1563,12 +1584,11 @@ function get-mfGitChangeLog
 
         write-verbose 'Get the Git Tags. Use the count of tags to determine if we are bundling for a release'
         #If you run this after tests and build, then creating a new release w/ tag, then you will KNOW that the tag is the new version
-        $tags = git tag --sort=-creatordate
+        $tags = @(git tag --sort=-creatordate)
         $tagCount  = $tags.count
         write-verbose "Got $tagCount total tags; ($($tags -join ','))"
-        if($tagCount  -gt 1)
+        if($tagCount -gt 1 -and -not $fromLastTag)
         {
-            
             if($all)
             {
                 write-verbose 'AllFlag set. Getting complete Change Log'
@@ -1603,45 +1623,37 @@ function get-mfGitChangeLog
                 #Only get between the latest and previous release based on tag
                 write-verbose "Found $tagCount total tags. Sorting to get latest and previous"
                 $commitMessages = git log "$($tags[1])..$($tags[0])" --pretty=format:"%s"
-                $markDown.add("Version: $($tags[1]) --> $($tags[0])`n")
-                $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+                $markDown.add("## Version: $($tags[1]) --> $($tags[0])`n")
+            }
+        }elseIf($fromLastTag -and $tagCount -gt 0){
+                write-verbose "fromLastTag set. Getting changelog from the last tagging event until now"
+                write-verbose "Found $tagCount total tags. Sorting to get latest and previous"
+                $commitMessages = git log "$($tags[0])..HEAD" --pretty=format:"%s"
+        }else{
+            #Get all and assume this is the first tag
+            write-verbose 'Either Single Tag found or no tags found. Get all Commit messages to this point'
+            $commitMessages = git log --pretty=format:"%s"
+        }
+
+        if(!$all -and $commitMessages)
+        {
+            write-verbose 'Getting Commit Objects, grouping and parsing based on changeLogTypes variable'
+            $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
                 $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
                 $grouped.forEach{
                     $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
                     $_.group.Message.ForEach{
                         $markDown.Add("- $_")
                     }
-                }
-            }
-            
-        }elseIf($tagCount  -eq 1){
-            #Get all and assume this is the first tag
-            write-verbose 'Single Tag found. Get all Commit messages to this point'
-            $commitMessages = git log --pretty=format:"%s"
-            $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
-            $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
-            $grouped.forEach{
-                $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
-                $markDown.add("Version: $($tags)`n")
-                $_.group.Message.ForEach{
-                    $markDown.Add("- $_")
-                }
-            }
-            
-        }else{
-            #Assume there isn't any tags and we aren't bundling this up for a release
-            Write-Warning 'No tags found. May not be a release. This function gets the change log between the previous tag and latest tag. If you are not using Tags this function will not work'
-            #Break here as nothing to action
-            return
+                }    
         }
-
+        
+        write-verbose 'Converting to Markdown String'
         $markDownText = $markDown -join "`n" 
         if($markDownText){
             return $markDownText
         }
-
     }
-    
 }
 function get-mfGitLatestVersion
 {
