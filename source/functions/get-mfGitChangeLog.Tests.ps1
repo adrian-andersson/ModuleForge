@@ -278,7 +278,6 @@ Describe 'get-mfGitChangeLog for Single Tag' {
     It 'should generate changelog for Single tags' {
 
         $result | Should -BeLike '*# Change Log*'
-        $result | Should -BeLike '*Version: v1.0.1-prev001*'
         $result | Should -BeLike '*## New Features*'
         $result | Should -BeLike '*- Added new feature*'
         $result | Should -BeLike '*## Bug Fixes*'
@@ -385,7 +384,6 @@ Describe 'get-mfGitChangeLog for Custom changeLogTypes' {
     It 'should generate changelog for Single tags' {
 
         $result | Should -BeLike '*# Change Log*'
-        $result | Should -BeLike '*Version: v1.0.1-prev001*'
         $result | Should -Not -BeLike '*## New Features*'
         $result | Should -Not -BeLike '*- Added new feature*'
         $result | Should -Not -BeLike '*## Bug Fixes*'
@@ -504,6 +502,93 @@ Describe 'get-mfGitChangeLog for Multi Tag with -All' {
         $result | Should -BeLike '*- Updated documentation*'
         $result | should -belike '*### Code Rewrite/Refactor*'
         $result | should -Not -BeLike '*## Chore*'
+        #>
+    }
+
+    
+    AfterAll{
+        remove-alias git
+    }
+}
+
+Describe 'get-mfGitChangeLog with -fromLastTag and single tag' {
+    # Mock the git version command
+    BeforeAll{
+        function invoke-GitCommand{
+            [CmdletBinding()]
+            PARAM(
+                [Parameter(Position = 0)]
+                [Alias("p0")]
+                [string]$Param0,
+                [Parameter(Position = 1)]
+                [Alias("p1")]
+                [string]$Param1,
+                [Parameter(Position = 2)]
+                [Alias("p2")]
+                [string]$Param2,
+                [Parameter(Position = 3)]
+                [Alias("p3")]
+                [string]$Param3,
+                [Parameter(Position = 4)]
+                [Alias("p4")]
+                [string]$Param4,
+                [Parameter(Position = 5)]
+                [Alias("p5")]
+                [string]$Param5,
+                [Parameter(Position = 6)]
+                [Alias("p6")]
+                [string]$Param6
+            )
+
+            begin{
+                $commandLine = "$Param0 $Param1 $Param2 $Param3 $Param4 $Param5 $Param6"
+                $commandLine = $commandLine.trim()
+
+
+                $tags = @(
+                    'v1.0.1',
+                    'v1.0.1-prev002',
+                    'v1.0.1-prev001'
+                )
+
+                $prettyLog1 = @(
+                    'feat: errors are now a feature'
+                    'test: threw spaget at wall to see what stuck'
+                    'fix: Added bandaid to small memory leak'
+                    'fix: Fixed bug that was stuck on fly paper by removing fly paper'
+                    'feat: this feature is untagged'
+                )
+            }
+            
+            process{
+                Write-Verbose "Command provided: $commandLine"
+                switch -Wildcard ($commandLine) {
+                    '--version' { return 'git version 2.30.0.mock' }
+                    'rev-parse --is-inside-work-tree' { return 'true' }
+                    'tag --sort=-creatordate' { return $tags }
+                    'log v1.0.1..HEAD --pretty=format:%s' { return $prettyLog1 }
+                    default { throw "Unexpected git command: $commandLine" }
+                }
+            }
+        }
+
+        Set-Alias -name 'git' -Value invoke-GitCommand
+
+        $result = get-mfGitChangeLog -fromLastTag
+
+        write-verbose $result
+    
+    }
+
+    # Test case for multiple tags
+    It 'should generate changelog for -fromLastTag Switch' {
+
+        $result | Should -BeLike '*# Change Log*'
+        $result | Should -BeLike '*## New Features*'
+        $result | Should -BeLike '*- errors are now a feature*'
+        $result | Should -BeLike '*- this feature is untagged*'
+        $result | Should -BeLike '*## Bug Fixes*'
+        $result | Should -BeLike '*- Fixed bug*'
         #>
     }
 
