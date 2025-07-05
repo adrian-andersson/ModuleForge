@@ -1,7 +1,7 @@
 <#
 Module created by ModuleForge
 	 ModuleForge Version: 1.1.2
-	BuildDate: 2025-07-02T01:23:57
+	BuildDate: 2025-07-02T10:48:16
 #>
 function add-mfGithubScaffold
 {
@@ -1570,10 +1570,8 @@ function get-mfGitChangeLog
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-
         $markDown = [System.Collections.Generic.List[string]]::new()
         $markDown.add("# Change Log`n")
-        
     }
     
     process{
@@ -1607,6 +1605,7 @@ function get-mfGitChangeLog
             {
                 write-verbose 'AllFlag set. Getting complete Change Log'
                 $tagRef = 1 #We need a marker to know what the next tag is. Since we start at 0, the ref should start at 1
+                
                 $tags.foreach{
                     write-verbose "Getting contents for $_. Reference: $tagRef"
                     $t1 = $_
@@ -1664,8 +1663,13 @@ function get-mfGitChangeLog
         
         write-verbose 'Converting to Markdown String'
         $markDownText = $markDown -join "`n" 
-        if($markDownText){
+        write-verbose "markDownLines = $($markDown.count)"
+        #Check we have enough relevant commit messages to return a changelog
+        #Basically, markDown should be gt 1, as the first line will be # changeLog.
+        if($markDownText -and $markDown.count -gt 1){
             return $markDownText
+        }else{
+            return "# No relevant commit messages to convert to changelog"
         }
     }
 }
