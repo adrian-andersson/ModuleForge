@@ -11,7 +11,7 @@ BeforeAll{
     $mockPsScriptRoot = $sourcePath
 
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'gItScaffoldTest'
+    $testPath = join-path -path $currentPath -childPath 'gitScaffoldTest'
     if(!(test-path $testPath)){
         new-Item -ItemType Directory -Path $testPath
     }
@@ -22,9 +22,9 @@ BeforeAll{
     new-Item -ItemType File -Name 'moduleForgeConfig.xml'
     
     #Some references to make things easier
-    $gIthubFolder = join-path -Path $testPath -ChildPath '.gIthub'
-    $prTemplateFile = join-path $gIthubFolder 'PULL_REQUEST_TEMPLATE.md'
-    $workflowsFolder = join-path $gIthubFolder 'workflows'
+    $githubFolder = join-path -Path $testPath -ChildPath '.github'
+    $prTemplateFile = join-path $githubFolder 'PULL_REQUEST_TEMPLATE.md'
+    $workflowsFolder = join-path $githubFolder 'workflows'
     $pesterTestFile = join-path $workflowsFolder 'pesterTest.yml'
     $buildandreleaseFile = join-path $workflowsFolder 'buildandrelease.yml'
 
@@ -35,13 +35,13 @@ BeforeAll{
     
 }
 
-Describe 'add-mfGIthubScaffold should Copy Files' {
+Describe 'add-mfgithubScaffold should Copy Files' {
     BeforeAll{
-        add-mfGIthubScaffold
+        add-mfgithubScaffold
     }
 
-    It 'Should have created the .gIthub folder' {
-        get-Item $gIthubFolder|Should -Not -BeNullOrEmpty
+    It 'Should have created the .github folder' {
+        get-Item $githubFolder|Should -Not -BeNullOrEmpty
     }
     It 'Should have created the  PR Template' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty
@@ -61,10 +61,11 @@ Describe 'add-mfGIthubScaffold should Copy Files' {
 
 }
 
-Describe 'add-mfGIthubScaffold should NOT copy if files exist' {
+Describe 'add-mfgithubScaffold should NOT copy if files exist' {
     BeforeAll{
-        '#### End of File Change'|Out-File $prTemplateFile -Append
-        add-mfGIthubScaffold
+        $endOfFileString = "`n#### End of File Change"
+        $endOfFileString|Out-File $prTemplateFile -Append
+        add-mfgithubScaffold
     }
     
     It 'Rerunning should not remove our end of file message in the PR Template'  {
@@ -75,10 +76,10 @@ Describe 'add-mfGIthubScaffold should NOT copy if files exist' {
 
 }
 
-Describe 'add-mfGIthubScaffold should copy if files exist and -force is used' {
+Describe 'add-mfgithubScaffold should copy if files exist and -force is used' {
 
     BeforeAll{
-        add-mfGIthubScaffold -force
+        add-mfgithubScaffold -force
     }
     
     It 'Rerunning should not remove our end of file message in the PR Template'  {
