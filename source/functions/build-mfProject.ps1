@@ -43,7 +43,11 @@ function build-mfProject
         [switch]$exportEnums,
         #Use this to not put anything in nestedmodules, making everything a single file. By default validators are put in a separate nestedmodule script to ensure they are loaded properly
         [Parameter()]
-        [switch]$noExternalFiles
+        [switch]$noExternalFiles,
+        [Parameter()]
+        [string]$releaseNotes,
+        [Parameter()]
+        [switch]$includeReleaseNotesInDescription
 
         
     )
@@ -398,6 +402,16 @@ function build-mfProject
             Guid = $config.guid
             PowershellVersion = $config.minimumPsVersion.tostring()
             CmdletsToExport = [array]@()
+        }
+
+        if($releaseNotes)
+        {
+            #Add the release notes if they were included
+            $splatManifest.releaseNotes = $releaseNotes
+            if($includeReleaseNotesInDescription)
+            {
+                $splatManifest.Description = "$($config.Description)`n`n$($releaseNotes)"
+            }
         }
         #Add the extra bits if present
         #Splatting really doesn't like nulls
