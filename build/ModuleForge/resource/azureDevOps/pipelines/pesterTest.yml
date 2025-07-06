@@ -1,0 +1,44 @@
+trigger: none
+
+jobs:
+  - job: ExecutePester
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+      displayName: 'Checkout repository'
+
+    - pwsh: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck
+        $moduleList = @('Pester')
+        Import-Module $moduleList
+        Get-Module $moduleList | Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease) {"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}} | Format-Table
+      displayName: 'Install Pester Module'
+
+    - pwsh: |
+        $pesterConfigHash = @{
+          Run = @{
+            Passthru = $true
+            Path = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"
+          }
+          CodeCoverage = @{
+            Enabled = $true
+            Path = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"
+            OutputFormat = 'JaCoCo'
+            OutputEncoding = 'UTF8'
+            OutputPath = "$(Join-Path -Path . -ChildPath 'codeCoverage.xml')"
+          }
+          Output = @{
+            Verbosity = 'Detailed'
+          }
+        }
+        $pesterConfig = New-PesterConfiguration -Hashtable $pesterConfigHash
+        Invoke-Pester -Configuration $pesterConfig
+      displayName: 'Execute Pester Testing'
+
+    - task: PublishCodeCoverageResults@2
+      inputs:
+        codeCoverageTool: 'Jacoco'
+        summaryFileLocation: '$(Build.SourcesDirectory)/codeCoverage.xml'
+      displayName: 'Publish Code Coverage Results'

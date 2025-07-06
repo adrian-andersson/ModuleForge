@@ -1,0 +1,192 @@
+trigger: none
+
+parameters:
+  - name: version_type
+    displayName: 'Type of version increment'
+    type: string
+    default: 'none'
+    values: [major, minor, patch, none]
+
+  - name: release_type
+    displayName: 'Type of release, stable or prerelease'
+    type: string
+    default: 'prerelease'
+    values: [stable, prerelease]
+
+  - name: moduleforge_release_toggle
+    displayName: 'Allow use of ModuleForge prerelease version'
+    type: string
+    default: 'moduleforge-latest-stable-only'
+    values: [moduleforge-latest-stable-only, moduleforge-latest-prerelease-allowed]
+
+  # This pipeline publishes PowerShell modules to the Azure DevOps feed.
+  # Default feed name is 'psPackages'. Can Override via pipeline parameters. Suggest you change if you created a different feed
+  - name: feed_name
+    displayName: 'Azure DevOps feed'
+    type: string
+    default: 'psPackages'
+
+
+jobs:
+- job: buildAndRelease
+  pool:
+    name: 'Azure Pipelines'
+    vmImage: 'ubuntu-latest'
+  steps:
+  - checkout: self
+    displayName: 'Checkout repository'
+    persistCredentials: true
+    fetchDepth: 0
+
+  - pwsh: |
+      $VerbosePreference = 'Continue'
+      $gitVer = git --version
+      $gitFolder = git rev-parse --is-inside-work-tree
+      write-verbose "GitVersion: $gitVer"
+      write-verbose "IsGitWorkingDirectory: $gitFolder"
+      $repoName = "$(Build.Repository.Name)"
+      $repoUri = "$(Build.Repository.Uri)"
+      Write-Host "Repo Name: $repoName"
+      Write-Host "Repo URI: $repoUri"
+    displayName: 'Git Check'
+
+
+  - pwsh: |
+      $VerbosePreference = 'Continue'
+      Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
+      $mfReleaseType = '${{ parameters.moduleforge_release_toggle }}'
+      if ($mfReleaseType -eq 'moduleforge-latest-prerelease-allowed') {
+        Write-Verbose '********WARNING: Will use latest moduleForge, even if it is a prerelease ********'
+        Install-Module -Name ModuleForge -AllowPrerelease -Force -SkipPublisherCheck
+      }else{
+        Write-Verbose 'Will use latest stable release of moduleForge'
+        Install-Module -Name ModuleForge -Force -SkipPublisherCheck
+      }
+      $moduleList = @('Microsoft.PowerShell.PSResourceGet','ModuleForge')
+      import-module $moduleList
+      get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+    displayName: 'Install Dependencies'
+
+  - pwsh: |
+      $VerbosePreference = 'Continue'
+      $latest = get-mfGitLatestVersion
+      #Inputs to determine next semver
+      $versionType = '${{ parameters.version_type }}'
+      write-verbose "Version Increment Type: $versionType"
+      $releaseType = '${{ parameters.release_type }}'
+      Write-Verbose "Version Release Type: $releaseType"
+      $nextVerSplat = @{
+        version = $latest
+      }
+      if($versionType -eq 'none') {
+        Write-Verbose 'Bumping current version'
+      }else{
+        Write-Verbose "Changing $versionType version"
+        $nextVerSplat.increment = $versionType
+      }
+
+      if ($releaseType -eq 'prerelease') {
+        Write-Verbose 'Adding PreRelease Tag'
+        $nextVerSplat.prerelease = $true
+      }else{
+        Write-Verbose 'Stable Release'
+        $nextVerSplat.stablerelease = $true
+      }
+      $changeLog = get-mfGitChangeLog -fromLastTag
+      $nextVersion = Get-mfNextSemver @nextVerSplat
+      Write-Verbose "NEXT VERSION SHOULD BE: $nextVersion"
+      Build-mfProject -version $nextVersion -InformationAction Continue -releaseNotes $changeLog
+      Write-Verbose "Push $nextVersion to pipeline variable"
+      Write-Output "##vso[task.setvariable variable=next_version]$nextVersion"
+    displayName: 'Get next version and build'
+
+  - pwsh: |
+      $verbosePreference = 'continue'
+      write-verbose 'Step1: Getting Feed URI'
+      #STEP 1 - Get all our Params in order and figure out our Repository URI to inject into the NUSPEC
+      #NOTE: This is very different to Github Actions. Something like "https://dev.azure.com/$(System.TeamProject)/_git/$(Build.Repository.Name)"
+      $repName = "$(Build.Repository.Name)"
+      $CollectionUri = "$(System.CollectionUri)"
+      $FullGitUri = "$($CollectionUri)_git/$($repName)"
+      if($FullGitUri)
+      {
+        $uri = [uri]::new($FullGitUri)
+        $escapedUri = $($uri.AbsoluteUri)
+        write-verbose "FullUriEscaped: $escapedUri"
+      }else{
+        throw 'Something went wrong with parsing the Feed URI'
+      }
+      write-verbose 'Step2: Creating Local Repo'
+      $currentPath = get-location
+      #Find the item from the build
+      $psd1Ref = $(get-childItem -path ./build/ -recurse -filter '*.psd1').fullname
+      if($psd1Ref)
+      {
+        write-verbose "Found PSD1 file: $psd1Ref"
+      }else{
+        throw 'No PSD1 file found, nothing to publish to local'
+      }
+      $repositoryPath = join-path -path $currentPath -childPath 'LocalRepository'
+      write-verbose "Will create local repository at path: $repositoryPath"
+      if(!(test-path $repositoryPath))
+      {
+        new-item -itemType Directory -path $repositoryPath
+      }else{
+        #In case runner is not clean, scrub and remove
+        if((get-psResourceRepository 'LocalTestRepository' -erroraction ignore))
+        {
+          write-verbose 'Cleaning up existing Repository Registration'
+          unregister-psresourceRepository 'LocalTestRepository'
+        }else{
+          write-verbose 'Repository not found to be removed'
+        }
+        write-verbose 'Removing directory and recreating'
+        remove-item $repositoryPath -force -recurse
+        new-item -itemType Directory -path $repositoryPath
+      }
+      write-verbose 'Registering local repository'
+      register-mfLocalPsResourceRepository -path $repositoryPath
+      write-verbose 'Step3: Publish module to Local Repository'
+      publish-psresource -repository LocalTestRepository -path $psd1Ref
+      $nuRef = (get-childItem -path $repositoryPath -recurse -filter *.nupkg).fullname
+      if($nuRef)
+      {
+        write-verbose "Found NUPKG: $nuRef"
+      }else{
+        throw 'No NUPKG found'
+      }
+      write-verbose 'Step4: Add Repository URI to NuSpec'
+      add-mfRepositoryXmlData -repositoryUri $escapedUri -nugetPackagePath $nuRef -force
+      Write-Output "##vso[task.setvariable variable=nuget_Package_Path]$nuRef"
+    displayName: 'Publish to Local'
+
+  - pwsh: |
+        $verbosePreference = 'Continue'
+        $nuRef = "$(nuget_Package_Path)"
+        write-verbose "NugetPath: $nuRef"
+        $versionTag = "$(next_version)"
+        write-verbose "VerTag: $versionTag"
+    displayName: 'Verifying Nuget Path Var and Version Tag Var'
+
+  - pwsh: |
+      $verbosePreference = 'Continue'
+      $nextVersionTag = "v$(next_version)"
+      write-verbose "NextVersionTag: $nextVersionTag"
+      if($nextVersionTag)
+      {
+        write-verbose "Tagging Version as: $nextVersionTag"
+        git tag "$nextVersionTag"
+        git push --tags 
+      }else{
+        throw 'Error, Next Version was not correctly passed through'
+      }
+    displayName: 'Apply Version Tag'
+
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Push NuGet Package to Azure Artifacts'
+    inputs:
+      command: 'push'
+      packagesToPush: '$(nuget_Package_Path)'
+      nuGetFeedType: 'internal'
+      publishVstsFeed: '$(System.TeamProject)/${{ parameters.feed_name }}'
