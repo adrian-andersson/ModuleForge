@@ -156,9 +156,16 @@ jobs:
           }
           $nextVersion = get-mfNextSemver @nextVerSplat
           Write-Verbose "NEXT VERSION SHOULD BE: $nextVersion"
-          build-mfProject -version $nextVersion -InformationAction Continue
+          write-verbose 'Compiling Changelog'
+          $changeLog = get-mfGitChangeLog -fromLastTag
+          Build-mfProject -version $nextVersion -InformationAction Continue -releaseNotes $changeLog
           write-verbose "Push $nextVersion to workflow as EnvVar"
           write-output "next_version=$nextVersion" >> $env:GITHUB_OUTPUT
+          write-verbose "Push changeLog to workflow as EnvVar"
+          #Need to do this as a special multiline value so it works correctly
+          "change_log<<EOF" >> $env:GITHUB_OUTPUT
+          $changeLog >> $env:GITHUB_OUTPUT
+          "EOF" >> $env:GITHUB_OUTPUT
 
       - name: Publish to Local #Push the build from last step to a temporary file-based repository on the build machine. Add Repository to XML for GHPackages Compatibility
         shell: pwsh
@@ -224,12 +231,13 @@ jobs:
         env:
           NEXT_VERSION: ${{ steps.generate_tag.outputs.next_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGE_LOG: ${{ steps.generate_tag.outputs.change_log }}
         run: |
           $VerbosePreference = 'Continue'
           $ver = "v$($env:NEXT_VERSION)"
           $releaseName = "Release $($ver)"
-          #Build ReleaseNotes from Commit Messages
-          $markdownText = get-mfGitChangeLog
+          #Reuse changelog from buildAndRelease step
+          $markdownText = $($env:CHANGE_LOG)
           if(!$markdownText){
             $markdownText = "#Release Version: $ver`n_no changelog provided_`n"
           }
