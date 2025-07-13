@@ -96,18 +96,31 @@ function add-mfGithubScaffold
         if(!(test-path $moduleGitFolder)){
             write-verbose "$moduleGitFolder does not exist, creating"
             new-item -ItemType Directory -Path $moduleGitFolder
+        }else{
+            write-verbose "$moduleGitFolder already exists"
         }
 
         $childItemSource = get-childitem $resourceFolderGithub -Recurse
         $childItemSource.foreach{
-            write-verbose "Checking file: $($_.name)"
-            $destinationPath = $_.FullName.replace($resourceFolderGithub,$moduleGitFolder)
-            write-verbose 'DestinationPath: $destinationPath'
+            write-verbose "Checking file: $($_.name)`n Need to replace $resourceFolderGithub with $moduleGitFolder"
+            #Need to not use .replace method as it is case sensitive. 
+            $destinationPath = $_.FullName -replace [regex]::Escape($resourceFolderGithub), $moduleGitFolder
+            write-verbose "DestinationPath: $destinationPath"
+            if($destinationPath -eq $_.FullName)
+            {
+                throw "Destination path matches original file path. Replace has not worked `n$($destinationPath) -> $($_.FullName)"
+            }else{
+                write-verbose "DestinationPath: $destinationPath"
+            }
             if(test-path $destinationPath){
                 if($force)
                 {
-                    write-warning "Overwrite $destinationPath"
-                    copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    if ($_.PSIsContainer) {
+                        Write-Verbose "Skipping directory: $($_.FullName)"
+                    }else{
+                        write-warning "Overwrite $destinationPath"
+                        copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    }
                 }else{
                     write-warning "Skipping $destinationPath as it exists"
                 }
