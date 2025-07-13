@@ -3,17 +3,18 @@ function get-mfScriptAnalyzerSummary
 
     <#
         .SYNOPSIS
-            Simple description
+            Runs, and then summarises the results of PSScriptAnalyzer across a set of PowerShell function files.
             
         .DESCRIPTION
-            Detailed Description
+            This function scans `.ps1` files using PSScriptAnalyzer and returns grouped summaries of errors, warnings, and informational findings.
+
             
         ------------
         .EXAMPLE
-            verb-noun param1
+            get-mfScriptAnalyzerSummary -sourcePath '.\source\functions'
             
             #### DESCRIPTION
-            Line by line of what this example will do
+            Runs PSScriptAnalyzer over all function files in the specified path, provides a summary
             
             
             #### OUTPUT
@@ -28,21 +29,24 @@ function get-mfScriptAnalyzerSummary
 
     [CmdletBinding()]
     PARAM(
-        #PARAM DESCRIPTION
+        #Source Path for function files
         [Parameter(ValueFromPipelineByPropertyName)]
-        [Alias("p1")]
         [string]$sourcePath = $(join-path $(join-path '.' -childPath 'source') -childPath functions),
         [parameter()]
+        #What severities should we scan for
         [string[]]$severity = @('Error','Warning','Information'),
+        #What weights to provide each severity
         [Parameter(dontshow)]
         [hashtable]$weights = @{
             Error = 50
             Warning = 15
             Information = 1
         },
+        #Set this switch to only get the summary
         [Parameter()]
         [switch]$suppressOutput,
         [Parameter()]
+        #Set this for what rules to exclude.
         [string[]]$excludeRules = @(
             'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
         )
