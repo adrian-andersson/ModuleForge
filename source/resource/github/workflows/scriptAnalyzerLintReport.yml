@@ -1,0 +1,192 @@
+name: Execute psScriptAnalyzer Review
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+jobs:
+  psScriptAnalyzerReview:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write #Needed for adding comment
+      contents: read #Since we set permissions, we need to declare read to do checkout
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          Install-Module -Name psscriptanalyzer -Force -SkipPublisherCheck
+          $moduleList = @('psscriptanalyzer')
+          import-module $moduleList
+          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+  
+      - name: Run psscriptanalyzer tests
+        shell: pwsh
+        id: psscriptanalyzer_tests
+        run: |
+            $verbosePreference = 'continue'
+            write-verbose 'Declaring PSScriptAnalyzer Params'
+            $severity = @('Error','Warning','Information')
+            $sourcePath = $(join-path $(join-path '.' -childPath 'source') -childPath functions)
+            $weights = @{
+                Error = 50
+                Warning = 15
+                Information = 1
+            }
+            $excludeRules = @(
+                'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
+            )
+            $psScriptAnalyzerSplat = @{
+                severity = $severity
+                ExcludeRule = $excludeRules
+            }
+            write-verbose 'Getting Public Function Files'
+            $functionFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath
+            $capture = [System.Collections.Generic.List[object]]::new()
+            #Do it this way so we can filter out pester files.
+            #Temp suspend verbosity, its really noisy here
+                $verbosePreference = 'silentlycontinue'
+            $functionFiles.foreach{
+                remove-variable invokeResult -errorAction ignore #Ensure Clean State
+                Invoke-ScriptAnalyzer -path $_.fullname @psScriptAnalyzerSplat|tee-object -variable invokeResult
+                $invokeResult.foreach{$capture.add($_)}
+            }
+            $verbosePreference = 'continue'
+            $psScriptAnalyzerVer = (get-module PSScriptAnalyzer|Select-object @{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}).version
+            if($capture)
+            {
+                write-verbose 'Parsing results and creating summary'
+                $capture = $capture.ToArray() #Transform from GenList to array for better compatibility
+                
+                $TopErrors = $capture.where{$_.Severity -eq 'Error'}|group-object -property 'RuleName' |Sort-Object -property 'Count' -Descending|Select-Object 'Name','Count' -first 5
+                $TopWarnings = $capture.where{$_.Severity -eq 'Warning'}|group-object -property 'RuleName' |Sort-Object -property 'Count' -Descending|Select-Object 'Name','Count' -first 5
+                $TopInfos = $capture.where{$_.Severity -eq 'Information'}|group-object -property 'RuleName' |Sort-Object -property 'Count' -Descending|Select-Object 'Name','Count' -first 5
+
+                write-verbose 'Getting weights'
+                $ScriptNameGroup = $capture|group-object -property 'ScriptName'
+                $ScriptNameWeighted = $ScriptNameGroup.ForEach{
+                    $fileFlagsGrouped = $_.Group|group-object -property 'Severity'|Select 'Name','Count'
+                    $Errors = [int]($fileFlagsGrouped.Where{$_.Name -eq 'Error'}|Select-Object -property 'Count').count
+                    $Warnings = [int]($fileFlagsGrouped.Where{$_.Name -eq 'Warning'}|Select-Object -property 'Count').count
+                    $Informations = [int]($fileFlagsGrouped.where{$_.Name -eq 'Information'}|Select-Object -Property 'count').count
+                    [PSCustomObject]@{
+                        ScriptName = $_.Name
+                        Counter = "E:$Errors W:$Warnings I:$Informations"
+                        Weight = [int]($($weights.Error * $Errors) +$($weights.Warning * $Warnings) +$($weights.Information * $Informations))
+                    }
+                }
+
+                write-verbose 'Creating Markdown Pieces'
+                $header = '|ScriptAnalyzerRule|Occurrence|'
+                $ScriptNameWeightedSelect = if($ScriptNameWeighted){
+                    $ScriptNameWeighted|sort-object -property weight -Descending|Select-Object -first 5
+                }else{$null}
+                $ErrorsMarkdown = if($TopErrors){@(
+                    '### Most Frequent Errors ❌'
+                    ''
+                    $header
+                    '|-|-|'
+                    $($TopErrors.Foreach{
+                        "|$($_.Name)|$($_.Count)|"
+                    })
+                ) -join "`n"}else{$null}
+
+                $warningsMarkdown = if($TopWarnings){@(
+                    '### Most Frequent Warnings ⚠️'
+                    ''
+                    $header
+                    '|-|-|'
+                    $($TopWarnings.Foreach{
+                        "|$($_.Name)|$($_.Count)|"
+                    })
+                    ''
+                ) -join "`n"}else{$null}
+
+                $infoMarkdown = if($TopInfos){@(
+                    '### Most Frequent Informational Notices❕'
+                    ''
+                    $header
+                    '|-|-|'
+                    $($TopInfos.Foreach{
+                        "|$($_.Name)|$($_.Count)|"
+                    })
+                    ''
+                ) -join "`n"}else{$null}
+
+                $fileAssessmentMarkdown = @(
+                    '### Top Flagged Files ⚖️📃'
+                    ''
+                    '|Filename|Counters|'
+                    '|-|-|'
+                    $($ScriptNameWeightedSelect.Foreach{
+                        "|$($_.ScriptName)|$($_.Counter)|"
+                    })
+                    ''
+                ) -join "`n"
+
+                write-verbose 'Joining Markdown Pieces into consolidated report'
+                $SAVer = $(Get-Module psscriptanalyzer|Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}}).version
+
+                $lintResultMarkdown = @(
+                    "### 🕵️ PSscriptAnalyzer Linting Results 🕵️‍♀️"
+                    ''
+                    '_Code Quality Advisory Only_'
+                    ''
+                    "- **Errors:** $($capture.where{$_.severity -eq 'Error'}.count)❌"
+                    "- **Warnings:** $($capture.where{$_.severity -eq 'Warning'}.count)⚠️"
+                    "- **Information:** $($capture.where{$_.severity -eq 'Information'}.count)❕"
+                    "$ErrorsMarkdown"
+                    "$warningsMarkdown"
+                    "$infoMarkdown"
+                    "$fileAssessmentMarkdown"
+                    '_Notes:_'
+                    ''
+                    
+                    '- _Up to 5 items will be shown for each category.Categories will show only if there are records_'
+                    "- _File assesment is weighted (E:$($weights.Error) W:$($weights.Warning) I:$($weights.Information))_"
+                    '- _Check the workflow output for more details_'
+                    '- _See [the invoke-scriptAnalyzer documentation from microsoft](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer) for information on how to suppress false positives_'
+                    ''
+                    "### ℹ️ Runtime Info"
+                    "**psscriptanalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
+                    "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
+                    ''
+                    '_This comment was generated automatically by the CI pipeline._'
+                    ''
+                ) -join "`n"
+                $lintResultMarkdown|out-file -FilePath psInvokeResult.md -encoding UTF8
+
+            }else{
+                write-verbose 'No results to parse. Either something has gone wrong with psScriptAnalyzer, this script, or youve done an amazing coding job!'
+                write-verbose 'Lets assume you did an amazing coding job!'
+                $lintResultMarkdown = @(
+                    "### 🕵️ PSscriptAnalyzer Linting Results 🕵️‍♀️"
+                    ''
+                    '_No Script Analyzer Recommendations_ 🥇'
+                    ''
+                    "### ℹ️ Runtime Info"
+                    "**psscriptanalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
+                    "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
+                    ''
+                    '_This comment was generated automatically by the CI pipeline._'
+                    ''
+                ) -join "`n"
+                $lintResultMarkdown|out-file -FilePath psInvokeResult.md -encoding UTF8
+            }
+
+      - name: Add PSInvoke PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: always() && github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: psInvokeResult.md
+          header: psInvokeResult
+    
