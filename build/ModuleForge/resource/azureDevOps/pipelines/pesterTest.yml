@@ -33,12 +33,182 @@ jobs:
             Verbosity = 'Detailed'
           }
         }
+
+
         $pesterConfig = New-PesterConfiguration -Hashtable $pesterConfigHash
-        Invoke-Pester -Configuration $pesterConfig
+        try{
+          Invoke-Pester -Configuration $pesterConfig|Tee-Object -variable pesterCapture
+        }catch{
+          write-verbose "WARNING: Pester threw an exception: $($_.Exception.Message)"
+          $pesterFailed = $true
+        }
+        $actualCoverage = [math]::round($pesterCapture.CodeCoverage.CoveragePercent, 0)
+        $targetCoverage = $pesterCapture.codeCoverage.CoveragePercentTarget
+        write-host "##vso[task.setvariable variable=actualCoverage;isOutput=true]$actualCoverage"
+        write-host "##vso[task.setvariable variable=targetCoverage;isOutput=true]$targetCoverage"
+
+        
+        if ($env:BUILD_REASON -eq 'PullRequest')
+        {
+          $pesterMarkdown = @{
+            name = 'PesterMarkdown'
+            expression = {
+              $cc = [math]::Round($_.CodeCoverage.CoveragePercent, 0)
+              $ccp = $_.CodeCoverage.CoveragePercentTarget
+              if (!$cc) { $cc = 0 }
+              if (!$ccp) { $ccp = 0 }
+              $midpoint = $ccp + ((100 - $ccp) / 2)
+              $badge = $(if($cc -lt $ccp){"🔴 Failed"}elseIf($cc -lt $midpoint){"🟡 Caution"}elseIf($cc -lt 98){"🟢 Good"}else{"🟢 Perfect 🏅"})
+              @(
+                "### 🧪 Pester Test Results"
+                "**Result:** $($_.Result) $(if($_.Result -eq 'Passed'){"✅"}else{"❌"})"
+                "**Tests:** 🟢 $($_.PassedCount) passed | 🔴 $($_.FailedCount) failed | ⚪ $($_.SkippedCount) skipped"
+                "**Duration:** $($_.duration.toString())"
+                "`n"
+                "### 📊 Code Coverage"
+                "**Coverage:**  $($cc)% $badge"
+                "**Target:** $($ccp)%"
+                "`n"
+                "### ℹ️ Runtime Info"
+                "**Pester Version:** $($_.version)"
+                "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
+                "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
+                "`n"
+                "_This comment was generated automatically by the CI pipeline._"
+              ) -join "`n"
+            }
+          }
+          $pesterError = @(
+            '### ❌ Pester Test Run Failed'
+            'Pester encountered an error and could not complete the test run.'
+            'Please check the logs for more details.'
+            '_This comment was generated automatically by the CI pipeline._'
+          ) -join "`n"
+          if($pesterCapture)
+          {
+            $comment = ($pesterCapture|Select-object $pesterMarkdown).PesterMarkdown
+          }else{
+            $comment = $pesterError
+          }
+          write-host "Try and send Pester Results response to Pull Request Comments"
+          $commentUri = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/git/repositories/$($env:BUILD_REPOSITORY_NAME)/pullRequests/$($env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads?api-version=7.1"
+          write-host "commentUri : $commentUri"
+          $accToken = $($env:SYSTEM_ACCESSTOKEN)
+          write-host "Got AccessToken with length $($accToken.length) $($accToken[0..2] -join '')...$($accToken[-1]))"
+          $headers = @{
+            Authorization = "Bearer $accToken"
+            Accept = 'application/json'
+          }
+          $postBody = @{
+            comments = @(
+              @{
+                parentCommentId = 0
+                content = $comment
+                commentType = 1
+              }
+            )
+            status = 1
+          }| convertTo-Json -depth 10
+
+          write-host 'Try and send comment with rest call'
+          invoke-restmethod -uri $commentUri -headers $headers -contenttype "application/json" -method Post -body $postBody
+        }
+        if($pesterFailed){throw 'Error with Pester invocation'}
+
+      name: RunPester
       displayName: 'Execute Pester Testing'
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
 
     - task: PublishCodeCoverageResults@2
       inputs:
         codeCoverageTool: 'Jacoco'
         summaryFileLocation: '$(Build.SourcesDirectory)/codeCoverage.xml'
       displayName: 'Publish Code Coverage Results'
+
+  - job: CheckCodeCoverage
+    dependsOn: ExecutePester
+    condition: succeededOrFailed()
+    continueOnError: true
+    variables:
+      actual: $[ dependencies.ExecutePester.outputs['RunPester.actualCoverage']]
+      target: $[ dependencies.ExecutePester.outputs['RunPester.targetCoverage']]
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-latest'
+    steps:
+      - pwsh: |
+          write-host "Actual Coverage: $(actual)"
+          write-host "Target Coverage: $(target)"
+        displayName: 'Debug Variable Passthrough'
+      - pwsh: |
+          $verbosePreference = 'Continue'
+          $actualCoverageString = "$(actual)"
+          $targetCoverageString = "$(target)"
+          if($actualCoverageString){
+            try{
+              $actualCoverage = [int]$actualCoverageString
+            }catch{
+              throw 'Unable to read coverage metric parameter'
+            }
+          }
+          if($targetCoverageString){
+            try{
+              $targetCoverage = [int]$targetCoverageString
+            }catch{
+              throw 'Unable to read target coverage metric parameter'
+            }
+          }
+          write-host "Actual Coverage: $actualCoverage`nTarget Coverage: $targetCoverage"
+          if ($env:BUILD_REASON -eq 'PullRequest')
+          {
+            write-host "Try and send code coverage response to Pull Request Comments"
+            $commentUri = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/git/repositories/$($env:BUILD_REPOSITORY_NAME)/pullRequests/$($env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads?api-version=7.1"
+            write-host "commentUri : $commentUri"
+            $accToken = $($env:SYSTEM_ACCESSTOKEN)
+            write-host "Got AccessToken with length $($accToken.length) $($accToken[0..2] -join '')...$($accToken[-1]))"
+            $headers = @{
+              Authorization = "Bearer $accToken"
+              Accept = 'application/json'
+            }
+            if($actualCoverage -lt $targetCoverage){
+              write-host 'Build CC Failed Comment'
+              $postBody = @{
+                comments = @(
+                  @{
+                    parentCommentId = 0
+                    content = "❌ Code coverage is below target. Please review the Code Coverage report attached to the Pester Test check"
+                    commentType = 1
+                  }
+                )
+                status = 6
+              }| convertTo-Json -depth 10
+              
+            }else{
+              write-host 'Build CC Success Comment'
+              $postBody = @{
+                comments = @(
+                  @{
+                    parentCommentId = 0
+                    content = "✅ Code coverage is above target. Please review the Code Coverage report attached to the Pester Test check"
+                    commentType = 1
+                  }
+                )
+                status = 4
+              }| convertTo-Json -depth 10
+            }
+            write-host 'Try and send comment with rest call'
+            invoke-restmethod -uri $commentUri -headers $headers -contenttype "application/json" -method Post -body $postBody
+          }
+          
+          
+          if($actualCoverage -lt $targetCoverage){
+            throw "Code Coverage $($actualCoverage)% is below the required threshold of $($targetCoverage)%"
+          }else{
+            write-host 'Coverage is acceptable'
+          }
+          
+        displayName: 'Check Code Coverage'
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
