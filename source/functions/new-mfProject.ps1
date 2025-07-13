@@ -1,13 +1,12 @@
 function new-mfProject
 {
-
     <#
         .SYNOPSIS
             Capture some basic parameters, and create the scaffold file structure
             
         .DESCRIPTION
             The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
-            Whether you’re building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
+            Whether you're building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
             Think of it as laying the foundation for your module project.
             
         ------------
@@ -15,7 +14,7 @@ function new-mfProject
             new-mfProject -ModuleName "MyModule" -description "A module for automating tasks" -moduleAuthors "John Doe" -companyName "MyCompany" -moduleTags "automation", "tasks" -projectUri "https://github.com/username/repo" -iconUri "https://example.com/icon.png" -licenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 
             #### DESCRIPTION
-            This example demonstrates how to use the `new-mfProject` function to create a scaffold for a new PowerShell module named "MyModule". 
+            This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 
             It includes a description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
 
             #### OUTPUT
@@ -110,17 +109,6 @@ function new-mfProject
         write-verbose 'Create Folder Scaffold'
         add-mfFilesAndFolders -moduleRoot $path
 
-       
-        <#
-        if($projectUri -and !$licenseUri)
-        {
-            write-verbose 'Auto-checking for license'
-            if(test-path $(join-path -path $path -childPath 'LICENSE'))
-            {
-                $licenseUri = "$projectUri\LICENSE"
-            }
-        }
-        #>
 
         #Should we use JSON for this, or CLIXML.
         #The vote from the internet in July 2024 is stick to CLIXML for PowerShell centric projects. So we will do that

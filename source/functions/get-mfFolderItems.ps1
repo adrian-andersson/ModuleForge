@@ -2,10 +2,10 @@ function get-mfFolderItems
 {
     <#
         .SYNOPSIS
-            Retrieves a filtered list of files from a specified folder, processing `.mfignore` and `.mforder` rules.
+            Retrieves a filtered list of files from a specified folder, processing '.mfignore' and '.mforder' rules.
             
         .DESCRIPTION
-            The `get-mfFolderItems` function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
+            The 'get-mfFolderItems' function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
             - Ignoring entries specified in `.mfignore`.
             - Filtering out non-PS1 files using a switch (`-psScriptsOnly`).
             - Excluding test-related files (`*.test.ps1`, `*.tests.ps1`, `*.skip.ps1`).
@@ -32,12 +32,12 @@ function get-mfFolderItems
 
         OUTPUTS
             [Object[]] - Returns an array of objects containing:
-                - **Name** (`[String]`) – Name of the file.
-                - **Path** (`[String]`) – Full file path.
-                - **RelativePath** (`[String]`) – Path relative to the source folder.
-                - **Folder** (`[String]`) – Name of the source folder.
-                - **(Optional) newPath** (`[String]`) – Destination path if copying.
-                - **(Optional) newFolder** (`[String]`) – Destination folder name if copying.
+                - **Name** (`[String]`) - Name of the file.
+                - **Path** (`[String]`) - Full file path.
+                - **RelativePath** (`[String]`) - Path relative to the source folder.
+                - **Folder** (`[String]`) - Name of the source folder.
+                - **(Optional) newPath** (`[String]`) - Destination path if copying.
+                - **(Optional) newFolder** (`[String]`) - Destination folder name if copying.
             
         .NOTES
             Author: Adrian Andersson
@@ -45,6 +45,7 @@ function get-mfFolderItems
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Items' reflects nature of function and improves clarity.")]
     PARAM(
         #Path to get items from
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Default')]

@@ -95,19 +95,32 @@ function add-mfAzureDevOpsScaffold
     process{
         if(!(test-path $moduleAzdFolder)){
             write-verbose "$moduleAzdFolder does not exist, creating"
-            new-item -ItemType Directory -Path $moduleAzdFolder
+            new-item -ItemType Directory -Path $moduleAzdFolder|out-null
+        }else{
+            write-verbose "$moduleAzdFolder already exists"
         }
 
         $childItemSource = get-childitem $resourceFolderAzd -Recurse
         $childItemSource.foreach{
-            write-verbose "Checking file: $($_.name)"
-            $destinationPath = $_.FullName.replace($resourceFolderAzd,$moduleAzdFolder)
-            write-verbose 'DestinationPath: $destinationPath'
+            write-verbose "Checking file: $($_.name)`n Need to replace $resourceFolderAzd with $moduleAzdFolder"
+            #Need to not use .replace method as it is case sensitive. 
+            $destinationPath = $_.FullName -replace [regex]::Escape($resourceFolderAzd), $moduleAzdFolder
+            if($destinationPath -eq $_.FullName)
+            {
+                throw "Destination path matches original file path. Replace has not worked `n$($destinationPath) -> $($_.FullName)"
+            }else{
+                write-verbose "DestinationPath: $destinationPath"
+            }
+            
             if(test-path $destinationPath){
                 if($force)
                 {
-                    write-warning "Overwrite $destinationPath"
-                    copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    if ($_.PSIsContainer) {
+                        Write-Verbose "Skipping directory: $($_.FullName)"
+                    }else{
+                        write-warning "Overwrite $destinationPath"
+                        copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    }
                 }else{
                     write-warning "Skipping $destinationPath as it exists"
                 }
@@ -116,5 +129,8 @@ function add-mfAzureDevOpsScaffold
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
+        $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/tutorials/azureDevOps/tutorial.html for guidance"
+        Write-Warning $warning 
+
     }
 }
