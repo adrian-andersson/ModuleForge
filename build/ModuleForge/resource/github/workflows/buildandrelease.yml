@@ -251,6 +251,17 @@ jobs:
           }else{
             throw 'No NUPKG found'
           }
+          write-verbose 'Adding Module and Manifest SHAs to Release Notes for verification'
+          # Load module name from ModuleForge config
+          $moduleName = (Import-Clixml moduleForgeConfig.xml).moduleName
+          # Locate the manifest and module script
+          $psd1Ref = Get-ChildItem -Path build -Filter "$moduleName.psd1" -Recurse | Select-Object -First 1
+          $psm1Ref = Get-ChildItem -Path build -Filter "$moduleName.psm1" -Recurse | Select-Object -First 1
+          # Compute SHA256 hashes
+          $psd1Sha = (Get-FileHash -Path $psd1Ref.FullName -Algorithm SHA256).Hash.ToLower()
+          $psm1Sha = (Get-FileHash -Path $psm1Ref.FullName -Algorithm SHA256).Hash.ToLower()
+          # Append to markdown
+          $markDownText = "$($markDownText)`n### 🔐 SHA256 Checksums`n$("$moduleName").psd1: $psd1Sha `n$("$moduleName").psm1: $psm1Sha"
           gh release create $ver --title $releaseName --notes $markDownText
           gh release upload $ver $nuRef
 
