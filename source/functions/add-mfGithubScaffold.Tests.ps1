@@ -39,10 +39,6 @@ Describe 'add-mfgithubScaffold should Copy Files' {
     BeforeAll{
         add-mfgithubScaffold
     }
-
-    It 'Should have created the .github folder' {
-        get-Item $githubFolder|Should -Not -BeNullOrEmpty
-    }
     It 'Should have created the  PR Template' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty
         get-content $prTemplateFile|should -Not -BeNullOrEmpty

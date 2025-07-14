@@ -65,6 +65,7 @@ Describe 'build-mfProject' {
 
 describe 'build-mfProject' {
     beforeAll {
+        write-verbose 'build test module files'
         $testFunction = @(
             'function get-text {'
             '    param ('
@@ -121,9 +122,11 @@ describe 'build-mfProject' {
         )
 
 
-
+        write-verbose "Create module directory at: $testPath"
         new-item -itemType Directory -Path $testPath
+        write-verbose "Set location to: $testPath"
         Set-Location $testPath
+        
 
         $mfProjSplat = @{
             ModuleName = 'TestModule'
@@ -138,16 +141,17 @@ describe 'build-mfProject' {
             #RequiredModules = @('Pester')
             ExternalModuleDependencies = @('Microsoft.PowerShell.PSResourceGet')
         }
-
+        write-verbose 'Creating ModuleForge Test Project'
         new-mfProject @mfProjSplat
         start-sleep -seconds 3
+        write-verbose "Outputting Test files. Example: $testFunctionPat"
         $testFunction -join "`n"|Out-File $testFunctionPath -force
         $privateFunction -join "`n"|Out-file $privateFunctionPath -Force
         $classDefinition -join "`n" | Out-File $classDefinitionPath -Force
         $enumDefinition -join "`n" | out-file $enumDefinitionPath -Force
         $textFile -join "`n" | out-file $resourceFilePath -Force
         $validatorFile -join "`n" | out-file $validatorFilePath -Force
-
+        write-verbose 'Building project'
         build-mfProject -version '1.0.0-PREv001'
     }
 
