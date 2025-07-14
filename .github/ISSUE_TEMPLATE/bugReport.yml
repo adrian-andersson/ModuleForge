@@ -1,0 +1,39 @@
+name: Report a bug 🐛
+description: Report a bug or code problem in ModuleForge.
+labels: [bug]
+body:
+  - type: dropdown
+    id: submission-type
+    attributes:
+      label: I'm submitting a...
+      options:
+        - Bug report - PowerShell Code and Functions
+        - Bug report - Github Workflows
+        - Bug report - AzureDevOps Pipelines 
+
+  # Bug Report Section
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What is the current behavior? 
+      description: Describe what's happening and where it's breaking.
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What is the expected behavior?
+      description: What should happen instead?
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Please tell us about your environment
+      description: OS, PowerShell version, pipeline runner, DevOps stack, encoding settings…
+
+  - type: textarea
+    id: other-info
+    attributes:
+      label: Other information
+      description: Logs, screenshots, related issues, or any details that might help.
+
+  

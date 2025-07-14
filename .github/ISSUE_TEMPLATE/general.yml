@@ -1,0 +1,11 @@
+name: General Feedback or Commentary 💬
+description: Constructive Criticism or General Feedback
+labels: [question]
+body:
+
+  # General Feedback
+  - type: textarea
+    id: general-feedback
+    attributes:
+      label: General Feedback 💬
+      description: Share any thoughts, vibes, or ideas not covered above.

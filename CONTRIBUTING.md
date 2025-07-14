@@ -1,6 +1,6 @@
 # Contributing to ModuleForge
 
-Thank you for considering contributing to ModuleForge! We welcome contributions from the community and are excited to collaborate
+Thank you for considering contributing to ModuleForge! Contributions welcome via Pull Request
 
 ## Getting Started
 
@@ -15,12 +15,6 @@ Thank you for considering contributing to ModuleForge! We welcome contributions 
 3. **Create a Branch**: Create a new branch for your changes.
     ```sh
     git checkout -b feature/your-feature-name
-    ```
-
-4. **Install Dependencies**: Install any necessary dependencies.
-    ```sh
-    # Example for a PowerShell project
-    Install-Module -Name Pester -Force -Scope CurrentUser
     ```
 
 ## Making Changes
