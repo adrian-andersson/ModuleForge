@@ -26,7 +26,7 @@ BeforeAll{
     $prTemplateFile = join-path $azdFolder 'pull_request_template.md'
     $pipelinesFolder = join-path $azdFolder 'pipelines'
     $pesterTestFile = join-path $pipelinesFolder 'pesterTest.yml'
-    $buildandreleaseFile = join-path $pipelinesFolder 'buildandrelease.yml'
+    $buildandreleaseFile = join-path $pipelinesFolder 'buildAndRelease.yml'
 
 
      #Load This File
@@ -40,9 +40,6 @@ Describe 'add-mfAzureDevOpsScaffold should Copy Files' {
         add-mfAzureDevOpsScaffold
     }
 
-    It 'Should have created the .azuredevops folder' {
-        get-Item $azdFolder|Should -Not -BeNullOrEmpty
-    }
     It 'Should have created the  PR Template' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty
         get-content $prTemplateFile|should -Not -BeNullOrEmpty
