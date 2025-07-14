@@ -1,8 +1,144 @@
 <#
 Module created by ModuleForge
-	 ModuleForge Version: 1.1.2
-	BuildDate: 2025-07-02T10:48:16
+	 ModuleForge Version: 1.2.0
+	BuildDate: 2025-07-14T18:21:13
 #>
+function add-mfAzureDevOpsScaffold
+{
+
+    <#
+        .SYNOPSIS
+            Initialises a `.azuredevops` scaffold in a PowerShell module, including YAML Azure DevOps Pipelines for pester testing and build and release
+
+            
+        .DESCRIPTION
+            This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
+            It will create 2 Azure DevOps Pipelines files, 1 for Pester testing, 1 for buildAndRelease
+            It will create 1 Pull Request template.
+
+            The buildAndRelease pipeline will use Git Tags to mark versions. If you stick with this template you should refrain from
+            using tags for other purposes.
+            
+            The purpose of these workflows and templates is to get you started, creating a quick and easy workflow scaffold. 
+            Please feel free to change the workflows and template to your own needs and preferences.
+            
+        .EXAMPLE
+            add-mfAzureDevOpsScaffold
+
+            #### DESCRIPTION
+            Copies the `.azuredevops` folder from the module's `resource` directory to the current module, skipping existing files.
+
+            #### OUTPUT
+            Should have a .azuredevops folder, with pipelines and a PR template
+
+        .EXAMPLE
+            add-mfAzureDevOpsScaffold -Force
+
+            #### DESCRIPTION
+            Copies the `.azuredevops` scaffold and overwrites existing files in `.azuredevops` directory
+
+            #### OUTPUT
+            Should have a .azuredevops folder, with workflows and a PR template
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
+        [Parameter()]
+        [alias('path')]
+        [string]$modulePath = $(get-location).path,
+        #Module Config reference
+        [Parameter(DontShow)]
+        [string]$configFile = 'moduleForgeConfig.xml',
+        #Azure DevOps folder
+        [Parameter(DontShow)]
+        [string]$azdFolder = '.azuredevops',
+        #Should we overwrite if files exist?
+        [switch]$force
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+        if($mockPsScriptRoot)
+        {
+            #Assume we are in pester test, and use the $mockPsScriptRoot param
+            write-warning 'Assuming PSScriptRoot from $mockPsScriptRoot. This should only be done for testing'
+            $resourceFolder = Join-Path $mockPsScriptRoot 'resource'
+            
+        }else{
+            $resourceFolder = Join-Path $PSScriptRoot 'resource'
+        }
+        write-verbose "ResourceFolder:  $resourceFolder"
+        
+        if(!(test-path  $resourceFolder))
+        {
+            throw 'Err: Unable to find resource folder in ModuleForge module'
+        }
+
+        $resourceFolderAzd = join-path $resourceFolder 'azureDevOps'
+        if(!(test-path  $resourceFolderAzd))
+        {
+            throw 'Err: Found resource folder, but not azureDevOps folder in ModuleForge module'
+        }
+
+        $mfConfigFile = join-path $modulePath $configFile
+        if(!(test-path $mfConfigFile))
+        {
+            throw 'Err: No Moduleforge Config File found. Please check your module path'
+        }
+
+        $moduleAzdFolder = join-path $modulePath $azdFolder
+
+    }
+    
+    process{
+        if(!(test-path $moduleAzdFolder)){
+            write-verbose "$moduleAzdFolder does not exist, creating"
+            new-item -ItemType Directory -Path $moduleAzdFolder|out-null
+        }else{
+            write-verbose "$moduleAzdFolder already exists"
+        }
+
+        $childItemSource = get-childitem $resourceFolderAzd -Recurse
+        $childItemSource.foreach{
+            write-verbose "Checking file: $($_.name)`n Need to replace $resourceFolderAzd with $moduleAzdFolder"
+            #Need to not use .replace method as it is case sensitive. 
+            $destinationPath = $_.FullName -replace [regex]::Escape($resourceFolderAzd), $moduleAzdFolder
+            if($destinationPath -eq $_.FullName)
+            {
+                throw "Destination path matches original file path. Replace has not worked `n$($destinationPath) -> $($_.FullName)"
+            }else{
+                write-verbose "DestinationPath: $destinationPath"
+            }
+            
+            if(test-path $destinationPath){
+                if($force)
+                {
+                    if ($_.PSIsContainer) {
+                        Write-Verbose "Skipping directory: $($_.FullName)"
+                    }else{
+                        write-warning "Overwrite $destinationPath"
+                        copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    }
+                }else{
+                    write-warning "Skipping $destinationPath as it exists"
+                }
+            }else{
+                write-verbose "Copying $($_) to $destinationPath"
+                copy-item -Path $_.FullName -Destination $destinationPath
+            }
+        }
+        $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/tutorials/azureDevOps/tutorial.html for guidance"
+        Write-Warning $warning 
+
+    }
+}
 function add-mfGithubScaffold
 {
 
@@ -101,18 +237,31 @@ function add-mfGithubScaffold
         if(!(test-path $moduleGitFolder)){
             write-verbose "$moduleGitFolder does not exist, creating"
             new-item -ItemType Directory -Path $moduleGitFolder
+        }else{
+            write-verbose "$moduleGitFolder already exists"
         }
 
         $childItemSource = get-childitem $resourceFolderGithub -Recurse
         $childItemSource.foreach{
-            write-verbose "Checking file: $($_.name)"
-            $destinationPath = $_.FullName.replace($resourceFolderGithub,$moduleGitFolder)
-            write-verbose 'DestinationPath: $destinationPath'
+            write-verbose "Checking file: $($_.name)`n Need to replace $resourceFolderGithub with $moduleGitFolder"
+            #Need to not use .replace method as it is case sensitive. 
+            $destinationPath = $_.FullName -replace [regex]::Escape($resourceFolderGithub), $moduleGitFolder
+            write-verbose "DestinationPath: $destinationPath"
+            if($destinationPath -eq $_.FullName)
+            {
+                throw "Destination path matches original file path. Replace has not worked `n$($destinationPath) -> $($_.FullName)"
+            }else{
+                write-verbose "DestinationPath: $destinationPath"
+            }
             if(test-path $destinationPath){
                 if($force)
                 {
-                    write-warning "Overwrite $destinationPath"
-                    copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    if ($_.PSIsContainer) {
+                        Write-Verbose "Skipping directory: $($_.FullName)"
+                    }else{
+                        write-warning "Overwrite $destinationPath"
+                        copy-item -Path $_.FullName -Destination $destinationPath -Force
+                    }
                 }else{
                     write-warning "Skipping $destinationPath as it exists"
                 }
@@ -387,8 +536,6 @@ function build-mfProject
             }
         }
 
-
-
         $moduleOutputFolder = join-path -path $buildFolder -ChildPath $($config.moduleName)
 
         if(!(test-path $moduleOutputFolder))
@@ -411,7 +558,6 @@ function build-mfProject
             }
         }
 
-
         $moduleForgeDetails = (get-module 'ModuleForge' |Sort-Object -Property Version -Descending|select-object -First 1)
         if($moduleForgeDetails)
         {
@@ -421,21 +567,15 @@ function build-mfProject
         }
 
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
-       
-        #Better Order
-        [array]$folders = @('enums','validationClasses','classes','functions','private')
-
-
         $sourceFolder = join-path -path $path -childPath 'source'
 
-        #What folders do we need to copy the files directly in
+        #What folders do we need to copy the files contents of
         [array]$copyFolders = @('resource','bin')
 
         $scriptsToProcess = New-Object System.Collections.Generic.List[string]
         $functionsToExport = New-Object System.Collections.Generic.List[string]
         $nestedModules = New-Object System.Collections.Generic.List[string]
-
-        $DscResourcesToExport = New-Object System.Collections.Generic.List[string]
+        #$DscResourcesToExport = New-Object System.Collections.Generic.List[string] #No Dsc Support presently
 
         $fileList = New-Object System.Collections.Generic.List[string]
 
@@ -476,11 +616,11 @@ function build-mfProject
 
         
         #Do a check for DSC Resources because they change how we handle everything
-        #Actually, for now lets not worry about DesiredStateConfig, 
+        #Actually, for now lets not worry about DesiredStateConfig stuff - Future Release, 
         # - its a bit broken as of July 2024,
         # - It changes how we build modules because nestedmodules, scriptstoprocess dont work (From previous experience)
         # - I don't have any need to build DSC resources at this time, so my testing will be limited
-        # - DSC Resources are being reworked by MicroSoft so this is a moving target at the moment 
+        # - DSC Resources are being reworked by MicroSoft so this is a moving target anyway 
         write-verbose 'Checking for DSC Resources. DSC Resources add nuance to module build'
         $dscResourcesFolder = join-path -path $sourceFolder -ChildPath 'dscClasses'
         if(test-path $dscResourcesFolder)
@@ -488,15 +628,15 @@ function build-mfProject
             $dscResourceFiles = get-mfFolderItems -path $dscResourcesFolder -psScriptsOnly
             if($dscResourceFiles.count -ge 1)
             {
-                write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
+                #write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
+                #$noExternalFiles = $true
                 #See above comments
                 throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
-                $noExternalFiles = $true
             }else{
                 write-verbose 'No DSC Resources found'
             }
         }else{
-            write-verbose 'No DSC folder found'
+            #write-verbose 'No DSC folder found'
         }
         
 
@@ -652,22 +792,6 @@ function build-mfProject
                 }
                 #Make null = to suppress the object output
                 $null = get-mfFolderItems -path $fullFolderPath -destination $destinationFolder -copy
-                
-
-                <# Ideally we add all the copied items to the filelist param in the module manifest
-                #But since we are putting them in a child folder, I've got concerns
-                #Like the relativename is there, and it works, but the folder divider wont be a \ on non-windows
-                #Probably safer to leave this out for the time being
-                # Also worth noting, I don't think I've ever seen a manifest have a file list
-
-
-                $folderItems.ForEach{
-                    if($_.name -notIn $fileList)
-                    {
-                        $fileList.Add($_.name)
-                    }
-                }
-                #>
 
                 
             }
@@ -757,7 +881,8 @@ function build-mfProject
             write-verbose 'Nothing to include in modulesToProcess'
         }
 
-        #This block should not trigger right now
+        #This block should not trigger right now. Maybe we can add it in if we revisit DSC
+        <#
         $DscResourcesToExport
         if($DscResourcesToExport.count -ge 1)
         {
@@ -767,36 +892,21 @@ function build-mfProject
         }else{
             write-verbose 'No dsc Resources to include'
         }
+        #>
 
         #Extra Stuff
         if($version.PreReleaseLabel)
         {
             #Semver supplied had a pre-release label
             write-verbose 'Incrementing Prerelease Version'
-            #$preReleaseSplit = $version.PreReleaseLabel.Split('.')
-            #$preReleaseLabel = $currentPreReleaseSplit[0]
-            
             write-verbose "Setting Prerelease tag to: $($version.PreReleaseLabel)"
-
             $splatManifest.Prerelease = $version.PreReleaseLabel
             
         }
 
         $splatManifest.ModuleVersion = $version
-
-
-        #Currently not adding anything to file list, will leave this code here in case we revisit later
-        <#
-        if($fileList.count -ge 1)
-        {
-            write-verbose "Included in fileList: $($fileList.ToArray() -join ',')"
-            [array]$splatManifest.fileList = [array]$fileList.ToArray()
-        }
-        #>
-
         New-ModuleManifest @splatManifest
         Write-Information 'Created Module Manifest' -tags 'CreatedModuleManifest'
-
     }
     
 }
@@ -931,28 +1041,28 @@ function get-mfFolderItemDetails
 
         .OUTPUTS
             [Object[]] - Returns an array of objects with detailed file metadata, including:
-                - **Name** (`[String]`) – Name of the file.
-                - **Path** (`[String]`) – Full file path.
-                - **FileSize** (`[Int]`) – File size in kilobytes.
-                - **FunctionDetails** (`[Object[]]`) – Details of functions within the file.
-                - **ClassDetails** (`[Object[]]`) – Details of classes within the file.
-                - **Contents** (`[String]`) – Entire script content.
-                - **Group** (`[String]`) – Subfolder grouping.
-                - **Dependencies** (`[Object[]]`) – References to other files with name and full path.
+                - **Name** (`[String]`) - Name of the file.
+                - **Path** (`[String]`) - Full file path.
+                - **FileSize** (`[Int]`) - File size in kilobytes.
+                - **FunctionDetails** (`[Object[]]`) - Details of functions within the file.
+                - **ClassDetails** (`[Object[]]`) - Details of classes within the file.
+                - **Contents** (`[String]`) - Entire script content.
+                - **Group** (`[String]`) - Subfolder grouping.
+                - **Dependencies** (`[Object[]]`) - References to other files with name and full path.
 
             Child Object Details:
             #### FunctionDetails (`[Object]`)
-                - **functionName** (`[String]`) – Name of the function.
-                - **cmdLets** (`[Object]`) – Functions/cmdlets called, with name and usage count.
-                - **types** (`[Object]`) – Classes referenced, with name and usage count.
-                - **parameterTypes** (`[Object]`) – Enums used.
-                - **Validators** (`[Object]`) – Validator classes used.
-                - **Properties** (`[String[]]`) – Properties within the function.
+                - **functionName** (`[String]`) - Name of the function.
+                - **cmdLets** (`[Object]`) - Functions/cmdlets called, with name and usage count.
+                - **types** (`[Object]`) - Classes referenced, with name and usage count.
+                - **parameterTypes** (`[Object]`) - Enums used.
+                - **Validators** (`[Object]`) - Validator classes used.
+                - **Properties** (`[String[]]`) - Properties within the function.
 
             #### ClassDetails (`[Object]`)
-                - **ClassName** (`[String]`) – Name of the class.
-                - **Methods** (`[String]`) – Methods defined in the class.
-                - **Properties** (`[String[]]`) – Properties within the class.
+                - **ClassName** (`[String]`) - Name of the class.
+                - **Methods** (`[String]`) - Methods defined in the class.
+                - **Properties** (`[String[]]`) - Properties within the class.
 
             
         .NOTES
@@ -960,6 +1070,7 @@ function get-mfFolderItemDetails
     #>
 
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Details' reflects multiple attributes returned and improves clarity.")]
     PARAM(
         #Path to source folder.
         [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
@@ -1204,7 +1315,6 @@ function get-mfFolderItemDetails
                 $item
             }
         }
-        $global:dbgScriptBlock = $sblock
 
         write-verbose 'Getting Folder Items'
 
@@ -1234,10 +1344,10 @@ function get-mfFolderItems
 {
     <#
         .SYNOPSIS
-            Retrieves a filtered list of files from a specified folder, processing `.mfignore` and `.mforder` rules.
+            Retrieves a filtered list of files from a specified folder, processing '.mfignore' and '.mforder' rules.
             
         .DESCRIPTION
-            The `get-mfFolderItems` function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
+            The 'get-mfFolderItems' function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
             - Ignoring entries specified in `.mfignore`.
             - Filtering out non-PS1 files using a switch (`-psScriptsOnly`).
             - Excluding test-related files (`*.test.ps1`, `*.tests.ps1`, `*.skip.ps1`).
@@ -1264,12 +1374,12 @@ function get-mfFolderItems
 
         OUTPUTS
             [Object[]] - Returns an array of objects containing:
-                - **Name** (`[String]`) – Name of the file.
-                - **Path** (`[String]`) – Full file path.
-                - **RelativePath** (`[String]`) – Path relative to the source folder.
-                - **Folder** (`[String]`) – Name of the source folder.
-                - **(Optional) newPath** (`[String]`) – Destination path if copying.
-                - **(Optional) newFolder** (`[String]`) – Destination folder name if copying.
+                - **Name** (`[String]`) - Name of the file.
+                - **Path** (`[String]`) - Full file path.
+                - **RelativePath** (`[String]`) - Path relative to the source folder.
+                - **Folder** (`[String]`) - Name of the source folder.
+                - **(Optional) newPath** (`[String]`) - Destination path if copying.
+                - **(Optional) newFolder** (`[String]`) - Destination folder name if copying.
             
         .NOTES
             Author: Adrian Andersson
@@ -1277,6 +1387,7 @@ function get-mfFolderItems
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Items' reflects nature of function and improves clarity.")]
     PARAM(
         #Path to get items from
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Default')]
@@ -1450,100 +1561,101 @@ function get-mfFolderItems
 }
 function get-mfGitChangeLog
 {
-    <#
-        .SYNOPSIS
-            Generates a markdown changelog from Git commit messages between the latest and previous tags.
+<#
+    .SYNOPSIS
+        Generates a markdown changelog from Git commit messages between the latest and previous tags.
 
-        .DESCRIPTION
-            This function retrieves Git commit messages between the latest and previous tags, categorizes them based on predefined types, and formats them into a markdown changelog. It ensures the Git environment is correctly set up and handles errors if Git is not recognized or tags are not found.
+    .DESCRIPTION
+        This function retrieves Git commit messages between the latest and previous tags, categorizes them based on predefined types, and formats them into a markdown changelog. It ensures the Git environment is correctly set up and handles errors if Git is not recognized or tags are not found.
 
-        .EXAMPLE
-            get-mfGitChangeLog
-                    
-            DESCRIPTION
-            Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
-                    
-            #### OUTPUT
-            # Change Log
-            Version: v1.0.0 --> v1.1.0
-            ## New Features
-            - Added new authentication module
-            ## Bug Fixes
-            - Fixed issue with user login
+    .EXAMPLE
+        get-mfGitChangeLog
+    
+        DESCRIPTION
+        Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
+        
+        #### OUTPUT
+        # Change Log
+        Version: v1.0.0 --> v1.1.0
+        ## New Features
+        - Added new authentication module
+        ## Bug Fixes
+        - Fixed issue with user login
 
-        .EXAMPLE
-            get-mfGitChangeLog -changeLogTypes @{
-                'feat' = 'New Features'
-                'fix' = 'Bug Fixes'
-                'chore' = 'Chore and Pipeline work'
-                'test' = 'Test Changes'
-            }
-                    
-            DESCRIPTION
-            This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
-                    
-            #### OUTPUT
-            # Change Log
-            Version: v1.0.0 --> v1.1.0
-            ## New Features
-            - Added new authentication module
-            ## Bug Fixes
-            - Fixed issue with user login
-            ## Chore and Pipeline work
-            - Updated GH Pipeline AutoBuildv3
-            ## Test Changes
-            - Added test to user login function
+    .EXAMPLE
+        get-mfGitChangeLog -changeLogTypes @{
+        'feat' = 'New Features'
+        'fix' = 'Bug Fixes'
+        'chore' = 'Chore and Pipeline work'
+        'test' = 'Test Changes'
+        }
+        
+        DESCRIPTION
+        This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
 
-        .EXAMPLE
-            get-mfGitChangeLog -All
+        #### OUTPUT
+        # Change Log
+        Version: v1.0.0 --> v1.1.0
+        ## New Features
+        - Added new authentication module
+        ## Bug Fixes
+        - Fixed issue with user login
+        ## Chore and Pipeline work
+        - Updated GH Pipeline AutoBuildv3
+        ## Test Changes
+        - Added test to user login function
 
-            DESCRIPTION
-            Generates a full markdown changelog with all versions.
+    .EXAMPLE
+        get-mfGitChangeLog -All
 
-            #### OUTPUT
-            # Change Log
-            ## Version: v1.0.0 --> v1.1.0
-            ### New Features
-            - Added new authentication module
-            ### Bug Fixes
-            - Fixed issue with user login
-            ### Chore and Pipeline work
-            - Updated GH Pipeline AutoBuildv3
-            ### Test Changes
-            - Added test to user login function
-            ## Version: v1.0.0-prev001 --> v1.1.0
-            ### New Features
-            - Added function
+        DESCRIPTION
+        Generates a full markdown changelog with all versions.
 
-        .EXAMPLE
-            get-mfGitChangeLog -fromLastTag
+        #### OUTPUT
+        # Change Log
+        ## Version: v1.0.0 --> v1.1.0
+        ### New Features
+        - Added new authentication module
+        ### Bug Fixes
+        - Fixed issue with user login
+        ### Chore and Pipeline work
+        - Updated GH Pipeline AutoBuildv3
+        ### Test Changes
+        - Added test to user login function
+        ## Version: v1.0.0-prev001 --> v1.1.0
+        ### New Features
+        - Added function
 
-            DESCRIPTION
-            Generates markdown changelog from commit messages from the last tag until now (Head)
+    .EXAMPLE
+        get-mfGitChangeLog -fromLastTag
 
-            #### OUTPUT
-            # Change Log
+        DESCRIPTION
+        Generates markdown changelog from commit messages from the last tag until now (Head)
 
-            ### New Features
-            - Added new authentication module
-            ### Bug Fixes
-            - Fixed issue with user login
-            ### Chore and Pipeline work
-            - Updated GH Pipeline AutoBuildv3
-            ### Test Changes
-            - Added test to user login function
+        #### OUTPUT
+        # Change Log
 
-        .INPUTS
-            [hashtable] - Accepts changeLogTypes hashtable via parameter or pipeline
+        ### New Features
+        - Added new authentication module
+        ### Bug Fixes
+        - Fixed issue with user login
+        ### Chore and Pipeline work
+        - Updated GH Pipeline AutoBuildv3
+        ### Test Changes
+        - Added test to user login function
 
-        .OUTPUTS
-            [STRING] - Returns a Markdown Compatible string output that can be redirected to a file
+    .INPUTS
+        [hashtable] - Accepts changeLogTypes hashtable via parameter or pipeline
 
-        .NOTES
-            Author: Adrian Andersson
-    #>
+    .OUTPUTS
+        [STRING] - Returns a Markdown Compatible string output that can be redirected to a file
+
+    .NOTES
+        Author: Adrian Andersson
+    #>
 
     [CmdletBinding(DefaultParameterSetName = 'Default')]
+    [OutputType([string])]
     PARAM(
         #Change Logs Types and corresponding Heading. Hashtable/Key Value Pair expected. Key = git type; Value = Heading
         [Parameter(ValueFromPipeline, ParameterSetName = 'Default')]
@@ -1652,13 +1764,13 @@ function get-mfGitChangeLog
         {
             write-verbose 'Getting Commit Objects, grouping and parsing based on changeLogTypes variable'
             $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
-                $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
-                $grouped.forEach{
-                    $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
-                    $_.group.Message.ForEach{
-                        $markDown.Add("- $_")
-                    }
-                }    
+            $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+            $grouped.forEach{
+                $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
+                $_.group.Message.ForEach{
+                    $markDown.Add("- $_")
+                }
+            }    
         }
         
         write-verbose 'Converting to Markdown String'
@@ -1787,6 +1899,7 @@ function get-mfLatestSemverFromBuildManifest
     #>
 
     [CmdletBinding()]
+    [OutputType([semver])]
     PARAM(
         #Root path of the module. Uses the current working directory by default
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
@@ -2066,16 +2179,140 @@ function get-mfNextSemver
     }
     
 }
-function new-mfProject
+function get-mfScriptAnalyzerSummary
 {
 
+    <#
+        .SYNOPSIS
+            Runs, and then summarises the results of PSScriptAnalyzer across a set of PowerShell function files.
+            
+        .DESCRIPTION
+            This function scans `.ps1` files using PSScriptAnalyzer and returns grouped summaries of errors, warnings, and informational findings.
+
+            
+        ------------
+        .EXAMPLE
+            get-mfScriptAnalyzerSummary -sourcePath '.\source\functions'
+            
+            #### DESCRIPTION
+            Runs PSScriptAnalyzer over all function files in the specified path, provides a summary
+            
+            
+            #### OUTPUT
+            Copy of the output of this line
+            
+            
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding()]
+    PARAM(
+        #Source Path for function files
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string]$sourcePath = $(join-path $(join-path '.' -childPath 'source') -childPath functions),
+        [parameter()]
+        #What severities should we scan for
+        [string[]]$severity = @('Error','Warning','Information'),
+        #What weights to provide each severity
+        [Parameter(dontshow)]
+        [hashtable]$weights = @{
+            Error = 50
+            Warning = 15
+            Information = 1
+        },
+        #Set this switch to only get the summary
+        [Parameter()]
+        [switch]$suppressOutput,
+        [Parameter()]
+        #Set this for what rules to exclude.
+        [string[]]$excludeRules = @(
+            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
+        )
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        $psScriptAnalyzerSplat = @{
+            severity = $severity
+            ExcludeRule = $excludeRules
+        }
+
+        if(!(get-module -ListAvailable 'PSScriptAnalyzer')){
+            throw 'PSScriptAnalyzer module must be present on this system for this function to work'
+        }
+        
+    }
+    
+    process{
+        $functionFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath 
+        #Use a GenList to avoid iterative arrays
+        $capture = [System.Collections.Generic.List[object]]::new()
+        write-verbose 'Try w a ArrayList'
+        $functionFiles.foreach{
+            remove-variable invokeResult -errorAction ignore
+            if($suppressOutput)
+            {
+                $invokeResult = Invoke-ScriptAnalyzer -path $_.fullname @psScriptAnalyzerSplat
+            }else{
+                Invoke-ScriptAnalyzer -path $_.fullname @psScriptAnalyzerSplat|tee-object -variable invokeResult
+            }
+            $invokeResult.foreach{$capture.add($_)}
+        }
+        
+        if($capture)
+        {
+            #Transform from GenList to array for better compatibility
+            $capture = $capture.ToArray()
+            $TopErrors = $capture.where{$_.Severity -eq 'Error'}|group-object -property 'RuleName' |Sort-Object -property 'Count' -Descending|Select-Object 'Name','Count' -first 5
+            $TopWarnings = $capture.where{$_.Severity -eq 'Warning'}|group-object -property 'RuleName' |Sort-Object -property 'Count' -Descending|Select-Object 'Name','Count' -first 5
+            $TopInfos = $capture.where{$_.Severity -eq 'Information'}|group-object -property 'RuleName' |Sort-Object -property 'Count' -Descending|Select-Object 'Name','Count' -first 5
+
+            $ScriptNameGroup = $capture|group-object -property 'ScriptName'
+            $ScriptNameWeighted = $ScriptNameGroup.ForEach{
+                $fileFlagsGrouped = $_.Group|group-object -property 'Severity'|Select-Object 'Name','Count'
+                $Errors = [int]($fileFlagsGrouped.Where{$_.Name -eq 'Error'}|Select-Object -property 'Count').count
+                $Warnings = [int]($fileFlagsGrouped.Where{$_.Name -eq 'Warning'}|Select-Object -property 'Count').count
+                $Informations = [int]($fileFlagsGrouped.where{$_.Name -eq 'Information'}|Select-Object -Property 'count').count
+                [PSCustomObject]@{
+                    ScriptName = $_.Name
+                    Counter = "E:$Errors W:$Warnings I:$Informations"
+                    Weight = [int]($($weights.Error * $Errors) +$($weights.Warning * $Warnings) +$($weights.Information * $Informations))
+                }
+            }
+
+            $ScriptNameWeightedSelect = if($ScriptNameWeighted){
+                $ScriptNameWeighted|sort-object -property weight -Descending|Select-Object -first 5
+            }else{$null}
+
+            [PSCustomObject]@{
+                Errors = $($capture.where{$_.severity -eq 'Error'}.count)
+                Warnings = $($capture.where{$_.severity -eq 'Warning'}.count)
+                Informational = $($capture.where{$_.severity -eq 'Information'}.count)
+                TopErrors = $TopErrors
+                TopWarnings = $TopWarnings
+                TopInformational = $TopInfos
+                TopFlaggedFiles = $ScriptNameWeightedSelect 
+            }
+        }
+        
+    }
+    
+}
+function new-mfProject
+{
     <#
         .SYNOPSIS
             Capture some basic parameters, and create the scaffold file structure
             
         .DESCRIPTION
             The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
-            Whether you’re building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
+            Whether you're building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
             Think of it as laying the foundation for your module project.
             
         ------------
@@ -2083,7 +2320,7 @@ function new-mfProject
             new-mfProject -ModuleName "MyModule" -description "A module for automating tasks" -moduleAuthors "John Doe" -companyName "MyCompany" -moduleTags "automation", "tasks" -projectUri "https://github.com/username/repo" -iconUri "https://example.com/icon.png" -licenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 
             #### DESCRIPTION
-            This example demonstrates how to use the `new-mfProject` function to create a scaffold for a new PowerShell module named "MyModule". 
+            This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 
             It includes a description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
 
             #### OUTPUT
@@ -2178,17 +2415,6 @@ function new-mfProject
         write-verbose 'Create Folder Scaffold'
         add-mfFilesAndFolders -moduleRoot $path
 
-       
-        <#
-        if($projectUri -and !$licenseUri)
-        {
-            write-verbose 'Auto-checking for license'
-            if(test-path $(join-path -path $path -childPath 'LICENSE'))
-            {
-                $licenseUri = "$projectUri\LICENSE"
-            }
-        }
-        #>
 
         #Should we use JSON for this, or CLIXML.
         #The vote from the internet in July 2024 is stick to CLIXML for PowerShell centric projects. So we will do that
@@ -2650,6 +2876,7 @@ function write-mfModuleDocs
     #>
 
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Docs' reflects a short form of documentation")]
     PARAM(
         #The root path where documentation should be stored. Defaults to the current directory.
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]

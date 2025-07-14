@@ -103,8 +103,6 @@ function build-mfProject
             }
         }
 
-
-
         $moduleOutputFolder = join-path -path $buildFolder -ChildPath $($config.moduleName)
 
         if(!(test-path $moduleOutputFolder))
@@ -127,7 +125,6 @@ function build-mfProject
             }
         }
 
-
         $moduleForgeDetails = (get-module 'ModuleForge' |Sort-Object -Property Version -Descending|select-object -First 1)
         if($moduleForgeDetails)
         {
@@ -137,21 +134,15 @@ function build-mfProject
         }
 
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
-       
-        #Better Order
-        [array]$folders = @('enums','validationClasses','classes','functions','private')
-
-
         $sourceFolder = join-path -path $path -childPath 'source'
 
-        #What folders do we need to copy the files directly in
+        #What folders do we need to copy the files contents of
         [array]$copyFolders = @('resource','bin')
 
         $scriptsToProcess = New-Object System.Collections.Generic.List[string]
         $functionsToExport = New-Object System.Collections.Generic.List[string]
         $nestedModules = New-Object System.Collections.Generic.List[string]
-
-        $DscResourcesToExport = New-Object System.Collections.Generic.List[string]
+        #$DscResourcesToExport = New-Object System.Collections.Generic.List[string] #No Dsc Support presently
 
         $fileList = New-Object System.Collections.Generic.List[string]
 
@@ -192,11 +183,11 @@ function build-mfProject
 
         
         #Do a check for DSC Resources because they change how we handle everything
-        #Actually, for now lets not worry about DesiredStateConfig, 
+        #Actually, for now lets not worry about DesiredStateConfig stuff - Future Release, 
         # - its a bit broken as of July 2024,
         # - It changes how we build modules because nestedmodules, scriptstoprocess dont work (From previous experience)
         # - I don't have any need to build DSC resources at this time, so my testing will be limited
-        # - DSC Resources are being reworked by MicroSoft so this is a moving target at the moment 
+        # - DSC Resources are being reworked by MicroSoft so this is a moving target anyway 
         write-verbose 'Checking for DSC Resources. DSC Resources add nuance to module build'
         $dscResourcesFolder = join-path -path $sourceFolder -ChildPath 'dscClasses'
         if(test-path $dscResourcesFolder)
@@ -204,15 +195,15 @@ function build-mfProject
             $dscResourceFiles = get-mfFolderItems -path $dscResourcesFolder -psScriptsOnly
             if($dscResourceFiles.count -ge 1)
             {
-                write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
+                #write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
+                #$noExternalFiles = $true
                 #See above comments
                 throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
-                $noExternalFiles = $true
             }else{
                 write-verbose 'No DSC Resources found'
             }
         }else{
-            write-verbose 'No DSC folder found'
+            #write-verbose 'No DSC folder found'
         }
         
 
@@ -368,22 +359,6 @@ function build-mfProject
                 }
                 #Make null = to suppress the object output
                 $null = get-mfFolderItems -path $fullFolderPath -destination $destinationFolder -copy
-                
-
-                <# Ideally we add all the copied items to the filelist param in the module manifest
-                #But since we are putting them in a child folder, I've got concerns
-                #Like the relativename is there, and it works, but the folder divider wont be a \ on non-windows
-                #Probably safer to leave this out for the time being
-                # Also worth noting, I don't think I've ever seen a manifest have a file list
-
-
-                $folderItems.ForEach{
-                    if($_.name -notIn $fileList)
-                    {
-                        $fileList.Add($_.name)
-                    }
-                }
-                #>
 
                 
             }
@@ -473,7 +448,8 @@ function build-mfProject
             write-verbose 'Nothing to include in modulesToProcess'
         }
 
-        #This block should not trigger right now
+        #This block should not trigger right now. Maybe we can add it in if we revisit DSC
+        <#
         $DscResourcesToExport
         if($DscResourcesToExport.count -ge 1)
         {
@@ -483,36 +459,21 @@ function build-mfProject
         }else{
             write-verbose 'No dsc Resources to include'
         }
+        #>
 
         #Extra Stuff
         if($version.PreReleaseLabel)
         {
             #Semver supplied had a pre-release label
             write-verbose 'Incrementing Prerelease Version'
-            #$preReleaseSplit = $version.PreReleaseLabel.Split('.')
-            #$preReleaseLabel = $currentPreReleaseSplit[0]
-            
             write-verbose "Setting Prerelease tag to: $($version.PreReleaseLabel)"
-
             $splatManifest.Prerelease = $version.PreReleaseLabel
             
         }
 
         $splatManifest.ModuleVersion = $version
-
-
-        #Currently not adding anything to file list, will leave this code here in case we revisit later
-        <#
-        if($fileList.count -ge 1)
-        {
-            write-verbose "Included in fileList: $($fileList.ToArray() -join ',')"
-            [array]$splatManifest.fileList = [array]$fileList.ToArray()
-        }
-        #>
-
         New-ModuleManifest @splatManifest
         Write-Information 'Created Module Manifest' -tags 'CreatedModuleManifest'
-
     }
     
 }

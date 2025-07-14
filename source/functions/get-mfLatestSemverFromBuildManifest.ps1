@@ -31,6 +31,7 @@ function get-mfLatestSemverFromBuildManifest
     #>
 
     [CmdletBinding()]
+    [OutputType([semver])]
     PARAM(
         #Root path of the module. Uses the current working directory by default
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]

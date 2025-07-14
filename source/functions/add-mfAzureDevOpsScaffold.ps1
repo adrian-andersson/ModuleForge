@@ -1,39 +1,39 @@
-function add-mfGithubScaffold
+function add-mfAzureDevOpsScaffold
 {
 
     <#
         .SYNOPSIS
-            Initialises a `.GitHub` scaffold in a PowerShell module, including GH Actions workflows for pester testing and build and release
+            Initialises a `.azuredevops` scaffold in a PowerShell module, including YAML Azure DevOps Pipelines for pester testing and build and release
 
             
         .DESCRIPTION
-            This function will create a '.github' folder in the moduleforge root (if one does not exist).
-            It will create 2 github actions workflows, 1 for Pester testing, 1 for buildAndRelease
+            This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
+            It will create 2 Azure DevOps Pipelines files, 1 for Pester testing, 1 for buildAndRelease
             It will create 1 Pull Request template.
 
-            The buildAndRelease template will use Git Tags to mark versions. If you stick with this template you should refrain from
+            The buildAndRelease pipeline will use Git Tags to mark versions. If you stick with this template you should refrain from
             using tags for other purposes.
             
             The purpose of these workflows and templates is to get you started, creating a quick and easy workflow scaffold. 
             Please feel free to change the workflows and template to your own needs and preferences.
             
         .EXAMPLE
-            Add-mfGithubScaffold
+            add-mfAzureDevOpsScaffold
 
             #### DESCRIPTION
-            Copies the `.GitHub` folder from the module's `resource` directory to the current module, skipping existing files.
+            Copies the `.azuredevops` folder from the module's `resource` directory to the current module, skipping existing files.
 
             #### OUTPUT
-            Should have a .github folder, with workflows and a PR template
+            Should have a .azuredevops folder, with pipelines and a PR template
 
         .EXAMPLE
-            Add-mfGithubScaffold -Force
+            add-mfAzureDevOpsScaffold -Force
 
             #### DESCRIPTION
-            Copies the `.GitHub` scaffold and overwrites existing files in `.github` directory
+            Copies the `.azuredevops` scaffold and overwrites existing files in `.azuredevops` directory
 
             #### OUTPUT
-            Should have a .github folder, with workflows and a PR template
+            Should have a .azuredevops folder, with workflows and a PR template
             
         .NOTES
             Author: Adrian Andersson
@@ -49,9 +49,9 @@ function add-mfGithubScaffold
         #Module Config reference
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
-        #githubFolder
+        #Azure DevOps folder
         [Parameter(DontShow)]
-        [string]$githubFolder = '.github',
+        [string]$azdFolder = '.azuredevops',
         #Should we overwrite if files exist?
         [switch]$force
     )
@@ -76,10 +76,10 @@ function add-mfGithubScaffold
             throw 'Err: Unable to find resource folder in ModuleForge module'
         }
 
-        $resourceFolderGithub = join-path $resourceFolder 'github'
-        if(!(test-path  $resourceFolderGithub))
+        $resourceFolderAzd = join-path $resourceFolder 'azureDevOps'
+        if(!(test-path  $resourceFolderAzd))
         {
-            throw 'Err: Found resource folder, but not Github folder in ModuleForge module'
+            throw 'Err: Found resource folder, but not azureDevOps folder in ModuleForge module'
         }
 
         $mfConfigFile = join-path $modulePath $configFile
@@ -88,30 +88,30 @@ function add-mfGithubScaffold
             throw 'Err: No Moduleforge Config File found. Please check your module path'
         }
 
-        $moduleGitFolder = join-path $modulePath $githubFolder
+        $moduleAzdFolder = join-path $modulePath $azdFolder
 
     }
     
     process{
-        if(!(test-path $moduleGitFolder)){
-            write-verbose "$moduleGitFolder does not exist, creating"
-            new-item -ItemType Directory -Path $moduleGitFolder
+        if(!(test-path $moduleAzdFolder)){
+            write-verbose "$moduleAzdFolder does not exist, creating"
+            new-item -ItemType Directory -Path $moduleAzdFolder|out-null
         }else{
-            write-verbose "$moduleGitFolder already exists"
+            write-verbose "$moduleAzdFolder already exists"
         }
 
-        $childItemSource = get-childitem $resourceFolderGithub -Recurse
+        $childItemSource = get-childitem $resourceFolderAzd -Recurse
         $childItemSource.foreach{
-            write-verbose "Checking file: $($_.name)`n Need to replace $resourceFolderGithub with $moduleGitFolder"
+            write-verbose "Checking file: $($_.name)`n Need to replace $resourceFolderAzd with $moduleAzdFolder"
             #Need to not use .replace method as it is case sensitive. 
-            $destinationPath = $_.FullName -replace [regex]::Escape($resourceFolderGithub), $moduleGitFolder
-            write-verbose "DestinationPath: $destinationPath"
+            $destinationPath = $_.FullName -replace [regex]::Escape($resourceFolderAzd), $moduleAzdFolder
             if($destinationPath -eq $_.FullName)
             {
                 throw "Destination path matches original file path. Replace has not worked `n$($destinationPath) -> $($_.FullName)"
             }else{
                 write-verbose "DestinationPath: $destinationPath"
             }
+            
             if(test-path $destinationPath){
                 if($force)
                 {
@@ -129,6 +129,8 @@ function add-mfGithubScaffold
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
+        $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/tutorials/azureDevOps/tutorial.html for guidance"
+        Write-Warning $warning 
+
     }
-    
 }

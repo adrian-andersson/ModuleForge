@@ -25,28 +25,28 @@ function get-mfFolderItemDetails
 
         .OUTPUTS
             [Object[]] - Returns an array of objects with detailed file metadata, including:
-                - **Name** (`[String]`) – Name of the file.
-                - **Path** (`[String]`) – Full file path.
-                - **FileSize** (`[Int]`) – File size in kilobytes.
-                - **FunctionDetails** (`[Object[]]`) – Details of functions within the file.
-                - **ClassDetails** (`[Object[]]`) – Details of classes within the file.
-                - **Contents** (`[String]`) – Entire script content.
-                - **Group** (`[String]`) – Subfolder grouping.
-                - **Dependencies** (`[Object[]]`) – References to other files with name and full path.
+                - **Name** (`[String]`) - Name of the file.
+                - **Path** (`[String]`) - Full file path.
+                - **FileSize** (`[Int]`) - File size in kilobytes.
+                - **FunctionDetails** (`[Object[]]`) - Details of functions within the file.
+                - **ClassDetails** (`[Object[]]`) - Details of classes within the file.
+                - **Contents** (`[String]`) - Entire script content.
+                - **Group** (`[String]`) - Subfolder grouping.
+                - **Dependencies** (`[Object[]]`) - References to other files with name and full path.
 
             Child Object Details:
             #### FunctionDetails (`[Object]`)
-                - **functionName** (`[String]`) – Name of the function.
-                - **cmdLets** (`[Object]`) – Functions/cmdlets called, with name and usage count.
-                - **types** (`[Object]`) – Classes referenced, with name and usage count.
-                - **parameterTypes** (`[Object]`) – Enums used.
-                - **Validators** (`[Object]`) – Validator classes used.
-                - **Properties** (`[String[]]`) – Properties within the function.
+                - **functionName** (`[String]`) - Name of the function.
+                - **cmdLets** (`[Object]`) - Functions/cmdlets called, with name and usage count.
+                - **types** (`[Object]`) - Classes referenced, with name and usage count.
+                - **parameterTypes** (`[Object]`) - Enums used.
+                - **Validators** (`[Object]`) - Validator classes used.
+                - **Properties** (`[String[]]`) - Properties within the function.
 
             #### ClassDetails (`[Object]`)
-                - **ClassName** (`[String]`) – Name of the class.
-                - **Methods** (`[String]`) – Methods defined in the class.
-                - **Properties** (`[String[]]`) – Properties within the class.
+                - **ClassName** (`[String]`) - Name of the class.
+                - **Methods** (`[String]`) - Methods defined in the class.
+                - **Properties** (`[String[]]`) - Properties within the class.
 
             
         .NOTES
@@ -54,6 +54,7 @@ function get-mfFolderItemDetails
     #>
 
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Details' reflects multiple attributes returned and improves clarity.")]
     PARAM(
         #Path to source folder.
         [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
@@ -298,7 +299,6 @@ function get-mfFolderItemDetails
                 $item
             }
         }
-        $global:dbgScriptBlock = $sblock
 
         write-verbose 'Getting Folder Items'
 

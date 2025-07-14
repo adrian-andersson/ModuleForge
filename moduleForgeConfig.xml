@@ -22,9 +22,17 @@
       <Obj N="tags" RefId="2">
         <TNRef RefId="1" />
         <LST>
+          <S>Automation</S>
+          <S>AzureDevOps</S>
+          <S>Bootstrap</S>
+          <S>BuildAutomation</S>
+          <S>CI/CD</S>
+          <S>CrossPlatform</S>
+          <S>DevOps</S>
+          <S>GIT</S>
+          <S>Github</S>
           <S>Module</S>
           <S>Scaffold</S>
-          <S>Bootstrap</S>
         </LST>
       </Obj>
       <S N="projectUri">https://github.com/adrian-andersson/ModuleForge</S>
