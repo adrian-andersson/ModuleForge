@@ -1,0 +1,134 @@
+name: Execute Pester Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+jobs:
+  pesterTest:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write #Needed for adding comment
+      contents: read #Since we set permissions, we need to declare read to do checkout
+    outputs:
+      coverage: ${{ steps.pester_tests.outputs.coverage }}
+      coverageTarget: ${{ steps.pester_tests.outputs.coverageTarget }}
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -Force -SkipPublisherCheck
+          $moduleList = @('Pester')
+          import-module $moduleList
+          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+      
+      - name: Run Pester tests
+        shell: pwsh
+        id: pester_tests
+        run: |
+          $pesterConfigHash = @{
+              Run = @{
+                  Passthru = $true
+                  Path = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+              }
+              CodeCoverage = @{
+                  Enabled = $true
+                  Path = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+              }
+              Output = @{
+                  Verbosity = 'Detailed'
+              }
+          }
+          $pesterConfig = New-PesterConfiguration -hashtable $pesterConfigHash
+
+          try{
+            Invoke-Pester -Configuration $pesterConfig|Tee-Object -variable pesterCapture
+          }catch{
+            write-verbose "WARNING: Pester threw an exception: $($_.Exception.Message)"
+            $pesterFailed = $true
+          }
+          
+          $pesterMarkdown = @{
+            name = 'PesterMarkdown'
+            expression = {
+              $cc = [math]::Round($_.CodeCoverage.CoveragePercent, 0)
+              $ccp = $_.CodeCoverage.CoveragePercentTarget
+              if (!$cc) { $cc = 0 }
+              if (!$ccp) { $ccp = 0 }
+              $midpoint = $ccp + ((100 - $ccp) / 2)
+              $badge = $(if($cc -lt $ccp){"🔴 Failed"}elseIf($cc -lt $midpoint){"🟡 Caution"}elseIf($cc -lt 98){"🟢 Good"}else{"🟢 Perfect 🏅"})
+              @(
+                "### 🧪 Pester Test Results"
+                "**Result:** $($_.Result) $(if($_.Result -eq 'Passed'){"✅"}else{"❌"})"
+                "**Tests:** 🟢 $($_.PassedCount) passed | 🔴 $($_.FailedCount) failed | ⚪ $($_.SkippedCount) skipped"
+                "**Duration:** $($_.duration.toString())"
+                "`n"
+                "### 📊 Code Coverage"
+                "**Coverage:**  $($cc)% $badge"
+                "**Target:** $($ccp)%"
+                "`n"
+                "### ℹ️ Runtime Info"
+                "**Pester Version:** $($_.version)"
+                "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
+                "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
+                "`n"
+                "_This comment was generated automatically by the CI pipeline._"
+              ) -join "`n"
+            }
+          }
+          $pesterError = @(
+            '### ❌ Pester Test Run Failed'
+            'Pester encountered an error and could not complete the test run.'
+            'Please check the logs for more details.'
+            '_This comment was generated automatically by the CI pipeline._'
+          ) -join "`n"
+          if($pesterCapture)
+          {
+            ($pesterCapture|Select-object $pesterMarkdown).PesterMarkdown|out-file -FilePath pesterMarkdown.md -encoding UTF8
+
+            # Export as job output
+            $coveragePercent = [math]::Round($pesterCapture.CodeCoverage.CoveragePercent, 0)
+            "coverage=$coveragePercent" >> $env:GITHUB_OUTPUT
+            $coverageTarget = $pesterCapture.CodeCoverage.CoveragePercentTarget
+            "coverageTarget=$coverageTarget">> $env:GITHUB_OUTPUT
+          }else{
+            $pesterError|out-file -FilePath pesterMarkdown.md -encoding UTF8
+            throw 'Error with Pester Invocation'
+          }
+
+          if($pesterFailed){throw 'Error with Pester invocation'}
+          
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: always() && github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: pesterMarkdown.md
+          header: pesterResult
+          
+  codeCoverageCheck:
+      needs: pesterTest
+      runs-on: ubuntu-latest
+      continue-on-error: true
+      steps:
+        - name: Check Coverage Threshold
+          shell: pwsh
+          run: | 
+            $coverage = [int]"${{ needs.pesterTest.outputs.coverage }}"
+            $coverageTarget = [int]"${{ needs.pesterTest.outputs.coverageTarget }}"
+            Write-Verbose "Coverage from previous job: $coverage%"
+
+            if ($coverage -lt $coverageTarget) {
+              Write-Error "Code coverage ($coverage%) is below the required threshold ($coverageTarget%)."
+              exit 1
+            } else {
+              Write-Verbose "Coverage is acceptable."
+            }
