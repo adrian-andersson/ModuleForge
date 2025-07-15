@@ -181,7 +181,7 @@ invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
 
 1. Commit _just_ our functions file with the `feat` commit prefix and a relevant comment
    - Something like `feat: added get-helloWorld function`
->Hint: If you are not sure how to commit in VSCode, switch to the `Source Control` item in the left-most menu. You will need to _stage_ each file by clicking the small plus sign next the the filename. Enter the _commit_ message into the text box labelled _changes_, when ready, hit _commit_. Once all your files are committed, you can publish your branch with the `
+>Hint: If you are not sure how to commit in VSCode, switch to the `Source Control` item in the left-most menu. You will need to _stage_ each file by clicking the small plus sign next the the filename. Enter the _commit_ message into the text box labelled _changes_, when ready, hit _commit_. Once all your files are committed, you can publish your branch with the `Publish Branch` button that replaces the `Commit` button
 2. Now commit the pester test file using the `test` commit prefix
     - Something like `test: added Pester testing for get-helloWorld`
 3. Publish your branch back to github
@@ -191,15 +191,13 @@ invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
 6. Fill in the Pull Request template
    - Type in a decent description
    - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
-   - ![New Repository](./img/prTemplate.png)
+   - ![New Repository](./img/prForm.png)
 7. Once you have completed the PR template, create the Pull Request
-8. On submission of a Pull Request to the Main branch, the Pester Workflow will automatically be invoked, and will run through All tests in your module.
-   - ![New Repository](./img/prpesterTest.png)
-9. Once our pester workflow is complete, the results will show a Pass/Fail in the PR
-   - ![New Repository](./img/prpesterTest2.png)
+8. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
+   - ![New Repository](./img/prComments.png)
 10. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
 
-> If you want to explore your pester results in more details before a merge, you can click on `Actions`, find the `pesterTest` workflow, and expand the `Run pester tests` step from our latest run to view things such as code coverage, or get more details on failures etc
+> If you want to explore your pester results in more details before a merge, you can click on `Actions`, find the `pesterTest` workflow, and expand the `Run pester tests` step from our latest run to view things such as code coverage, or get more details on failures etc.
 
 ### Build and Release
 
@@ -292,13 +290,6 @@ Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages
 
 > A note on V3 nuget feeds and PSResourceGet. Wildcard searching is not supplied, you will need to know the exact name of your module for find and install commands to work.
 
-
 ## Wrapping up
 
-In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Github Packages repository for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge.
-
-The next steps are up to you, you could create a new function and a new prerelease version, or experiment with something a little more advanced.
-
-If you are not a fan of the PR template, feel free to use your own.
-
-If you want to know more about the workflows, feel free to take a look, adjust them, reverse-engineer them, tweak them for your own purposes.
+In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Github Packages repository for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge, and published a single-function module.
