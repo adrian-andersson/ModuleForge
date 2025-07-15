@@ -95,7 +95,13 @@ function get-helloWorld
      $functionName = 'write-mfModuleDocs'
     . $fileName
     
+    #Need to ensure PlatyPS is available 
+    if(! (get-module 'platyPs' -ListAvailable))
+    { 
+        install-module -Repository 'PSGallery' -Name platyPS -Force -SkipPublisherCheck
+    }
 
+    
 
 }
 
