@@ -34,6 +34,7 @@ BeforeAll{
     if(!(test-path $docsPath)){
         new-item -ItemType Directory -Path $docsPath
     }
+    
     #Create a manifest file
 @'
 @{
@@ -42,10 +43,11 @@ BeforeAll{
     Author           = 'Example'
     PowerShellVersion = '5.1'
     FunctionsToExport = 'get-helloWorld'
-    RootModule = 'platypstest.psm1'
+    RootModule = 'platyPsTest.psm1'
 }
 '@|out-file $manifestPath
     #Create a module file
+    
 @'
 function get-helloWorld
 {
@@ -89,13 +91,24 @@ function get-helloWorld
 '@|Out-File $moduleFile
 
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $functionName = 'write-mfModuleDocs'
+    . $fileName
     
 
 
 }
 
 
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
+}
 
 
 Describe 'write-mfModuleDocs' {
@@ -175,12 +188,9 @@ Describe 'write-mfModuleDocs' {
         }
 
         Set-Alias -name 'git' -Value invoke-GitCommand
-
         import-module $manifestPath
-        import-module platyPs
-        
+        import-module platyPS
         write-mfModuleDocs -modulename platyPsTest -path $docsPath -includeChangeLog
-
         $newDocsPath = join-path $docsPath 'docs'
         $newFuncsPath = join-path $newDocsPath 'functions'
 

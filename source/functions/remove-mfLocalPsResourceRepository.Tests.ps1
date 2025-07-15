@@ -22,14 +22,30 @@ BeforeAll{
         }
     }
     
-    #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
-    
     #Create a temp folder so we don't clobber anything
     $repoTestPath = join-path -path $currentPath -childPath 'repoTest'
+    if(!(test-path $repoTestPath)){
+        new-item -ItemType Directory -Path $repoTestPath
+    }
 
+    #Load This File
+    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $functionName = 'remove-mfLocalPsResourceRepository'
+    . $fileName
+    
+    #Param for our RepoName
     $repoName = 'PesterTesting'
 
+}
+
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
 }
 
 Describe 'remove-mfLocalPsResourceRepository' {
@@ -47,6 +63,7 @@ Describe 'remove-mfLocalPsResourceRepository' {
     }
 }
 
+
 AfterAll{
-    remove-item repoTest -Recurse -Force
+    remove-item $repoTestPath -Recurse -Force -ErrorAction Ignore
 }
