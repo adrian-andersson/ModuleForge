@@ -14,7 +14,8 @@ Grab all the files from source, compile them into a single PowerShell module fil
 
 ```
 build-mfProject [-version] <SemanticVersion> [[-path] <String>] [[-configFile] <String>] [-exportClasses]
- [-exportEnums] [-noExternalFiles] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-exportEnums] [-noExternalFiles] [[-releaseNotes] <String>] [-includeReleaseNotesInDescription]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -116,6 +117,36 @@ Accept wildcard characters: False
 ### -noExternalFiles
 Use this to not put anything in nestedmodules, making everything a single file.
 By default validators are put in a separate nestedmodule script to ensure they are loaded properly
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -releaseNotes
+{{ Fill releaseNotes Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 4
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -includeReleaseNotesInDescription
+{{ Fill includeReleaseNotesInDescription Description }}
 
 ```yaml
 Type: SwitchParameter

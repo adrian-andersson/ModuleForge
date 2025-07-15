@@ -12,8 +12,20 @@ Generates a markdown changelog from Git commit messages between the latest and p
 
 ## SYNTAX
 
+### Default (Default)
 ```
-get-mfGitChangeLog [[-changeLogTypes] <Hashtable>] [-all] [-ProgressAction <ActionPreference>]
+get-mfGitChangeLog [-changeLogTypes <Hashtable>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+### FromLastTag
+```
+get-mfGitChangeLog [-changeLogTypes <Hashtable>] [-fromLastTag] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
+```
+
+### All
+```
+get-mfGitChangeLog [-changeLogTypes <Hashtable>] [-all] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
 ```
 
@@ -26,34 +38,36 @@ It ensures the Git environment is correctly set up and handles errors if Git is 
 ### EXAMPLE 1
 ```
 get-mfGitChangeLog
-        
+```
+
 DESCRIPTION
-Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
-        
+Call the \`get-mfGitChangeLog\` function with default change Log Types.
+The function will generate a markdown changelog that can be sent to release or artifact notes.
+
 #### OUTPUT
 # Change Log
-Version: v1.0.0 --> v1.1.0
+Version: v1.0.0 --\> v1.1.0
 ## New Features
 - Added new authentication module
 ## Bug Fixes
 - Fixed issue with user login
-```
 
 ### EXAMPLE 2
 ```
 get-mfGitChangeLog -changeLogTypes @{
-    'feat' = 'New Features'
-    'fix' = 'Bug Fixes'
-    'chore' = 'Chore and Pipeline work'
-    'test' = 'Test Changes'
+'feat' = 'New Features'
+'fix' = 'Bug Fixes'
+'chore' = 'Chore and Pipeline work'
+'test' = 'Test Changes'
 }
-        
+```
+
 DESCRIPTION
-This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
-        
+This example demonstrates how to call the \`get-mfGitChangeLog\` function with a custom set of changelog types, in case you want to control your own
+
 #### OUTPUT
 # Change Log
-Version: v1.0.0 --> v1.1.0
+Version: v1.0.0 --\> v1.1.0
 ## New Features
 - Added new authentication module
 ## Bug Fixes
@@ -62,7 +76,6 @@ Version: v1.0.0 --> v1.1.0
 - Updated GH Pipeline AutoBuildv3
 ## Test Changes
 - Added test to user login function
-```
 
 ### EXAMPLE 3
 ```
@@ -87,6 +100,26 @@ Generates a full markdown changelog with all versions.
 ### New Features
 - Added function
 
+### EXAMPLE 4
+```
+get-mfGitChangeLog -fromLastTag
+```
+
+DESCRIPTION
+Generates markdown changelog from commit messages from the last tag until now (Head)
+
+#### OUTPUT
+# Change Log
+
+### New Features
+- Added new authentication module
+### Bug Fixes
+- Fixed issue with user login
+### Chore and Pipeline work
+- Updated GH Pipeline AutoBuildv3
+### Test Changes
+- Added test to user login function
+
 ## PARAMETERS
 
 ### -changeLogTypes
@@ -102,7 +135,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 1
+Position: Named
 Default value: @{
             'feat' = 'New Features'
             'fix' = 'Bug Fixes'
@@ -121,10 +154,25 @@ Switch to get a full changelog for ALL tags
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: All
 Aliases:
 
-Required: False
+Required: True
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -fromLastTag
+Switch to get the changelog from the last tag until this point.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: FromLastTag
+Aliases:
+
+Required: True
 Position: Named
 Default value: False
 Accept pipeline input: False
