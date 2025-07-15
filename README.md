@@ -47,7 +47,7 @@ ModuleForge is designed for flexibility.
 
 ```mermaid
 
-graph LR
+graph TD
   A[🚀 Start A New Pwsh Module Project] --> B[💻 Code your functions]
   B --> C[🔍 Test Locally]
   C --> D[📦 Commit Changes & Open a PR]
