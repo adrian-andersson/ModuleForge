@@ -48,11 +48,17 @@ ModuleForge is designed for flexibility.
 ```mermaid
 
 graph LR
-  A[Start A New Module Project] --> B[Code]
-  B --> C[Test]
-  C --> D[Commit & PR]
-  D --> E[Automated Tests]
-  E --> F[Release]
-  F --> G[Deploy & Use]
-  G --> B
+  A[🚀 Start A New Pwsh Module Project] --> B[💻 Code your functions]
+  B --> C[🔍 Test Locally]
+  C --> D[📦 Commit Changes & Open a PR]
+  subgraph "CI ⚙️"
+  D --> E[🧪 Automated Pester and PSInvoke Tests]
+  E --> F[👀 Review and Merge]
+  end
+  subgraph "CD 🚚"
+  F --> G[🏷️ Build & Release Version]
+  G --> H[⏬ Deploy & Use]
+  end
+  H --> B
+
 ```
