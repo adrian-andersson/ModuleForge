@@ -43,34 +43,29 @@ install-psresource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 ## Part 2 - Create a new ModuleForge Project
 
 1. From your repository directory, run the new-mfProject function to build the files out, as per the example below
-
-```powershell
-new-mfProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
-```
-
 2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory shoud have a number of subfolders
 3. Run the `add-mfGithubScaffold` function to add 2 github workflow files and a PR template to the `.github` directory of your module folder
-
-```PowerShell
-add-mfgithubScaffold
-```
 4. Check the files were created
 5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
    - You should use a proper commit message, something like `chore: Initialised ModuleForge project with scaffolding & workflows'
+  
+```powershell
+new-mfProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
+add-mfgithubScaffold
+```
 
 ## Part 3 - Create a Function and a Test
 
 ### Creating our get-helloWorld function
 
 1. Create a branch called `feature/hello-world-function`. You can deviate from this naming convention if you like. The objective is to be consistant.
-
-> Hint: In VSCode you can create a branch by clicking on the current branch name in the bottom left corner, then in the dialog box, selecting `+Create New Branch`. VSCode will automatically switch you to the new branch
-
 2. Create a new file in the `functions` sub-directory of the `source` directory
    - Call the file `get-helloWorld.ps1`
 3. Code up your powershell function code.
    - An example is provided below
    - Make sure you include some form of Inline Help and follow good coding practices
+
+> Hint: In VSCode you can create a branch by clicking on the current branch name in the bottom left corner, then in the dialog box, selecting `+Create New Branch`. VSCode will automatically switch you to the new branch
 
 ```PowerShell
 function get-helloWorld
@@ -177,25 +172,29 @@ invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
 
 ## Part 4 - Pull Request and BuildAndRelease
 
-### Commit and Pull Request
+### Commit Changes
 
 1. Commit _just_ our functions file with the `feat` commit prefix and a relevant comment
    - Something like `feat: added get-helloWorld function`
->Hint: If you are not sure how to commit in VSCode, switch to the `Source Control` item in the left-most menu. You will need to _stage_ each file by clicking the small plus sign next the the filename. Enter the _commit_ message into the text box labelled _changes_, when ready, hit _commit_. Once all your files are committed, you can publish your branch with the `Publish Branch` button that replaces the `Commit` button
 2. Now commit the pester test file using the `test` commit prefix
     - Something like `test: added Pester testing for get-helloWorld`
 3. Publish your branch back to github
-4. In your browser, navigate to your new repository. You should see a notification banner in the top of github advising that a new branch can be used to create a PR.
+
+>Hint: If you are not sure how to commit in VSCode, switch to the `Source Control` item in the left-most menu. You will need to _stage_ each file by clicking the small plus sign next the the filename. Enter the _commit_ message into the text box labelled _changes_, when ready, hit _commit_. Once all your files are committed, you can publish your branch with the `Publish Branch` button that replaces the `Commit` button
+
+### Create Pull Request
+
+1. In your browser, navigate to your new repository. You should see a notification banner in the top of github advising that a new branch can be used to create a PR.
    - ![New Repository](./img/prbanner.png)
-5. Click the option to create a Pull Request
-6. Fill in the Pull Request template
+2. Click the option to create a Pull Request
+3. Fill in the Pull Request template
    - Type in a decent description
    - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
    - ![New Repository](./img/prForm.png)
-7. Once you have completed the PR template, create the Pull Request
-8. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
+4. Once you have completed the PR template, create the Pull Request
+5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
    - ![New Repository](./img/prComments.png)
-10. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
+6. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
 
 > If you want to explore your pester results in more details before a merge, you can click on `Actions`, find the `pesterTest` workflow, and expand the `Run pester tests` step from our latest run to view things such as code coverage, or get more details on failures etc.
 
