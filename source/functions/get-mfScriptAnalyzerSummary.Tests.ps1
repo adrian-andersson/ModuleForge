@@ -42,7 +42,7 @@ BeforeAll{
 
 describe 'get-mfScriptAnalyzerSummary' {
     BeforeAll{
-        $output = get-mfScriptAnalyzerSummary
+        $output = get-mfScriptAnalyzerSummary $sourcePath
     }
 
     It 'Should have returned 2 objects' {

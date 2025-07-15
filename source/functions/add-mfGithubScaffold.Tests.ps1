@@ -30,14 +30,28 @@ BeforeAll{
 
 
      #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
-
+     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $functionName = 'add-mfGithubScaffold'
+    . $fileName
     
+}
+
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
 }
 
 Describe 'add-mfgithubScaffold should Copy Files' {
     BeforeAll{
         add-mfgithubScaffold
+    }
+    It 'Should have created the .github folder' {
+        get-Item $githubFolder -force|Should -Not -BeNullOrEmpty
     }
     It 'Should have created the  PR Template' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty

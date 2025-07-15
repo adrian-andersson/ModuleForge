@@ -24,11 +24,13 @@ BeforeAll{
     }
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $functionName = 'build-mfProject'
+    . $fileName
     
     #Create a temp folder so we don't clobber anything
     $testPath = join-path -path $currentPath -childPath 'buildTest'
-    $sourcePath = join-path $testPath -ChildPath 'Source'
+    $sourcePath = join-path $testPath -ChildPath 'source'
     $functionsPath = join-path $sourcePath -ChildPath functions
     $privatePath = join-path $sourcePath -ChildPath private
     $classPath = join-path $sourcePath -ChildPath classes
@@ -51,12 +53,21 @@ BeforeAll{
 
 }
 
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
+}
 
 Describe 'build-mfProject' {
     It 'should throw an error if module path does not exist' {
         $params = @{
             version = [semver]::new('1.0.0')
-            modulePath = 'NonExistentPath'
+            ModulePath = 'NonExistentPath'
         }
         { build-mfProject @params } | Should -Throw "Unable to read from NonExistentPath"
     }
