@@ -38,6 +38,14 @@ BeforeAll{
     
     #Load This File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+
+    #Need to ensure PSScriptAnalyzer is available 
+    if(! (get-module 'PSScriptAnalyzer' -ListAvailable))
+    { 
+        install-module -Repository 'PSGallery' -Name PSScriptAnalyzer -Force -SkipPublisherCheck
+    }
+
+
 }
 
 describe 'get-mfScriptAnalyzerSummary' {
