@@ -6,7 +6,9 @@ BeforeAll{
 
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $functionName = 'get-mfFolderItems'
+    . $fileName
 
     $tempCopyLocation = join-path -Path $currentPath -ChildPath 'TempCopy'
 
@@ -14,10 +16,21 @@ BeforeAll{
 
 }
 
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
+}
+
 Describe 'get-mfFolderItems' {
 
     BeforeAll {
         $folderItems = get-mfFolderItems -path $sourcePath -psScriptsOnly
+        $relativePath = join-path $(join-path '.' -ChildPath 'functions') -ChildPath 'build-mfProject.ps1'
     }
 
     It 'Should have returned more than 10 of items' {
@@ -25,7 +38,7 @@ Describe 'get-mfFolderItems' {
     }
     It 'Should have a build-mfProject.ps1 item' {
         $folderItems.Name | Should -Contain 'build-mfProject.ps1'
-        $folderItems.RelativePath | Should -Contain '.\functions\build-mfProject.ps1'
+        $folderItems.RelativePath | Should -Contain $relativePath
         $folderItems.Folder
     }
 

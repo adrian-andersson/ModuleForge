@@ -24,11 +24,13 @@ BeforeAll{
     }
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $functionName = 'build-mfProject'
+    . $fileName
     
     #Create a temp folder so we don't clobber anything
     $testPath = join-path -path $currentPath -childPath 'buildTest'
-    $sourcePath = join-path $testPath -ChildPath 'Source'
+    $sourcePath = join-path $testPath -ChildPath 'source'
     $functionsPath = join-path $sourcePath -ChildPath functions
     $privatePath = join-path $sourcePath -ChildPath private
     $classPath = join-path $sourcePath -ChildPath classes
@@ -51,12 +53,21 @@ BeforeAll{
 
 }
 
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
+}
 
 Describe 'build-mfProject' {
     It 'should throw an error if module path does not exist' {
         $params = @{
             version = [semver]::new('1.0.0')
-            modulePath = 'NonExistentPath'
+            ModulePath = 'NonExistentPath'
         }
         { build-mfProject @params } | Should -Throw "Unable to read from NonExistentPath"
     }
@@ -65,6 +76,7 @@ Describe 'build-mfProject' {
 
 describe 'build-mfProject' {
     beforeAll {
+        write-verbose 'build test module files'
         $testFunction = @(
             'function get-text {'
             '    param ('
@@ -121,9 +133,11 @@ describe 'build-mfProject' {
         )
 
 
-
+        write-verbose "Create module directory at: $testPath"
         new-item -itemType Directory -Path $testPath
+        write-verbose "Set location to: $testPath"
         Set-Location $testPath
+        
 
         $mfProjSplat = @{
             ModuleName = 'TestModule'
@@ -138,16 +152,17 @@ describe 'build-mfProject' {
             #RequiredModules = @('Pester')
             ExternalModuleDependencies = @('Microsoft.PowerShell.PSResourceGet')
         }
-
+        write-verbose 'Creating ModuleForge Test Project'
         new-mfProject @mfProjSplat
         start-sleep -seconds 3
+        write-verbose "Outputting Test files. Example: $testFunctionPat"
         $testFunction -join "`n"|Out-File $testFunctionPath -force
         $privateFunction -join "`n"|Out-file $privateFunctionPath -Force
         $classDefinition -join "`n" | Out-File $classDefinitionPath -Force
         $enumDefinition -join "`n" | out-file $enumDefinitionPath -Force
         $textFile -join "`n" | out-file $resourceFilePath -Force
         $validatorFile -join "`n" | out-file $validatorFilePath -Force
-
+        write-verbose 'Building project'
         build-mfProject -version '1.0.0-PREv001'
     }
 

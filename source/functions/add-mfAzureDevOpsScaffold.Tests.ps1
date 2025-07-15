@@ -26,22 +26,35 @@ BeforeAll{
     $prTemplateFile = join-path $azdFolder 'pull_request_template.md'
     $pipelinesFolder = join-path $azdFolder 'pipelines'
     $pesterTestFile = join-path $pipelinesFolder 'pesterTest.yml'
-    $buildandreleaseFile = join-path $pipelinesFolder 'buildandrelease.yml'
+    $buildandreleaseFile = join-path $pipelinesFolder 'buildAndRelease.yml'
 
 
      #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $functionName = 'add-mfAzureDevOpsScaffold'
+    . $fileName
+
 
     
+}
+
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
 }
 
 Describe 'add-mfAzureDevOpsScaffold should Copy Files' {
     BeforeAll{
         add-mfAzureDevOpsScaffold
     }
-
+    
     It 'Should have created the .azuredevops folder' {
-        get-Item $azdFolder|Should -Not -BeNullOrEmpty
+        get-Item $azdFolder -Force|Should -Not -BeNullOrEmpty
     }
     It 'Should have created the  PR Template' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty
