@@ -40,6 +40,7 @@ ModuleForge is designed for flexibility.
   - ![GH Release](/img/changelog.png)
 - Support for enumerators, classes, and advanced PowerShell constructs
 - Tag-based automated versioning with pre-release support
+  - ![GH Release](/img/versions.png)
 - Works with GitHub Packages and Azure DevOps feeds for module repositories
 
 ## Workflow Overview
