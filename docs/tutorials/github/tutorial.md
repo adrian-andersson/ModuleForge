@@ -2,6 +2,31 @@
 
 This tutorial will demonstrate how to create a simple, single-function module using ModuleForge, with 1 pester test, and deploy via Github workflows.
 
+## Part 0 - Local Environment Setup
+
+1. Setup your local workspace. You will need to have installed
+    - PowerShell 7+
+    - VSCode (or your IDE of choice)
+        - If you use an IDE other than VSCode, you will need to correct the instructions in this tutorial accordingly
+    - GIT commandline
+2. Install PowerShell module dependencies. You will need the following modules from the PSGallery:
+    - `Pester` 5.6+
+    - `PSScriptAnalyzer` 1.24+
+    - `Microsoft.PowerShell.PSResourceGet` 1.1.1+
+    - `ModuleForge` 1.2.0+
+
+> Note: All the required modules are cross-platform compatible. You're OS of choice does not matter.
+
+Here is a code-snippet to help get you started
+
+```PowerShell
+#Use the legacy PowerShell Get command to get PSResourceGet
+install-module Microsoft.PowerShell.PSResourceGet
+
+#Switch to PSResourceGet for the remainder
+install-psresource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleForge
+```
+
 ## Part 1 - New Repository
 
 1. Login to your github account
@@ -12,6 +37,8 @@ This tutorial will demonstrate how to create a simple, single-function module us
    - Repository should be private
     ![New Repository](./img/newRepo.png)
 4. Clone your repository to your local environment
+
+> hint: If you are unsure of how to clone a repository, copy the URI from the browser address bar and use it with the `git clone` command, e.g. `git clone https://github.com/adrian-andersson/ModuleForge`
 
 ## Part 2 - Create a new ModuleForge Project
 
@@ -35,7 +62,10 @@ add-mfgithubScaffold
 
 ### Creating our get-helloWorld function
 
-1. Using the GIT commandline or your IDE (E.g. VSCode), create a branch called `feature/hello-world-function` or something similar and 
+1. Create a branch called `feature/hello-world-function`. You can deviate from this naming convention if you like. The objective is to be consistant.
+
+> Hint: In VSCode you can create a branch by clicking on the current branch name in the bottom left corner, then in the dialog box, selecting `+Create New Branch`. VSCode will automatically switch you to the new branch
+
 2. Create a new file in the `functions` sub-directory of the `source` directory
    - Call the file `get-helloWorld.ps1`
 3. Code up your powershell function code.
@@ -92,14 +122,14 @@ function get-helloWorld
 
 1. Create a new file in the `functions` sub-directory of the `source` directory
    - Call the file `get-helloWorld.Tests.ps1`
-   - It is important that `Tests` is in the correct, capital-case format for invoke pester to work as expected
+   - It is important that `Tests` is in the correct, capital-case format for `invoke-pester` to work.
 2. Code up your Pester Test. You can use the example below
    - Don't forget to load your functions file in a before all block
    - This can be achieved dynamically with this little piece of code: `. $PSCommandPath.Replace('.Tests.ps1','.ps1')`
 
 ```PowerShell
 BeforeAll{
-    #Load This File
+    #Load The Function File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
 }
 
@@ -135,9 +165,9 @@ Describe "get-helloWorld Custom Name" {
 
 ### Run our Pester Test Locally
 
-1. It is a good idea to test locally before we submit our code back to the repository.
-2. We can do that from our invoking pester from our working directory, as per below
-3. If everything is working as intended, you should have passed the 4 tests (represented in our Pester test as 'It' blocks)
+1. It is a good idea to test locally before we submit our code back to the repository
+    - We can do that from our invoking pester from our working directory, as per below
+    - If everything is working as intended, you should have passed the 4 tests (represented in our Pester test as 'It' blocks)
 
 ```PowerShell
 invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
@@ -151,6 +181,7 @@ invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
 
 1. Commit _just_ our functions file with the `feat` commit prefix and a relevant comment
    - Something like `feat: added get-helloWorld function`
+>Hint: If you are not sure how to commit in VSCode, switch to the `Source Control` item in the left-most menu. You will need to _stage_ each file by clicking the small plus sign next the the filename. Enter the _commit_ message into the text box labelled _changes_, when ready, hit _commit_. Once all your files are committed, you can publish your branch with the `
 2. Now commit the pester test file using the `test` commit prefix
     - Something like `test: added Pester testing for get-helloWorld`
 3. Publish your branch back to github
