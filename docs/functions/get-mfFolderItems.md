@@ -8,7 +8,7 @@ schema: 2.0.0
 # get-mfFolderItems
 
 ## SYNOPSIS
-Retrieves a filtered list of files from a specified folder, processing \`.mfignore\` and \`.mforder\` rules.
+Retrieves a filtered list of files from a specified folder, processing '.mfignore' and '.mforder' rules.
 
 ## SYNTAX
 
@@ -24,7 +24,7 @@ get-mfFolderItems -path <String> [-psScriptsOnly] [-destination <String>] [-copy
 ```
 
 ## DESCRIPTION
-The \`get-mfFolderItems\` function scans a folder and applies filtering rules to return a curated list of files.
+The 'get-mfFolderItems' function scans a folder and applies filtering rules to return a curated list of files.
 It offers additional filtering logic, such as:
 - Ignoring entries specified in \`.mfignore\`.
 - Filtering out non-PS1 files using a switch (\`-psScriptsOnly\`).

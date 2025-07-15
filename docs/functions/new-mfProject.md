@@ -35,7 +35,7 @@ new-mfProject -ModuleName "MyModule" -description "A module for automating tasks
 ```
 
 #### DESCRIPTION
-This example demonstrates how to use the \`new-mfProject\` function to create a scaffold for a new PowerShell module named "MyModule". 
+This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 
 It includes a description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
 
 #### OUTPUT

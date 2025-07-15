@@ -2,6 +2,31 @@
 
 This tutorial will demonstrate how to create a simple, single-function module using ModuleForge, with 1 pester test, and deploy via Github workflows.
 
+## Part 0 - Local Environment Setup
+
+1. Setup your local workspace. You will need to have installed
+    - PowerShell 7+
+    - VSCode (or your IDE of choice)
+        - If you use an IDE other than VSCode, you will need to correct the instructions in this tutorial accordingly
+    - GIT commandline
+2. Install PowerShell module dependencies. You will need the following modules from the PSGallery:
+    - `Pester` 5.6+
+    - `PSScriptAnalyzer` 1.24+
+    - `Microsoft.PowerShell.PSResourceGet` 1.1.1+
+    - `ModuleForge` 1.2.0+
+
+> Note: All the required modules are cross-platform compatible. You're OS of choice does not matter.
+
+Here is a code-snippet to help get you started
+
+```PowerShell
+#Use the legacy PowerShell Get command to get PSResourceGet
+install-module Microsoft.PowerShell.PSResourceGet
+
+#Switch to PSResourceGet for the remainder
+install-psresource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleForge
+```
+
 ## Part 1 - New Repository
 
 1. Login to your github account
@@ -13,34 +38,34 @@ This tutorial will demonstrate how to create a simple, single-function module us
     ![New Repository](./img/newRepo.png)
 4. Clone your repository to your local environment
 
+> hint: If you are unsure of how to clone a repository, copy the URI from the browser address bar and use it with the `git clone` command, e.g. `git clone https://github.com/adrian-andersson/ModuleForge`
+
 ## Part 2 - Create a new ModuleForge Project
 
 1. From your repository directory, run the new-mfProject function to build the files out, as per the example below
-
-```powershell
-new-mfProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
-```
-
 2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory shoud have a number of subfolders
 3. Run the `add-mfGithubScaffold` function to add 2 github workflow files and a PR template to the `.github` directory of your module folder
-
-```PowerShell
-add-mfgithubScaffold
-```
 4. Check the files were created
 5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
    - You should use a proper commit message, something like `chore: Initialised ModuleForge project with scaffolding & workflows'
+  
+```powershell
+new-mfProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
+add-mfgithubScaffold
+```
 
 ## Part 3 - Create a Function and a Test
 
 ### Creating our get-helloWorld function
 
-1. Using the GIT commandline or your IDE (E.g. VSCode), create a branch called `feature/hello-world-function` or something similar and 
+1. Create a branch called `feature/hello-world-function`. You can deviate from this naming convention if you like. The objective is to be consistant.
 2. Create a new file in the `functions` sub-directory of the `source` directory
    - Call the file `get-helloWorld.ps1`
 3. Code up your powershell function code.
    - An example is provided below
    - Make sure you include some form of Inline Help and follow good coding practices
+
+> Hint: In VSCode you can create a branch by clicking on the current branch name in the bottom left corner, then in the dialog box, selecting `+Create New Branch`. VSCode will automatically switch you to the new branch
 
 ```PowerShell
 function get-helloWorld
@@ -92,14 +117,14 @@ function get-helloWorld
 
 1. Create a new file in the `functions` sub-directory of the `source` directory
    - Call the file `get-helloWorld.Tests.ps1`
-   - It is important that `Tests` is in the correct, capital-case format for invoke pester to work as expected
+   - It is important that `Tests` is in the correct, capital-case format for `invoke-pester` to work.
 2. Code up your Pester Test. You can use the example below
    - Don't forget to load your functions file in a before all block
    - This can be achieved dynamically with this little piece of code: `. $PSCommandPath.Replace('.Tests.ps1','.ps1')`
 
 ```PowerShell
 BeforeAll{
-    #Load This File
+    #Load The Function File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
 }
 
@@ -135,9 +160,9 @@ Describe "get-helloWorld Custom Name" {
 
 ### Run our Pester Test Locally
 
-1. It is a good idea to test locally before we submit our code back to the repository.
-2. We can do that from our invoking pester from our working directory, as per below
-3. If everything is working as intended, you should have passed the 4 tests (represented in our Pester test as 'It' blocks)
+1. It is a good idea to test locally before we submit our code back to the repository
+    - We can do that from our invoking pester from our working directory, as per below
+    - If everything is working as intended, you should have passed the 4 tests (represented in our Pester test as 'It' blocks)
 
 ```PowerShell
 invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
@@ -147,28 +172,31 @@ invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
 
 ## Part 4 - Pull Request and BuildAndRelease
 
-### Commit and Pull Request
+### Commit Changes
 
 1. Commit _just_ our functions file with the `feat` commit prefix and a relevant comment
    - Something like `feat: added get-helloWorld function`
 2. Now commit the pester test file using the `test` commit prefix
     - Something like `test: added Pester testing for get-helloWorld`
 3. Publish your branch back to github
-4. In your browser, navigate to your new repository. You should see a notification banner in the top of github advising that a new branch can be used to create a PR.
+
+>Hint: If you are not sure how to commit in VSCode, switch to the `Source Control` item in the left-most menu. You will need to _stage_ each file by clicking the small plus sign next the the filename. Enter the _commit_ message into the text box labelled _changes_, when ready, hit _commit_. Once all your files are committed, you can publish your branch with the `Publish Branch` button that replaces the `Commit` button
+
+### Create Pull Request
+
+1. In your browser, navigate to your new repository. You should see a notification banner in the top of github advising that a new branch can be used to create a PR.
    - ![New Repository](./img/prbanner.png)
-5. Click the option to create a Pull Request
-6. Fill in the Pull Request template
+2. Click the option to create a Pull Request
+3. Fill in the Pull Request template
    - Type in a decent description
    - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
-   - ![New Repository](./img/prTemplate.png)
-7. Once you have completed the PR template, create the Pull Request
-8. On submission of a Pull Request to the Main branch, the Pester Workflow will automatically be invoked, and will run through All tests in your module.
-   - ![New Repository](./img/prpesterTest.png)
-9. Once our pester workflow is complete, the results will show a Pass/Fail in the PR
-   - ![New Repository](./img/prpesterTest2.png)
-10. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
+   - ![New Repository](./img/prForm.png)
+4. Once you have completed the PR template, create the Pull Request
+5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
+   - ![New Repository](./img/prComments.png)
+6. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
 
-> If you want to explore your pester results in more details before a merge, you can click on `Actions`, find the `pesterTest` workflow, and expand the `Run pester tests` step from our latest run to view things such as code coverage, or get more details on failures etc
+> If you want to explore your pester results in more details before a merge, you can click on `Actions`, find the `pesterTest` workflow, and expand the `Run pester tests` step from our latest run to view things such as code coverage, or get more details on failures etc.
 
 ### Build and Release
 
@@ -261,13 +289,6 @@ Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages
 
 > A note on V3 nuget feeds and PSResourceGet. Wildcard searching is not supplied, you will need to know the exact name of your module for find and install commands to work.
 
-
 ## Wrapping up
 
-In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Github Packages repository for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge.
-
-The next steps are up to you, you could create a new function and a new prerelease version, or experiment with something a little more advanced.
-
-If you are not a fan of the PR template, feel free to use your own.
-
-If you want to know more about the workflows, feel free to take a look, adjust them, reverse-engineer them, tweak them for your own purposes.
+In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Github Packages repository for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge, and published a single-function module.
