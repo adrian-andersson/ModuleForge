@@ -11,13 +11,13 @@ function Write-MFModuleDocs
             Additionally, if specified, it includes a changelog based on Git commits.
 
         .EXAMPLE
-            write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
+            Write-MFModuleDocs -ModuleName 'MyCustomModule' -IncludeChangeLog
 
             #### DESCRIPTION
             Builds documentation for `MyCustomModule` and includes a full Git-based changelog (`changeLog.md`) alongside function help files.
 
         .EXAMPLE
-            write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
+            Write-MFModuleDocs -ModuleName 'MyCustomModule' -SkipIndex
 
             #### DESCRIPTION
             Generates function documentation without updating `index.md`.
@@ -84,7 +84,8 @@ function Write-MFModuleDocs
             'basename'
             @{
                 name = 'baseFolder'
-                expression = {$($_.Directory.FullName.replace($DocsFullPath,''))}
+                #expression = {$($_.Directory.FullName.replace($DocsFullPath,''))}
+                expression = {$($_.Directory.FullName -replace $DocsFullPath,'')}
             }
             @{
                 name = 'leaf'
@@ -92,11 +93,13 @@ function Write-MFModuleDocs
             }
             @{
                 name = 'relLink'
-                expression = {("./$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))/$($_.name)").replace('//','/')}
+                #expression = {("./$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))/$($_.name)").replace('//','/')}
+                expression = {("./$($($_.Directory.FullName -replace $DocsFullPath,'').replace('\','/'))/$($_.name)").replace('//','/')}
             }
             @{
                 name = 'subjectGroup'
-                expression = {("$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))").replace('//','/').trimStart('/')}
+                #expression = {("$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))").replace('//','/').trimStart('/')}
+                expression = {$($_.Directory.FullName -replace $DocsFullPath,'')}
             }
         )
 
@@ -107,6 +110,7 @@ function Write-MFModuleDocs
         #Checks and parses
         write-verbose "In path $ModulePath"
         $DocsFullPath = join-path -Path $ModulePath -ChildPath $DocsFolder
+        write-verbose "DocsFullPath: $($DocsFullPath)"
         if(!(test-path $DocsFullPath))
         {
             write-verbose 'Need to make docs folder as it does not exist'
