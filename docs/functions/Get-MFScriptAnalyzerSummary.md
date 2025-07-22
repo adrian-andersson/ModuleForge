@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfScriptAnalyzerSummary
+# Get-MFScriptAnalyzerSummary
 
 ## SYNOPSIS
 Runs, and then summarises the results of PSScriptAnalyzer across a set of PowerShell function files.
@@ -13,8 +13,8 @@ Runs, and then summarises the results of PSScriptAnalyzer across a set of PowerS
 ## SYNTAX
 
 ```
-get-mfScriptAnalyzerSummary [[-sourcePath] <String>] [[-severity] <String[]>] [[-weights] <Hashtable>]
- [-suppressOutput] [[-excludeRules] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFScriptAnalyzerSummary [[-SourcePath] <String>] [[-Severity] <String[]>] [[-Weights] <Hashtable>]
+ [-SuppressOutput] [[-ExcludeRules] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -39,7 +39,7 @@ Copy of the output of this line
 
 ## PARAMETERS
 
-### -sourcePath
+### -SourcePath
 Source Path for function files
 
 ```yaml
@@ -54,7 +54,7 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -severity
+### -Severity
 What severities should we scan for
 
 ```yaml
@@ -69,7 +69,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -weights
+### -Weights
 What weights to provide each severity
 
 ```yaml
@@ -88,7 +88,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -suppressOutput
+### -SuppressOutput
 Set this switch to only get the summary
 
 ```yaml
@@ -103,7 +103,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -excludeRules
+### -ExcludeRules
 Set this for what rules to exclude.
 Noisy rule.
 Preference script readability over strict whitespace adherance

@@ -5,24 +5,24 @@ online version:
 schema: 2.0.0
 ---
 
-# add-mfAzureDevOpsScaffold
+# Add-MFGithubScaffold
 
 ## SYNOPSIS
-Initialises a \`.azuredevops\` scaffold in a PowerShell module, including YAML Azure DevOps Pipelines for pester testing and build and release
+Initialises a \`.GitHub\` scaffold in a PowerShell module, including GH Actions workflows for pester testing and build and release
 
 ## SYNTAX
 
 ```
-add-mfAzureDevOpsScaffold [[-modulePath] <String>] [[-configFile] <String>] [[-azdFolder] <String>] [-force]
+Add-MFGithubScaffold [[-ModulePath] <String>] [[-ConfigFile] <String>] [[-GithubFolder] <String>] [-Force]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
-It will create 2 Azure DevOps Pipelines files, 1 for Pester testing, 1 for buildAndRelease
+This function will create a '.github' folder in the moduleforge root (if one does not exist).
+It will create 2 github actions workflows, 1 for Pester testing, 1 for buildAndRelease
 It will create 1 Pull Request template.
 
-The buildAndRelease pipeline will use Git Tags to mark versions.
+The buildAndRelease template will use Git Tags to mark versions.
 If you stick with this template you should refrain from
 using tags for other purposes.
 
@@ -33,29 +33,29 @@ Please feel free to change the workflows and template to your own needs and pref
 
 ### EXAMPLE 1
 ```
-add-mfAzureDevOpsScaffold
+Add-mfGithubScaffold
 ```
 
 #### DESCRIPTION
-Copies the \`.azuredevops\` folder from the module's \`resource\` directory to the current module, skipping existing files.
+Copies the \`.GitHub\` folder from the module's \`resource\` directory to the current module, skipping existing files.
 
 #### OUTPUT
-Should have a .azuredevops folder, with pipelines and a PR template
+Should have a .github folder, with workflows and a PR template
 
 ### EXAMPLE 2
 ```
-add-mfAzureDevOpsScaffold -Force
+Add-mfGithubScaffold -Force
 ```
 
 #### DESCRIPTION
-Copies the \`.azuredevops\` scaffold and overwrites existing files in \`.azuredevops\` directory
+Copies the \`.GitHub\` scaffold and overwrites existing files in \`.github\` directory
 
 #### OUTPUT
-Should have a .azuredevops folder, with workflows and a PR template
+Should have a .github folder, with workflows and a PR template
 
 ## PARAMETERS
 
-### -modulePath
+### -ModulePath
 Root path of the module.
 Uses the current working directory by default.
 Aliased path, but use modulePath as paramname to avoid confusion
@@ -63,7 +63,7 @@ Aliased path, but use modulePath as paramname to avoid confusion
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: path
+Aliases: Path
 
 Required: False
 Position: 1
@@ -72,7 +72,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -configFile
+### -ConfigFile
 Module Config reference
 
 ```yaml
@@ -87,8 +87,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -azdFolder
-Azure DevOps folder
+### -GithubFolder
+githubFolder
 
 ```yaml
 Type: String
@@ -97,12 +97,12 @@ Aliases:
 
 Required: False
 Position: 3
-Default value: .azuredevops
+Default value: .github
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -force
+### -Force
 Should we overwrite if files exist?
 
 ```yaml

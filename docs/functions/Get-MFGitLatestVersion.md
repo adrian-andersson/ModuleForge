@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfGitLatestVersion
+# Get-MFGitLatestVersion
 
 ## SYNOPSIS
 Retrieves the latest Git tag version in semantic version format.
@@ -13,7 +13,7 @@ Retrieves the latest Git tag version in semantic version format.
 ## SYNTAX
 
 ```
-get-mfGitLatestVersion [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFGitLatestVersion [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION

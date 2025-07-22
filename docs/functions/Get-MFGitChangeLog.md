@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfGitChangeLog
+# Get-MFGitChangeLog
 
 ## SYNOPSIS
 Generates a markdown changelog from Git commit messages between the latest and previous tags.
@@ -14,18 +14,18 @@ Generates a markdown changelog from Git commit messages between the latest and p
 
 ### Default (Default)
 ```
-get-mfGitChangeLog [-changeLogTypes <Hashtable>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFGitChangeLog [-ChangeLogTypes <Hashtable>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### FromLastTag
 ```
-get-mfGitChangeLog [-changeLogTypes <Hashtable>] [-fromLastTag] [-ProgressAction <ActionPreference>]
+Get-MFGitChangeLog [-ChangeLogTypes <Hashtable>] [-FromLastTag] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
 ```
 
 ### All
 ```
-get-mfGitChangeLog [-changeLogTypes <Hashtable>] [-all] [-ProgressAction <ActionPreference>]
+Get-MFGitChangeLog [-ChangeLogTypes <Hashtable>] [-All] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
 ```
 
@@ -122,7 +122,7 @@ Generates markdown changelog from commit messages from the last tag until now (H
 
 ## PARAMETERS
 
-### -changeLogTypes
+### -ChangeLogTypes
 Change Logs Types and corresponding Heading.
 Hashtable/Key Value Pair expected.
 Key = git type; Value = Heading
@@ -149,7 +149,7 @@ Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
-### -all
+### -All
 Switch to get a full changelog for ALL tags
 
 ```yaml
@@ -164,7 +164,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -fromLastTag
+### -FromLastTag
 Switch to get the changelog from the last tag until this point.
 
 ```yaml

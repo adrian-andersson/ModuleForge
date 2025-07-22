@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# write-mfModuleDocs
+# Write-MFModuleDocs
 
 ## SYNOPSIS
 Generates and updates function documentation using PlatyPS, and creates an index for module functions.
@@ -13,8 +13,8 @@ Generates and updates function documentation using PlatyPS, and creates an index
 ## SYNTAX
 
 ```
-write-mfModuleDocs [[-Path] <String>] [-ModuleName] <String> [[-docsFolder] <String>]
- [[-functionsFolder] <String>] [-includeChangeLog] [-skipIndex] [-ProgressAction <ActionPreference>]
+Write-MFModuleDocs [[-ModulePath] <String>] [-ModuleName] <String> [[-DocsFolder] <String>]
+ [[-FunctionsFolder] <String>] [-IncludeChangeLog] [-SkipIndex] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
 ```
 
@@ -43,14 +43,14 @@ Generates function documentation without updating \`index.md\`.
 
 ## PARAMETERS
 
-### -Path
+### -ModulePath
 The root path where documentation should be stored.
 Defaults to the current directory.
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: modulePath
+Aliases: Path
 
 Required: False
 Position: 1
@@ -74,7 +74,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -docsFolder
+### -DocsFolder
 Specifies the subfolder within \`docsFolder\` where function-specific documentation should be stored.
 Defaults to \`functions\`.
 
@@ -90,7 +90,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -functionsFolder
+### -FunctionsFolder
 Specifies the subfolder within \`docsFolder\` where function-specific documentation should be stored.
 Defaults to \`functions\`.
 
@@ -106,7 +106,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -includeChangeLog
+### -IncludeChangeLog
 If specified, retrieves and includes a Markdown changelog based on Git commit history.
 
 ```yaml
@@ -121,7 +121,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -skipIndex
+### -SkipIndex
 If specified, skips creating or updating the \`index.md\` file.
 
 ```yaml

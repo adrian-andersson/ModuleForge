@@ -5,37 +5,32 @@ online version:
 schema: 2.0.0
 ---
 
-# register-mfLocalPsResourceRepository
+# Remove-MFLocalPsResourceRepository
 
 ## SYNOPSIS
-Add a local file-based PowerShell repository into the systems temp location
+Remove the local test repository that was created with register-mfLocalPsResourceRepository
 
 ## SYNTAX
 
 ```
-register-mfLocalPsResourceRepository [[-repositoryName] <String>] [[-path] <String>]
+Remove-MFLocalPsResourceRepository [[-RepositoryName] <String>] [[-Path] <String>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-Allows you to test psresourceGet, as well as directly manipulate the nuget package,
-for example, to add git data to the nuspec
+If a local test repository was created with the register-mfLocalPsResourceRepository, this command will remove it
+It will also remove the directory that hosted the local repository
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-register-mfLocalPsResourceRepository            
-#### DESCRIPTION
-Create a powershell file repository using default values.
+remove-mfLocalPsResourceRepository
 ```
-
-Repository will be called: LocalTestRepository
-Path will be where-ever \[System.IO.Path\]::GetTempPath() points
 
 ## PARAMETERS
 
-### -repositoryName
+### -RepositoryName
 Name of the repository
 
 ```yaml
@@ -50,7 +45,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
+### -Path
 Root path of the module.
 Uses Temp Path by default
 

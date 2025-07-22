@@ -2,25 +2,25 @@
 
 ## Functions
 
-- [add-mfAzureDevOpsScaffold](./functions/add-mfAzureDevOpsScaffold.md)
-- [add-mfGithubScaffold](./functions/add-mfGithubScaffold.md)
-- [add-mfRepositoryXmlData](./functions/add-mfRepositoryXmlData.md)
-- [build-mfProject](./functions/build-mfProject.md)
-- [get-mfDependencyTree](./functions/get-mfDependencyTree.md)
-- [get-mfFolderItemDetails](./functions/get-mfFolderItemDetails.md)
-- [get-mfFolderItems](./functions/get-mfFolderItems.md)
-- [get-mfGitChangeLog](./functions/get-mfGitChangeLog.md)
-- [get-mfGitLatestVersion](./functions/get-mfGitLatestVersion.md)
-- [get-mfLatestSemverFromBuildManifest](./functions/get-mfLatestSemverFromBuildManifest.md)
-- [get-mfNextSemver](./functions/get-mfNextSemver.md)
-- [get-mfScriptAnalyzerSummary](./functions/get-mfScriptAnalyzerSummary.md)
-- [new-mfProject](./functions/new-mfProject.md)
-- [register-mfLocalPsResourceRepository](./functions/register-mfLocalPsResourceRepository.md)
-- [remove-mfLocalPsResourceRepository](./functions/remove-mfLocalPsResourceRepository.md)
-- [update-mfProject](./functions/update-mfProject.md)
-- [write-mfModuleDocs](./functions/write-mfModuleDocs.md)
+- [Add-MFAzureDevOpsScaffold](./functions/Add-MFAzureDevOpsScaffold.md)
+- [Add-MFGithubScaffold](./functions/Add-MFGithubScaffold.md)
+- [Add-MFRepositoryXmlData](./functions/Add-MFRepositoryXmlData.md)
+- [Build-MFProject](./functions/Build-MFProject.md)
+- [Get-MFDependencyTree](./functions/Get-MFDependencyTree.md)
+- [Get-MFFolderItemDetails](./functions/Get-MFFolderItemDetails.md)
+- [Get-MFFolderItems](./functions/Get-MFFolderItems.md)
+- [Get-MFGitChangeLog](./functions/Get-MFGitChangeLog.md)
+- [Get-MFGitLatestVersion](./functions/Get-MFGitLatestVersion.md)
+- [Get-MFLatestSemverFromBuildManifest](./functions/Get-MFLatestSemverFromBuildManifest.md)
+- [Get-MFNextSemver](./functions/Get-MFNextSemver.md)
+- [Get-MFScriptAnalyzerSummary](./functions/Get-MFScriptAnalyzerSummary.md)
+- [New-MFProject](./functions/New-MFProject.md)
+- [Register-MFLocalPsResourceRepository](./functions/Register-MFLocalPsResourceRepository.md)
+- [Remove-MFLocalPsResourceRepository](./functions/Remove-MFLocalPsResourceRepository.md)
+- [Update-MFProject](./functions/Update-MFProject.md)
+- [Write-MFModuleDocs](./functions/Write-MFModuleDocs.md)
 
-## Miscellany
+## Misc
 
 - [bartenderCompatibility](./misc/bartenderCompatibility.md)
 - [Pester](./misc/Pester.md)

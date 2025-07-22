@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfFolderItemDetails
+# Get-MFFolderItemDetails
 
 ## SYNOPSIS
 This function analyses a PS1 file, returning its content, any functions, classes and dependencies, as well as a relative location
@@ -13,7 +13,7 @@ This function analyses a PS1 file, returning its content, any functions, classes
 ## SYNTAX
 
 ```
-get-mfFolderItemDetails [[-path] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFFolderItemDetails [[-Path] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -38,7 +38,7 @@ get-mfFolderItemDetails .\source
 
 ## PARAMETERS
 
-### -path
+### -Path
 Path to source folder.
 
 ```yaml

@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfLatestSemverFromBuildManifest
+# Get-MFLatestSemverFromBuildManifest
 
 ## SYNOPSIS
 If you are manually building, and you have access to the \build folder, you can use this to get the next semver
@@ -13,8 +13,8 @@ If you are manually building, and you have access to the \build folder, you can 
 ## SYNTAX
 
 ```
-get-mfLatestSemverFromBuildManifest [[-path] <String>] [[-configFile] <String>]
- [[-moduleNameOverride] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFLatestSemverFromBuildManifest [[-ModulePath] <String>] [[-ConfigFile] <String>]
+ [[-ModuleNameOverride] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -43,14 +43,14 @@ Major  Minor  Patch  PreReleaseLabel BuildLabel
 
 ## PARAMETERS
 
-### -path
+### -ModulePath
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: modulePath
+Aliases: Path
 
 Required: False
 Position: 1
@@ -59,8 +59,8 @@ Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
-### -configFile
-{{ Fill configFile Description }}
+### -ConfigFile
+{{ Fill ConfigFile Description }}
 
 ```yaml
 Type: String
@@ -74,8 +74,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -moduleNameOverride
-{{ Fill moduleNameOverride Description }}
+### -ModuleNameOverride
+{{ Fill ModuleNameOverride Description }}
 
 ```yaml
 Type: String

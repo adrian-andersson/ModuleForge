@@ -5,24 +5,25 @@ online version:
 schema: 2.0.0
 ---
 
-# update-mfProject
+# New-MFProject
 
 ## SYNOPSIS
-Update the parameters of a moduleForge project
+Capture some basic parameters, and create the scaffold file structure
 
 ## SYNTAX
 
 ```
-update-mfProject [[-ModuleName] <String>] [[-description] <String>] [[-minimumPsVersion] <Version>]
- [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-projectUri] <String>]
- [[-iconUri] <String>] [[-licenseUri] <String>] [[-RequiredModules] <Object[]>]
- [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String[]>] [[-PrivateData] <Object[]>]
- [[-path] <String>] [[-configFile] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+New-MFProject [-ModuleName] <String> [-description] <String> [[-minimumPsVersion] <Version>]
+ [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-ModulePath] <String>]
+ [[-projectUri] <String>] [[-iconUri] <String>] [[-licenseUri] <String>] [[-configFile] <String>]
+ [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String>]
+ [[-PrivateData] <Object[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-This command allows you to update any of the parameters that were saved with the new-mfProject function without
-having to recreate the whole project file from scratch.
+The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
+Whether you're building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
+Think of it as laying the foundation for your module project.
 
 ------------
 
@@ -30,27 +31,16 @@ having to recreate the whole project file from scratch.
 
 ### EXAMPLE 1
 ```
-update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module" -moduleAuthors "Jane Doe" -companyName "UpdatedCompany" -moduleTags "updated", "module" -projectUri "https://github.com/username/updated-repo" -iconUri "https://example.com/updated-icon.png" -licenseUri "https://example.com/updated-license" -RequiredModules @("UpdatedModule1", "UpdatedModule2") -ExternalModuleDependencies @("UpdatedDependency1", "UpdatedDependency2") -DefaultCommandPrefix "UpdMod" -PrivateData @{}
+new-mfProject -ModuleName "MyModule" -description "A module for automating tasks" -moduleAuthors "John Doe" -companyName "MyCompany" -moduleTags "automation", "tasks" -projectUri "https://github.com/username/repo" -iconUri "https://example.com/icon.png" -licenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 ```
 
 #### DESCRIPTION
-This example demonstrates how to use the \`update-mfProject\` function to update multiple parameters of an existing module project. 
-It updates the module name, description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
+This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 
+It includes a description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
 
 #### OUTPUT
-The function will update the specified parameters in the module project configuration file.
-
-### EXAMPLE 2
-```
-update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module"
-```
-
-#### DESCRIPTION
-This example demonstrates how to use the \`update-mfProject\` function to update only the module name and description of an existing module project. 
-It leaves all other parameters unchanged.
-
-#### OUTPUT
-The function will update the module name and description in the module project configuration file.
+The function will create the directory structure and essential files for the new module "MyModule" in the current working directory. 
+It will also set up the specified metadata and dependencies.
 
 ## PARAMETERS
 
@@ -62,7 +52,7 @@ Type: String
 Parameter Sets: (All)
 Aliases:
 
-Required: False
+Required: True
 Position: 1
 Default value: None
 Accept pipeline input: False
@@ -78,7 +68,7 @@ Type: String
 Parameter Sets: (All)
 Aliases:
 
-Required: False
+Required: True
 Position: 2
 Default value: None
 Accept pipeline input: False
@@ -96,7 +86,7 @@ Aliases:
 
 Required: False
 Position: 3
-Default value: None
+Default value: [version]::new('7.2.0')
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -149,9 +139,25 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -ModulePath
+Root path of the module.
+Uses the current working directory by default
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: Path
+
+Required: False
+Position: 7
+Default value: $(get-location).path
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -projectUri
-Source Code Repository to use, i.e.
-your repositories github/azure devops uri
+Project URI.
+Will try and read from Git if your using a git repository.
 
 ```yaml
 Type: String
@@ -159,8 +165,8 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 7
-Default value: None
+Position: 8
+Default value: $(try{git config remote.origin.url}catch{$null})
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -174,7 +180,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 8
+Position: 9
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -190,8 +196,23 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 9
+Position: 10
 Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -configFile
+{{ Fill configFile Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 11
+Default value: ModuleForgeConfig.xml
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -205,7 +226,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 10
+Position: 12
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -220,29 +241,29 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 11
+Position: 13
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -DefaultCommandPrefix
-If you are specifying a Default Command Prefix via your manifest, this will update that prefix
+{{ Fill DefaultCommandPrefix Description }}
 
 ```yaml
-Type: String[]
+Type: String
 Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 12
+Position: 14
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -PrivateData
-If you have any additional Private Data you want to add to your module manifest, add it here
+{{ Fill PrivateData Description }}
 
 ```yaml
 Type: Object[]
@@ -250,39 +271,8 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 13
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -path
-Root path of the module.
-Uses the current working directory by default
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases: modulePath
-
-Required: False
-Position: 14
-Default value: $(get-location).path
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -configFile
-Module Config File
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
 Position: 15
-Default value: ModuleForgeConfig.xml
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

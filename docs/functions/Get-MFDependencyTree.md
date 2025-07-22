@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfDependencyTree
+# Get-MFDependencyTree
 
 ## SYNOPSIS
 Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal or a mermaid flowchart
@@ -13,7 +13,7 @@ Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal
 ## SYNTAX
 
 ```
-get-mfDependencyTree [[-referenceData] <Object[]>] [[-outputType] <String>]
+Get-MFDependencyTree [[-ReferenceData] <Object[]>] [[-OutputType] <String>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -37,7 +37,7 @@ Show files and any dependencies
 
 ## PARAMETERS
 
-### -referenceData
+### -ReferenceData
 What Reference Data are we looking at.
 See function example for how to retrieve
 
@@ -53,8 +53,8 @@ Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
-### -outputType
-{{ Fill outputType Description }}
+### -OutputType
+{{ Fill OutputType Description }}
 
 ```yaml
 Type: String
