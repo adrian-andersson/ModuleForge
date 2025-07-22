@@ -42,7 +42,7 @@ function Write-MFModuleDocs
         [alias('module')]
         [ValidateScript({ Get-Module -Name $_ -ErrorAction SilentlyContinue })]
         [string]$ModuleName,
-        #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
+        #Specify the Document Folder. All files and index.md will be created in this and subsequent subfolders. Defaults to docs. Do not us a full path
         [Parameter()]
         [alias('docsPath')]
         [string]$DocsFolder = 'docs',
