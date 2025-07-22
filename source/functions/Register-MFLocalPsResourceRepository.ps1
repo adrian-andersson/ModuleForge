@@ -1,4 +1,4 @@
-function register-mfLocalPsResourceRepository
+function Register-MFLocalPsResourceRepository
 {
 
     <#
@@ -27,10 +27,10 @@ function register-mfLocalPsResourceRepository
     PARAM(
         #Name of the repository
         [Parameter()]
-        [string]$repositoryName = 'LocalTestRepository',
+        [string]$RepositoryName = 'LocalTestRepository',
         #Root path of the module. Uses Temp Path by default
         [Parameter()]
-        [string]$path = [System.IO.Path]::GetTempPath()
+        [string]$Path = [System.IO.Path]::GetTempPath()
 
     )
     begin{
@@ -52,14 +52,14 @@ function register-mfLocalPsResourceRepository
             throw "Module dependancy Name: $($psResourceGet.Name) minver:$($psResourceGet.version) Not found. Please install from the PSGallery"
         }
 
-        $repositoryLocation = join-path $path -ChildPath $repositoryName
+        $repositoryLocation = join-path $Path -ChildPath $RepositoryName
 
     }
     
     process{
         
-        write-verbose "Checking we dont already have a repository with name: $repositoryName"
-        if(!(Get-PSResourceRepository -Name $repositoryName -erroraction Ignore))
+        write-verbose "Checking we dont already have a repository with name: $RepositoryName"
+        if(!(Get-PSResourceRepository -Name $RepositoryName -erroraction Ignore))
         {
             write-verbose 'Repository not found.'
 
@@ -75,7 +75,7 @@ function register-mfLocalPsResourceRepository
             }
 
             $registerSplat = @{
-                Name = $repositoryName
+                Name = $RepositoryName
                 URI = $repositoryLocation
                 Trusted = $true
             }
@@ -87,7 +87,7 @@ function register-mfLocalPsResourceRepository
             }
 
             write-verbose 'Test Repository was created'
-            if(!(Get-PSResourceRepository -Name $repositoryName -erroraction Ignore))
+            if(!(Get-PSResourceRepository -Name $RepositoryName -erroraction Ignore))
             {
                 throw 'Something has gone wrong. Unable to find repository'
             }else{
@@ -96,7 +96,7 @@ function register-mfLocalPsResourceRepository
 
 
         }else{
-            write-verbose "$repositoryName Found"
+            write-verbose "$RepositoryName Found"
         }
     }
     

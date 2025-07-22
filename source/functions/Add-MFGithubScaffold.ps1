@@ -1,4 +1,4 @@
-function add-mfGithubScaffold
+function Add-MFGithubScaffold
 {
 
     <#
@@ -44,16 +44,16 @@ function add-mfGithubScaffold
     PARAM(
         #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
         [Parameter()]
-        [alias('path')]
-        [string]$modulePath = $(get-location).path,
+        [alias('Path')]
+        [string]$ModulePath = $(get-location).path,
         #Module Config reference
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml',
+        [string]$ConfigFile = 'moduleForgeConfig.xml',
         #githubFolder
         [Parameter(DontShow)]
-        [string]$githubFolder = '.github',
+        [string]$GithubFolder = '.github',
         #Should we overwrite if files exist?
-        [switch]$force
+        [switch]$Force
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -82,13 +82,13 @@ function add-mfGithubScaffold
             throw 'Err: Found resource folder, but not Github folder in ModuleForge module'
         }
 
-        $mfConfigFile = join-path $modulePath $configFile
+        $mfConfigFile = join-path $ModulePath $ConfigFile
         if(!(test-path $mfConfigFile))
         {
             throw 'Err: No Moduleforge Config File found. Please check your module path'
         }
 
-        $moduleGitFolder = join-path $modulePath $githubFolder
+        $moduleGitFolder = join-path $ModulePath $GithubFolder
 
     }
     
@@ -113,7 +113,7 @@ function add-mfGithubScaffold
                 write-verbose "DestinationPath: $destinationPath"
             }
             if(test-path $destinationPath){
-                if($force)
+                if($Force)
                 {
                     if ($_.PSIsContainer) {
                         Write-Verbose "Skipping directory: $($_.FullName)"

@@ -1,4 +1,4 @@
-function get-mfLatestSemverFromBuildManifest
+function Get-MFLatestSemverFromBuildManifest
 {
 
     <#
@@ -35,12 +35,12 @@ function get-mfLatestSemverFromBuildManifest
     PARAM(
         #Root path of the module. Uses the current working directory by default
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [alias('modulePath')]
-        [string]$path  = $(get-location).path,
+        [alias('Path')]
+        [string]$ModulePath  = $(get-location).path,
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml',
+        [string]$ConfigFile = 'moduleForgeConfig.xml',
         [Parameter(DontShow)]
-        [string]$moduleNameOverride
+        [string]$ModuleNameOverride
 
 
     )
@@ -53,11 +53,11 @@ function get-mfLatestSemverFromBuildManifest
     
     process{
         #Do some checks and parsing
-        if(! $moduleNameOverride)
+        if(! $ModuleNameOverride)
         {
             #Read the config file
             write-verbose 'Importing config file'
-            $configPath = join-path -path $path -ChildPath $configFile
+            $configPath = join-path -path $ModulePath -ChildPath $ConfigFile
 
             if(!(test-path $configPath))
             {
@@ -66,11 +66,11 @@ function get-mfLatestSemverFromBuildManifest
             $config = import-clixml $configPath -erroraction stop
             $moduleName = $config.moduleName
         }else{
-            $moduleName = $moduleNameOverride
+            $moduleName = $ModuleNameOverride
         }
         
         
-        $buildFolder = Join-Path $path 'build'
+        $buildFolder = Join-Path $ModulePath 'build'
         write-verbose "build folder: $buildFolder"
         $moduleFolder = join-path $buildFolder $moduleName
         $manifestFile = get-childItem -Path $moduleFolder -Filter "$moduleName.psd1"

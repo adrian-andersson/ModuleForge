@@ -5,7 +5,7 @@ BeforeAll{
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('update-mfProject.ps1')
+        functions = @('New-MFProject.ps1')
         private = @('add-mfFilesAndFolders.ps1')
     }
 
@@ -31,10 +31,33 @@ BeforeAll{
 
 }
 
-Describe 'new-mfProject' {
+Describe 'update-mfProject' {
     BeforeAll{
-        new-item -ItemType Directory -path $testPath -force
+        new-item -ItemType Directory -path $testPath
+        Set-Location $testPath
+    }
+    It 'Should fail to update due to missing config file' {
+        
+        {$update = @{
+                moduleName = 'UpdatedName'
+            };
+        update-mfProject $update} | Should -throw
+    }
+
+
+    AfterAll{
+        Set-Location $currentPath
+        Remove-Item $testPath -Force -Recurse
+    }
+
+}
+Describe 'update-mfProject' {
+    BeforeAll{
+        new-item -ItemType Directory -path $testPath
         set-location $testPath
+        $moduleConfig = join-path $testPath -ChildPath moduleForgeConfig.xml
+        $sourceFolder = join-path $testPath -ChildPath 'source'
+
     }
     It 'should create scaffold with mandatory parameters' {
         $params = @{
@@ -42,55 +65,38 @@ Describe 'new-mfProject' {
             description = 'Test description'
         }
         new-mfProject @params
-        $moduleConfig = join-path $testPath -ChildPath moduleForgeConfig.xml
         Test-Path -Path $moduleConfig | Should -Be $true
-        $sourceFolder = join-path $testPath -ChildPath 'source'
         Test-Path -Path $sourceFolder | Should -Be $true
     }
 
 
-    AfterAll{
-
-        Set-Location $currentPath
-        Remove-Item $testPath -Force -Recurse
-        start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
-    }
-
-}
-
-Describe 'new-mfProject' {
-    BeforeAll{
-        new-item -ItemType Directory -path $testPath
-        set-location $testPath
-        $moduleConfig = join-path $testPath -ChildPath moduleForgeConfig.xml
-
-    }
-    It 'should create a config file with correct parameters' {
-        $params = @{
-            ModuleName = 'TestModule'
-            description = 'Test description'
-            moduleAuthors = @('Author1', 'Author2')
-            companyName = 'TestCompany'
-            moduleTags = @('tag1', 'tag2')
+    It 'Should update the config file' {
+        $update = @{
+            moduleName = 'UpdatedName'
+            description = 'Test Description 2'
+            companyName = 'TestCompany2'
             minimumPsVersion = '7.4'
+            moduleAuthors = @('brian.may','jeremy.clarkson','richard.hammond')
+            moduleTags = @('one','two')
             projectUri = 'https://example.com'
             iconUri = 'https://example.com/logo.png'
             licenseUri = 'https://example.com/license.md'
             DefaultCommandPrefix = 'tst'
-
+            RequiredModules = @('Microsoft.PowerShell.PSResourceGet','Pester')
+            ExternalModuleDependencies = 'PSReadLine'
         }
-        new-mfProject @params
+        update-mfProject @update
         $config = Import-Clixml -Path $moduleConfig
-        $config.moduleName | Should -Be $params.ModuleName
-        $config.description | Should -Be $params.description
-        $config.moduleAuthors | Should -Be $params.moduleAuthors
-        $config.companyName | Should -Be $params.companyName
-        $config.tags | Should -Be $params.moduleTags
-        $config.minimumPsVersion |should -be $params.minimumPsVersion
-        $config.projectUri |should -be $params.projectUri
-        $config.iconUri | should -be $params.iconUri
-        $config.licenseUri | should -be $params.licenseUri
-        $config.DefaultCommandPrefix |should -be $params.DefaultCommandPrefix
+        $config.moduleName | Should -Be $update.moduleName
+        $config.description | Should -Be $update.description
+        $config.companyName | Should -Be $update.companyName
+        $config.minimumPsVersion | Should -Be $update.minimumPsVersion
+        $config.moduleAuthors | Should -Be $update.moduleAuthors
+        $config.tags | should -be $update.moduleTags
+        $config.projectUri | Should -Be $update.projectUri
+        $config.iconUri | Should -Be $update.iconUri
+        $config.licenseUri | Should -Be $update.licenseUri
+        $config.DefaultCommandPrefix | Should -Be $update.DefaultCommandPrefix
     }
 
     AfterAll{

@@ -5,7 +5,7 @@ BeforeAll{
 
 }
 
-Describe 'get-mfGitLatestversion' {
+Describe 'Get-MFGitLatestVersion' {
     BeforeAll{
         #https://pester.dev/docs/usage/mocking/
         #Mocking a command line is apparently not so straight forwards.

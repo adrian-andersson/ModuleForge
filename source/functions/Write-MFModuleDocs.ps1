@@ -1,4 +1,4 @@
-function write-mfModuleDocs
+function Write-MFModuleDocs
 {
 
     <#
@@ -35,8 +35,8 @@ function write-mfModuleDocs
     PARAM(
         #The root path where documentation should be stored. Defaults to the current directory.
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [alias('modulePath')]
-        [string]$Path = $(get-item .).fullname,
+        [alias('Path')]
+        [string]$ModulePath = $(get-item .).fullname,
         #The name of the PowerShell module for which documentation should be generated.
         [Parameter(Mandatory)]
         [alias('module')]
@@ -45,17 +45,17 @@ function write-mfModuleDocs
         #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
         [Parameter()]
         [alias('docsPath')]
-        [string]$docsFolder = 'docs',
+        [string]$DocsFolder = 'docs',
         #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
         [Parameter()]
         [alias('functionsPath')]
-        [string]$functionsFolder = 'functions',
+        [string]$FunctionsFolder = 'functions',
         #If specified, retrieves and includes a Markdown changelog based on Git commit history.
         [Parameter()]
-        [switch]$includeChangeLog,
+        [switch]$IncludeChangeLog,
         #If specified, skips creating or updating the `index.md` file.
         [Parameter()]
-        [switch]$skipIndex
+        [switch]$SkipIndex
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -105,15 +105,15 @@ function write-mfModuleDocs
     
     process{
         #Checks and parses
-        write-verbose "In path $path"
-        $DocsFullPath = join-path -Path $Path -ChildPath $docsFolder
+        write-verbose "In path $ModulePath"
+        $DocsFullPath = join-path -Path $ModulePath -ChildPath $DocsFolder
         if(!(test-path $DocsFullPath))
         {
             write-verbose 'Need to make docs folder as it does not exist'
             New-Item -ItemType Directory -Path $DocsFullPath
         }
 
-        $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $functionsFolder
+        $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $FunctionsFolder
         if(!(test-path $functionsFullPath))
         {
             write-verbose 'Need to make functions folder as it does not exist'
@@ -132,7 +132,7 @@ function write-mfModuleDocs
         write-verbose 'Create markdown help from module help'
         New-MarkdownHelp -Module $module.Name -Force -OutputFolder $functionsFullPath
 
-        if($includeChangeLog)
+        if($IncludeChangeLog)
         {
             write-verbose 'Creating releaseNotes file'
             $changeLog = get-mfGitChangeLog -all
@@ -146,7 +146,7 @@ function write-mfModuleDocs
             }
         }
 
-        if($skipIndex){
+        if($SkipIndex){
             Write-Verbose 'Skipping Index File'
         }else{
             $indexContent = [System.Collections.Generic.List[string]]::new()

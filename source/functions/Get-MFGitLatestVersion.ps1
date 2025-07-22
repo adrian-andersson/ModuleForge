@@ -1,4 +1,4 @@
-function get-mfGitLatestVersion
+function Get-MFGitLatestVersion
 {
 
     <#

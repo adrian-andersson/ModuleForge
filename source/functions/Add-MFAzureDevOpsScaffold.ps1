@@ -1,4 +1,4 @@
-function add-mfAzureDevOpsScaffold
+function Add-MFAzureDevOpsScaffold
 {
 
     <#
@@ -44,16 +44,16 @@ function add-mfAzureDevOpsScaffold
     PARAM(
         #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
         [Parameter()]
-        [alias('path')]
-        [string]$modulePath = $(get-location).path,
+        [alias('Path')]
+        [string]$ModulePath = $(get-location).path,
         #Module Config reference
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml',
+        [string]$ConfigFile = 'moduleForgeConfig.xml',
         #Azure DevOps folder
         [Parameter(DontShow)]
-        [string]$azdFolder = '.azuredevops',
+        [string]$AzdFolder = '.azuredevops',
         #Should we overwrite if files exist?
-        [switch]$force
+        [switch]$Force
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -82,13 +82,13 @@ function add-mfAzureDevOpsScaffold
             throw 'Err: Found resource folder, but not azureDevOps folder in ModuleForge module'
         }
 
-        $mfConfigFile = join-path $modulePath $configFile
+        $mfConfigFile = join-path $ModulePath $ConfigFile
         if(!(test-path $mfConfigFile))
         {
             throw 'Err: No Moduleforge Config File found. Please check your module path'
         }
 
-        $moduleAzdFolder = join-path $modulePath $azdFolder
+        $moduleAzdFolder = join-path $ModulePath $AzdFolder
 
     }
     

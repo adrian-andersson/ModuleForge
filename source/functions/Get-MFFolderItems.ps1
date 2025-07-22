@@ -1,4 +1,4 @@
-function get-mfFolderItems
+function Get-MFFolderItems
 {
     <#
         .SYNOPSIS
@@ -50,18 +50,17 @@ function get-mfFolderItems
         #Path to get items from
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Default')]
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ValueFromPipeline,ParameterSetName ='Copy')]
-        [alias('s')]
-        [string]$path,
+        [string]$Path,
         #Flag to copy scripts only
         [parameter(ParameterSetName ='Default')]
         [parameter(ParameterSetName ='Copy')]
-        [switch]$psScriptsOnly,
+        [switch]$PSScriptsOnly,
         #Flag to copy scripts only
         [parameter(ParameterSetName ='Copy')]
-        [string]$destination,
+        [string]$Destination,
         #Flag to actually copy files and not just output
         [parameter(ParameterSetName ='Copy')]
-        [switch]$copy
+        [switch]$Copy
 
     )
     begin{
@@ -106,17 +105,17 @@ function get-mfFolderItems
     process{
 
         #Check the Parameters and do some lite parsing
-        write-verbose "Path set to: $path"
+        write-verbose "Path set to: $Path"
         
-        if($path[-1] -eq '\' -or $path[-1] -eq '/')
+        if($Path[-1] -eq '\' -or $Path[-1] -eq '/')
         {
             write-verbose 'Removing extra \ or / from path'
-            $path = $path.Substring(0,$($path.length-1))
-            write-verbose "New Path $path"
+            $Path = $Path.Substring(0,$($Path.length-1))
+            write-verbose "New Path $Path"
         }
 
         try{
-            $folderItem = get-item $path -erroraction stop
+            $folderItem = get-item $Path -erroraction stop
             #Ensure we have the full path
 
             $folder = $folderItem.FullName
@@ -125,25 +124,25 @@ function get-mfFolderItems
             write-verbose "Folder Shortname: $folderShortName"
 
         }catch{
-            throw "Unable to get folder at $path"
+            throw "Unable to get folder at $Path"
         }
 
 
         #Include the older bartender bits so we have backwards compatibility
         [System.Collections.Generic.List[string]]$excludeList = '.gitignore','.mfignore','.btorderEnd','.btorderStart','.btignore'
 
-        if($destination)
+        if($Destination)
         {
-            if($destination[-1] -eq '\' -or $destination[-1] -eq '/')
+            if($Destination[-1] -eq '\' -or $Destination[-1] -eq '/')
             {
                 write-verbose 'Removing extra \ or / from destination'
-                $path = $path.Substring(0,$($destination.length-1))
-                write-verbose "New destination $destination"
+                $Path = $Path.Substring(0,$($Destination.length-1))
+                write-verbose "New destination $Destination"
             }
 
-            if(!(test-path $destination))
+            if(!(test-path $Destination))
             {
-                throw "Unable to resolve destination path: $destination"
+                throw "Unable to resolve destination path: $Destination"
             }
 
 
@@ -164,7 +163,7 @@ function get-mfFolderItems
         #Actual processing
         
         write-verbose 'Getting Folder files'
-        if($psScriptsOnly)
+        if($PSScriptsOnly)
         {
             write-verbose 'Getting PS1 Files'
             $fileList = get-childitem -path $folder -recurse -filter *.ps1|where-object{$_.psIsContainer -eq $false -and $_.name.tolower() -notlike '*.test.ps1' -and $_.name.tolower() -notlike '*.tests.ps1' -and $_.name.tolower() -notlike '*.skip.ps1' -and $_.Name.tolower() -notin $excludeList}
@@ -176,16 +175,16 @@ function get-mfFolderItems
         write-verbose 'Add custom member values'
         $fileList.foreach{
             $_|Add-Member -MemberType NoteProperty -Name 'RelativePath' -Value $($_.fullname.ToString()).replace("$($folder)$([IO.Path]::DirectorySeparatorChar)",".$([IO.Path]::DirectorySeparatorChar)")
-            if($destination)
+            if($Destination)
             {
-                $_|add-member -MemberType NoteProperty -name 'newPath' -Value $($_.fullname.ToString()).replace($folder,$destination)
-                $_|Add-Member -name 'newFolder' -memberType NoteProperty -value $($_.directory.ToString()).replace($folder,$destination)
+                $_|add-member -MemberType NoteProperty -name 'newPath' -Value $($_.fullname.ToString()).replace($folder,$Destination)
+                $_|Add-Member -name 'newFolder' -memberType NoteProperty -value $($_.directory.ToString()).replace($folder,$Destination)
             }
         }
 
-        if($destination)
+        if($Destination)
         {
-            if($copy)
+            if($Copy)
             {
                 $fileList.foreach{
                     write-verbose "Copy file $($_.relativePath) to $($_.newFolder)"

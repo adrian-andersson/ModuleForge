@@ -1,4 +1,4 @@
-function get-mfDependencyTree
+function Get-MFDependencyTree
 {
 
     <#
@@ -36,10 +36,10 @@ function get-mfDependencyTree
     PARAM(
         #What Reference Data are we looking at. See function example for how to retrieve
         [Parameter(ValueFromPipeline)]
-        [object[]]$referenceData = (get-mfFolderItemDetails -path (get-item source).fullname),
+        [object[]]$ReferenceData = (get-mfFolderItemDetails -path (get-item source).fullname),
         [Parameter()]
         [ValidateSet('Mermaid','MermaidMarkdown','Terminal')]
-        [string]$outputType = 'Terminal'
+        [string]$OutputType = 'Terminal'
     )
     begin {
         # Return the script name when running verbose, makes it tidier
@@ -51,7 +51,7 @@ function get-mfDependencyTree
     }
     
     process {
-        foreach ($ref in $referenceData) {
+        foreach ($ref in $ReferenceData) {
             $relativePath = $ref.relativePath
             foreach ($dep in $ref.dependencies) {
                 $dependencies.add(
@@ -64,15 +64,15 @@ function get-mfDependencyTree
         }
 
         $output = New-Object System.Collections.Generic.List[string]
-        if ($outputType -eq 'Mermaid' -or $outputType -eq 'MermaidMarkdown') {
-            if ($outputType -eq 'MermaidMarkdown') {
+        if ($OutputType -eq 'Mermaid' -or $OutputType -eq 'MermaidMarkdown') {
+            if ($OutputType -eq 'MermaidMarkdown') {
                 $output.add('```mermaid')
             }
             $output.add('flowchart TD')
             foreach ($dep in $dependencies) {
                 $output.add("'$($dep.Parent)' --> '$($dep.Child)'")
             }
-            if ($outputType -eq 'MermaidMarkdown') {
+            if ($OutputType -eq 'MermaidMarkdown') {
                 $output.add('```')
             }
             
@@ -90,7 +90,7 @@ function get-mfDependencyTree
                 $tree[$dep.Parent].add($dep.Child)
             }
 
-            $rootNodes = $referenceData.where{$_.Dependencies.Count -gt 0}.relativePath
+            $rootNodes = $ReferenceData.where{$_.Dependencies.Count -gt 0}.relativePath
             $rootNodes.foreach{
                 write-output $_
                 if ($tree.ContainsKey($_)) {

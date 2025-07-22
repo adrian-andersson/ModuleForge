@@ -1,4 +1,4 @@
-function build-mfProject
+function Build-MFProject
 {
 
     <#
@@ -28,26 +28,26 @@ function build-mfProject
     PARAM(
         #What version are we building?
         [Parameter(Mandatory)]
-        [semver]$version,
+        [semver]$Version,
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
-        [alias('ModulePath')]
-        [string]$path = $(get-location).path,
+        [alias('Path')]
+        [string]$ModulePath = $(get-location).path,
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml',
+        [string]$ConfigFile = 'moduleForgeConfig.xml',
         #Use this flag to put any classes in ScriptsToProcess
         [Parameter()]
-        [switch]$exportClasses,
+        [switch]$ExportClasses,
         #Use this flag to put any enums in ScriptsToProcess
         [Parameter()]
-        [switch]$exportEnums,
+        [switch]$ExportEnums,
         #Use this to not put anything in nestedmodules, making everything a single file. By default validators are put in a separate nestedmodule script to ensure they are loaded properly
         [Parameter()]
-        [switch]$noExternalFiles,
+        [switch]$NoExternalFiles,
         [Parameter()]
-        [string]$releaseNotes,
+        [string]$ReleaseNotes,
         [Parameter()]
-        [switch]$includeReleaseNotesInDescription
+        [switch]$IncludeReleaseNotesInDescription
 
         
     )
@@ -59,21 +59,21 @@ function build-mfProject
 
         write-verbose 'Testing module path'
         try{
-            $moduleTest = get-item $path -ErrorAction SilentlyContinue
+            $moduleTest = get-item $ModulePath -ErrorAction SilentlyContinue
         }catch{
             $moduleTest = $null
         }
         
         if(!$moduleTest){
-            throw "Unable to read from $path"
+            throw "Unable to read from $ModulePath"
         }
 
-        $path = $moduleTest.FullName
-        write-verbose "Building from: $path"
+        $ModulePath = $moduleTest.FullName
+        write-verbose "Building from: $ModulePath"
 
         #Read the config file
         write-verbose 'Importing config file'
-        $configPath = join-path -path $path -ChildPath $configFile
+        $configPath = join-path -path $ModulePath -ChildPath $ConfigFile
 
         if(!(test-path $configPath))
         {
@@ -88,10 +88,10 @@ function build-mfProject
         }
 
         #Reference version as a string
-        $versionString = $version.tostring()
+        $VersionString = $Version.tostring()
 
         write-verbose 'Checking for a build and module folder'
-        $buildFolder = join-path -path $path -childPath 'build'
+        $buildFolder = join-path -path $ModulePath -childPath 'build'
         if(!(test-path $buildFolder))
         {
             write-verbose "Build folder not found at: $($buildFolder), creating"
@@ -134,7 +134,7 @@ function build-mfProject
         }
 
         $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
-        $sourceFolder = join-path -path $path -childPath 'source'
+        $sourceFolder = join-path -path $ModulePath -childPath 'source'
 
         #What folders do we need to copy the files contents of
         [array]$copyFolders = @('resource','bin')
@@ -150,7 +150,7 @@ function build-mfProject
     
     process{
 
-        write-verbose "Attempt to build:`n`t`tmodule:$($config.moduleName)version:`n`t`t$versionString"
+        write-verbose "Attempt to build:`n`t`tmodule:$($config.moduleName)version:`n`t`t$VersionString"
 
         #References for our manifest and module root
         $moduleFileShortname = "$($config.moduleName).psm1"
@@ -196,7 +196,7 @@ function build-mfProject
             if($dscResourceFiles.count -ge 1)
             {
                 #write-warning 'DSC Resources Found - Ignoring Export Switches and Compiling to single module file'
-                #$noExternalFiles = $true
+                #$NoExternalFiles = $true
                 #See above comments
                 throw 'DSC is not supported in this version of moduleForge. Its on the roadmap'
             }else{
@@ -241,7 +241,7 @@ function build-mfProject
                     Write-Information "Processing $($item.name) as a Enum" -tags 'FilesProcessed'
                     write-verbose "Processing $($item.name) as an Enum"
 
-                    if($exportEnums -and !$noExternalFiles){
+                    if($ExportEnums -and !$NoExternalFiles){
                         write-verbose 'Exporting enum content to external enum file'
                         $item.content|Out-file $enumsFile -Append
 
@@ -265,7 +265,7 @@ function build-mfProject
                     Write-Information "Processing $($item.name) as a ValidationClass" -tags 'FilesProcessed'
                     write-verbose "Processing $($item.name) as ValidationClass"
 
-                    if($noExternalFiles)
+                    if($NoExternalFiles)
                     {
                         write-verbose 'No ExternalFiles flag set'
                         write-warning 'By setting NoExternalFiles with files in the validationClasses folder, you run the risk of your validator class objects not loading correctly.'
@@ -292,7 +292,7 @@ function build-mfProject
                     Write-Information "Processing $($item.name) as a Class" -tags 'FilesProcessed'
                     write-verbose "Processing $($item.name) as Class"
 
-                    if($exportClasses -and !$noExternalFiles){
+                    if($ExportClasses -and !$NoExternalFiles){
                         write-verbose 'Exporting classes content to external classes file'
                         $item.content|Out-file $classesFile -Append
 
@@ -373,19 +373,19 @@ function build-mfProject
             Copyright = "$(get-date -f yyyy)$(if($config.companyName){" $($config.companyName)"}else{" $($config.moduleAuthors -join ' ')"})"
             CompanyName = $config.companyName
             Description = $config.Description
-            ModuleVersion = $versionString
+            ModuleVersion = $VersionString
             Guid = $config.guid
             PowershellVersion = $config.minimumPsVersion.tostring()
             CmdletsToExport = [array]@()
         }
 
-        if($releaseNotes)
+        if($ReleaseNotes)
         {
             #Add the release notes if they were included
-            $splatManifest.releaseNotes = $releaseNotes
-            if($includeReleaseNotesInDescription)
+            $splatManifest.releaseNotes = $ReleaseNotes
+            if($IncludeReleaseNotesInDescription)
             {
-                $splatManifest.Description = "$($config.Description)`n`n$($releaseNotes)"
+                $splatManifest.Description = "$($config.Description)`n`n$($ReleaseNotes)"
             }
         }
         #Add the extra bits if present
@@ -462,16 +462,16 @@ function build-mfProject
         #>
 
         #Extra Stuff
-        if($version.PreReleaseLabel)
+        if($Version.PreReleaseLabel)
         {
             #Semver supplied had a pre-release label
             write-verbose 'Incrementing Prerelease Version'
-            write-verbose "Setting Prerelease tag to: $($version.PreReleaseLabel)"
-            $splatManifest.Prerelease = $version.PreReleaseLabel
+            write-verbose "Setting Prerelease tag to: $($Version.PreReleaseLabel)"
+            $splatManifest.Prerelease = $Version.PreReleaseLabel
             
         }
 
-        $splatManifest.ModuleVersion = $version
+        $splatManifest.ModuleVersion = $Version
         New-ModuleManifest @splatManifest
         Write-Information 'Created Module Manifest' -tags 'CreatedModuleManifest'
     }

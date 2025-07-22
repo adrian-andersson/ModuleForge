@@ -1,4 +1,4 @@
-function update-mfProject
+function Update-MFProject
 {
 
     <#
@@ -41,28 +41,28 @@ function update-mfProject
         [string]$ModuleName,
         #A description of your module. Is used as the descriptor in the module repository
         [Parameter()]
-        [string]$description,
+        [string]$Description,
         #Minimum PowerShell version. Defaults to 7.2 as this is the current LTS version
         [Parameter()]
-        [version]$minimumPsVersion,
+        [version]$MinimumPsVersion,
         #Who are the primary module authors. Can expand later with add-mfmoduleAuthors command
         [Parameter()]
-        [string[]]$moduleAuthors,
+        [string[]]$ModuleAuthors,
         #Company Name. If you are building this module for your organisation, this is where it goes
         [Parameter()]
-        [string]$companyName,
+        [string]$CompanyName,
         #Module Tags. Used to help discoverability and compatibility in package repositories
         [Parameter()]
-        [String[]]$moduleTags,
+        [String[]]$ModuleTags,
         #Source Code Repository to use, i.e. your repositories github/azure devops uri
         [Parameter()]
-        [string]$projectUri,
+        [string]$ProjectUri,
         # A URL to an icon representing this module.
         [Parameter()]
-        [string]$iconUri,
+        [string]$IconUri,
         #URI to use for your projects license. Will try and use the license file if a projectUri is found
         [Parameter()]
-        [string]$licenseUri,
+        [string]$LicenseUri,
         #Modules that must be imported into the global environment prior to importing this module
         [Parameter()]
         [Object[]]$RequiredModules,
@@ -77,11 +77,11 @@ function update-mfProject
         [object[]]$PrivateData,
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
-        [Alias('modulePath')]
-        [string]$path = $(get-location).path,
+        [Alias('path')]
+        [string]$ModulePath = $(get-location).path,
         #Module Config File
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml'
+        [string]$ConfigFile = 'moduleForgeConfig.xml'
 
     )
     begin{
@@ -91,17 +91,17 @@ function update-mfProject
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         write-verbose 'Testing module path'
-        $moduleTest = get-item $path
+        $moduleTest = get-item $ModulePath
         if(!$moduleTest){
-            throw "Unable to read from $path"
+            throw "Unable to read from $ModulePath"
         }
 
-        $path = $moduleTest.FullName
-        write-verbose "update module config in: $path"
+        $ModulePath = $moduleTest.FullName
+        write-verbose "update module config in: $ModulePath"
 
         #Read the config file
         write-verbose 'Importing config file'
-        $configPath = join-path -path $path -ChildPath $configFile
+        $configPath = join-path -path $ModulePath -ChildPath $ConfigFile
 
         if(!(test-path $configPath))
         {
@@ -121,52 +121,52 @@ function update-mfProject
             $config.moduleName = $moduleName
         }
 
-        if($description)
+        if($Description)
         {
-            write-verbose "Updating Module description from: $($config.description) -> $($description)"
-            $config.description = $description
+            write-verbose "Updating Module description from: $($config.description) -> $($Description)"
+            $config.description = $Description
         }
 
-        if($minimumPsVersion)
+        if($MinimumPsVersion)
         {
-            write-verbose "Updating Module minimumPsVersion from: $($config.minimumPsVersion.tostring()) -> $($minimumPsVersion.tostring())"
-            $config.minimumPsVersion = $minimumPsVersion
+            write-verbose "Updating Module minimumPsVersion from: $($config.minimumPsVersion.tostring()) -> $($MinimumPsVersion.tostring())"
+            $config.minimumPsVersion = $MinimumPsVersion
         }
 
-        if($moduleAuthors)
+        if($ModuleAuthors)
         {
-            write-verbose "Updating Module moduleAuthors from: $($config.moduleAuthors) -> $($moduleAuthors)"
-            $config.moduleAuthors = $moduleAuthors
+            write-verbose "Updating Module moduleAuthors from: $($config.moduleAuthors) -> $($ModuleAuthors)"
+            $config.moduleAuthors = $ModuleAuthors
         }
 
-        if($companyName)
+        if($CompanyName)
         {
-            write-verbose "Updating Module companyName from: $($config.companyName) -> $($companyName)"
-            $config.companyName = $companyName
+            write-verbose "Updating Module companyName from: $($config.companyName) -> $($CompanyName)"
+            $config.companyName = $CompanyName
         }
 
-        if($moduleTags)
+        if($ModuleTags)
         {
             write-verbose "Updating Module tags from: $($config.tags) -> $($tags)"
-            $config.tags = $moduleTags
+            $config.tags = $ModuleTags
         }
 
-        if($projectUri)
+        if($ProjectUri)
         {
-            write-verbose "Updating Module projectUri from: $($config.projectUri) -> $($projectUri)"
-            $config.projectUri = $projectUri
+            write-verbose "Updating Module projectUri from: $($config.projectUri) -> $($ProjectUri)"
+            $config.projectUri = $ProjectUri
         }
 
-        if($iconUri)
+        if($IconUri)
         {
-            write-verbose "Updating Module iconUri from: $($config.iconUri) -> $($iconUri)"
-            $config.iconUri = $iconUri
+            write-verbose "Updating Module iconUri from: $($config.iconUri) -> $($IconUri)"
+            $config.iconUri = $IconUri
         }
 
-        if($licenseUri)
+        if($LicenseUri)
         {
-            write-verbose "Updating Module licenseUri from: $($config.licenseUri) -> $($licenseUri)"
-            $config.licenseUri = $licenseUri
+            write-verbose "Updating Module licenseUri from: $($config.licenseUri) -> $($LicenseUri)"
+            $config.licenseUri = $LicenseUri
         }
         if($RequiredModules)
         {

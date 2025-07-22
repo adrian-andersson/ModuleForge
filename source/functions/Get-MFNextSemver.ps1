@@ -1,4 +1,4 @@
-function get-mfNextSemver
+function Get-MFNextSemver
 {
 
     <#
@@ -11,8 +11,8 @@ function get-mfNextSemver
         The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
     .EXAMPLE
-        $version = [SemVer]::new('1.0.0')
-        get-mfNextSemver -version $version -increment 'Minor' -prerelease
+        $Version = [SemVer]::new('1.0.0')
+        get-mfNextSemver -version $Version -increment 'Minor' -prerelease
 
         #### DESCRIPTION
         This example takes a SemVer object with version '1.0.0', increments the minor version, and adds a pre-release tag. The output will be '1.1.0-prerelease.1'.
@@ -21,8 +21,8 @@ function get-mfNextSemver
         '1.1.0-prerelease.1'
 
     .EXAMPLE
-        $version = [SemVer]::new('2.0.0-prerelease.1')
-        get-mfNextSemver -version $version -increment 'Major'
+        $Version = [SemVer]::new('2.0.0-prerelease.1')
+        get-mfNextSemver -version $Version -increment 'Major'
 
         #### DESCRIPTION
         This example takes a SemVer object with version '2.0.0-prerelease.1', increments the major version, and removes the pre-release tag because the 'prerelease' switch is not set. The output will be '3.0.0'.
@@ -45,30 +45,30 @@ function get-mfNextSemver
         #Semver Version
         [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='default')]
         [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='preRelease')]
-        [SemVer]$version,
+        [SemVer]$Version,
 
         #What are we incrementing
         [Parameter(ParameterSetName='default')]
         [Parameter(ParameterSetName='preRelease')]
         [ValidateSet('Major','Minor','Patch')]
-        [string]$increment,
+        [string]$Increment,
 
         #Is this a prerelease
         [Parameter(ParameterSetName='preRelease')]
-        [switch]$prerelease,
+        [switch]$PreRelease,
 
         #Is this a prerelease
         [Parameter(ParameterSetName='default')]
-        [switch]$stableRelease,
+        [switch]$StableRelease,
 
         #Optional override the prerelease label. If not supplied will use 'prerelease'
         [Parameter(ParameterSetName='preRelease')]
         [Parameter(ParameterSetName='Initial')]
-        [string]$preReleaseLabel,
+        [string]$PreReleaseLabel,
 
         #Is this the initial prerelease
         [Parameter(ParameterSetName='Initial')]
-        [switch]$initialPreRelease
+        [switch]$InitialPreRelease
 
     )
     begin{
@@ -80,39 +80,39 @@ function get-mfNextSemver
         #Making the default preReleaase label to be lower case. This addresses a problem with psResourceGet and AzureDevOps repositories specifically (Issue #1787)
         $defaultPrereleaseLabel = 'pre' 
 
-        if (-not $increment -and -not $prerelease -and -not $initialPreRelease -and -not $stableRelease) {
+        if (-not $Increment -and -not $PreRelease -and -not $InitialPreRelease -and -not $StableRelease) {
             throw 'At least one of "increment", parameter or "stableRelease", "prerelease", "initialPreRelease" switch should be supplied.'
         }
     }
     
     process{
         # Increment the version based on the 'increment' parameter
-        switch ($increment) {
+        switch ($Increment) {
             'Major' { 
-                #$nextVersion = $version.IncrementMajor()
-                $nextVersion = [semver]::new($version.Major+1,0,0)
+                #$nextVersion = $Version.IncrementMajor()
+                $nextVersion = [semver]::new($Version.Major+1,0,0)
                 write-verbose "Incrementing Major Version to: $($nextVersion.tostring())"
              }
             'Minor' { 
-                $nextVersion = [semver]::new($version.Major,$version.minor+1,0)
+                $nextVersion = [semver]::new($Version.Major,$Version.minor+1,0)
                 write-verbose "Incrementing Minor Version to: $($nextVersion.tostring())"
             }
             'Patch' { 
-                $nextVersion = [semver]::new($version.Major,$version.minor,$version.Patch+1)
+                $nextVersion = [semver]::new($Version.Major,$Version.minor,$Version.Patch+1)
                 write-verbose "Incrementing Patch Version to: $($nextVersion.tostring())"
             }
         }
 
         # Handle pre-release versions
-        if($prerelease -and !$nextVersion -and $version.PreReleaseLabel)
+        if($PreRelease -and !$nextVersion -and $Version.PreReleaseLabel)
         {
             #This scenario indicates version supplied is already a prerelease, and what we want to do is increment the prerelease version
             write-verbose 'Incrementing Prerelease Version'
-            $currentPreReleaseSplit = $version.PreReleaseLabel.Split('v')
+            $currentPreReleaseSplit = $Version.PreReleaseLabel.Split('v')
             $currentpreReleaseLabel = $currentPreReleaseSplit[0]
             write-verbose "Current PreRelease Label: $currentpreReleaseLabel"
-            if(!$preReleaseLabel -or ($currentpreReleaseLabel -ceq $preReleaseLabel)){
-                if($currentpreReleaseLabel -eq $preReleaseLabel)
+            if(!$PreReleaseLabel -or ($currentpreReleaseLabel -ceq $PreReleaseLabel)){
+                if($currentpreReleaseLabel -eq $PreReleaseLabel)
                 {
                     write-warning 'It appears the prerelease casing has changed, but the label has not. This may cause unexpected ordering results.'
                 }
@@ -124,28 +124,28 @@ function get-mfNextSemver
 
             }else{
                 write-verbose 'Prerelease label changed. Resetting prerelease version to 1'
-                $nextPreReleaseLabel = $preReleaseLabel
+                $nextPreReleaseLabel = $PreReleaseLabel
                 $nextPreRelease = 1
             }
             
-            $nextVersionString = "$($version.major).$($version.minor).$($version.patch)-$($nextPreReleaseLabel)v$('{0:d3}' -f $nextPrerelease)"
+            $nextVersionString = "$($Version.major).$($Version.minor).$($Version.patch)-$($nextPreReleaseLabel)v$('{0:d3}' -f $nextPrerelease)"
             $nextVersion = [semver]::New($nextVersionString)
             write-verbose "Next Prerelease will be: $($nextVersion.ToString())"
             
-        }elseIf($prerelease -and $nextVersion)
+        }elseIf($PreRelease -and $nextVersion)
         {
             write-verbose 'Need to tag incremented version as PreRelease'
             #This scenario indicates we have incremented a major,minor or patch, and need to start a fresh prerelease
-            if(!$preReleaseLabel){
+            if(!$PreReleaseLabel){
                 $nextPreReleaseLabel = $defaultPrereleaseLabel
             }else{
-                $nextPreReleaseLabel = $preReleaseLabel
+                $nextPreReleaseLabel = $PreReleaseLabel
             }
 
             $nextVersionString = "$($nextVersion.major).$($nextVersion.minor).$($nextVersion.patch)-$($nextPreReleaseLabel)v001"
             $nextVersion = [semver]::New($nextVersionString)
             write-verbose "Next Prerelease will be: $($nextVersion.ToString())"
-        }elseIf($prerelease){
+        }elseIf($PreRelease){
             #This is a strange scenario. Indicates that we have prerelease switch,but the version supplied wasn't a prerelease already. And we didn't increment anything.
             #Are we supposed to go backwards
 
@@ -154,33 +154,33 @@ function get-mfNextSemver
             #I think what we do, is we increment patch by 1 and then tag as pre-release
             write-warning 'Unspecified version increment. Will increment Patch. If this is not what you meant, please try again'
 
-            if(!$preReleaseLabel){
+            if(!$PreReleaseLabel){
                 $nextPreReleaseLabel = $defaultPrereleaseLabel
             }else{
-                $nextPreReleaseLabel = $preReleaseLabel
+                $nextPreReleaseLabel = $PreReleaseLabel
             }
 
-            $nextVersionString = "$($version.major).$($version.minor).$($version.patch+1)-$($nextPreReleaseLabel)v001"
+            $nextVersionString = "$($Version.major).$($Version.minor).$($Version.patch+1)-$($nextPreReleaseLabel)v001"
             $nextVersion = [semver]::New($nextVersionString)
-        }elseIf($initialPreRelease){
-            if(!$preReleaseLabel){
+        }elseIf($InitialPreRelease){
+            if(!$PreReleaseLabel){
                 $nextPreReleaseLabel = $defaultPrereleaseLabel
             }else{
-                $nextPreReleaseLabel = $preReleaseLabel
+                $nextPreReleaseLabel = $PreReleaseLabel
             }
             write-verbose 'Start at v1 prerelease v001'
             $nextVersionString = "1.0.0-$($nextPreReleaseLabel)v001"
             $nextVersion = [semver]::New($nextVersionString)
-        }elseIf($stableRelease)
+        }elseIf($StableRelease)
         {
             write-verbose 'Mark release as stable'
             #This scenario is for when we have a pre-release tag and we want to drop it for a stable release version
-            if(!($version.PreReleaseLabel))
+            if(!($Version.PreReleaseLabel))
             {
                 throw 'version supplied does not contain a prerelease'
             }
 
-            $nextVersionString = "$($version.major).$($version.minor).$($version.patch)"
+            $nextVersionString = "$($Version.major).$($Version.minor).$($Version.patch)"
             $nextVersion = [semver]::New($nextVersionString)
             write-verbose "Stable Release Version: $($nextVersion.tostring())"
 

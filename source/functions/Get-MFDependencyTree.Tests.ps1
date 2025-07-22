@@ -5,7 +5,7 @@ BeforeAll{
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('get-mfFolderItems.ps1','get-mfFolderItemDetails.ps1')
+        functions = @('Get-MFFolderItems.ps1','Get-MFFolderItemDetails.ps1')
         private = @('printTree.ps1')
     }
 
@@ -29,15 +29,15 @@ BeforeAll{
 
 }
 
-Describe 'get-mfDependencyTree' {
+Describe 'Get-MFDependencyTree' {
 
     BeforeAll {
         $folderItemDetails = get-mfFolderItemDetails -path $sourcePath
-        $depTree = get-mfDependencyTree -referenceData $($folderItemDetails|Select-Object relativePath,Dependencies)
+        $depTree = Get-MFDependencyTree -referenceData $($folderItemDetails|Select-Object relativePath,Dependencies)
         $c1Ref = ".$([IO.Path]::DirectorySeparatorChar)source$([IO.Path]::DirectorySeparatorChar)functions$([IO.Path]::DirectorySeparatorChar)get-mfFolderItemDetails.ps1"
         $c2Ref = "     >--DEPENDS-ON--> .$([IO.Path]::DirectorySeparatorChar)source$([IO.Path]::DirectorySeparatorChar)functions$([IO.Path]::DirectorySeparatorChar)get-mfFolderItems.ps1"
-        $Mermaid = get-mfDependencyTree -referenceData $($folderItemDetails|Select-Object relativePath,Dependencies) -outputType mermaid
-        $mermaidRef = "'.\source\functions\build-mfProject.ps1' --> '.\source\functions\get-mfDependencyTree.ps1'"
+        $Mermaid = Get-MFDependencyTree -referenceData $($folderItemDetails|Select-Object relativePath,Dependencies) -outputType mermaid
+        $mermaidRef = "'.\source\functions\build-mfProject.ps1' --> '.\source\functions\Get-MFDependencyTree.ps1'"
     }
 
     It 'Should have returned more than 5 lines of output' {

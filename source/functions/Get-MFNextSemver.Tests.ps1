@@ -3,7 +3,7 @@ BeforeAll{
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
 }
 
-Describe 'get-mfNextSemver' {
+Describe 'Get-MFNextSemver' {
     BeforeAll {
         $initialVersion = get-mfNextSemver -initialPreRelease
     }

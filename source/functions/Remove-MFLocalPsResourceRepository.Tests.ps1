@@ -5,7 +5,7 @@ BeforeAll{
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('register-mfLocalPsResourceRepository.ps1')
+        functions = @('Register-MFLocalPsResourceRepository.ps1')
     }
 
     $dependencies.GetEnumerator().ForEach{
@@ -30,7 +30,7 @@ BeforeAll{
 
     #Load This File
     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
-    $functionName = 'remove-mfLocalPsResourceRepository'
+    $functionName = 'Register-MFLocalPsResourceRepository'
     . $fileName
     
     #Param for our RepoName
@@ -48,9 +48,9 @@ Describe 'Check Clean Environment' {
     }
 }
 
-Describe 'remove-mfLocalPsResourceRepository' {
+Describe 'Remove-MFLocalPsResourceRepository' {
     BeforeAll {
-        register-mfLocalPsResourceRepository -repositoryName $repoName -path $repoTestPath
+        Register-MFLocalPsResourceRepository -repositoryName $repoName -path $repoTestPath
     }
 
     it 'Should have registered a local repository' {
@@ -58,7 +58,7 @@ Describe 'remove-mfLocalPsResourceRepository' {
     }
 
     it 'Should unregister the repository Correctly' {
-        remove-mfLocalPsResourceRepository -repositoryName $repoName -path $repoTestPath
+        Remove-MFLocalPsResourceRepository -repositoryName $repoName -path $repoTestPath
         (get-psResourceRepository).Name |Should -Not -Contain $repoName
     }
 }
