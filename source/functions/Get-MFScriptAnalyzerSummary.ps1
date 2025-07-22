@@ -11,7 +11,7 @@ function Get-MFScriptAnalyzerSummary
             
         ------------
         .EXAMPLE
-            get-mfScriptAnalyzerSummary -sourcePath '.\source\functions'
+            Get-MFScriptAnalyzerSummary -SourcePath '.\source\functions'
             
             #### DESCRIPTION
             Runs PSScriptAnalyzer over all function files in the specified path, provides a summary

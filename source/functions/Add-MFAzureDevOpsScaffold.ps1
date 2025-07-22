@@ -18,7 +18,7 @@ function Add-MFAzureDevOpsScaffold
             Please feel free to change the workflows and template to your own needs and preferences.
             
         .EXAMPLE
-            add-mfAzureDevOpsScaffold
+            Add-MFAzureDevOpsScaffold
 
             #### DESCRIPTION
             Copies the `.azuredevops` folder from the module's `resource` directory to the current module, skipping existing files.
@@ -27,7 +27,7 @@ function Add-MFAzureDevOpsScaffold
             Should have a .azuredevops folder, with pipelines and a PR template
 
         .EXAMPLE
-            add-mfAzureDevOpsScaffold -Force
+            Add-MFAzureDevOpsScaffold -Force
 
             #### DESCRIPTION
             Copies the `.azuredevops` scaffold and overwrites existing files in `.azuredevops` directory

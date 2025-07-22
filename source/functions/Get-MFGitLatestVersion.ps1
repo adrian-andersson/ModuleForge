@@ -12,7 +12,7 @@ function Get-MFGitLatestVersion
             
         ------------
         .EXAMPLE
-            get-mfGitLatestVersion
+            Get-MFGitLatestVersion
 
             #### DESCRIPTION
             Queries the current Git repository for version tags, identifies the latest version,
@@ -23,7 +23,7 @@ function Get-MFGitLatestVersion
             (Example: If Git tags include `v1.0.0`, `v1.2.3`, `v1.1.0`, the function returns `1.2.3` as the latest.)
 
         .EXAMPLE
-            get-mfGitLatestVersion -Verbose
+            Get-MFGitLatestVersion -Verbose
 
             #### DESCRIPTION
             Runs the function with verbose output, providing detailed debugging information
@@ -31,7 +31,7 @@ function Get-MFGitLatestVersion
 
             #### OUTPUT
             ```
-            ===========Executing get-mfGitLatestVersion===========
+            ===========Executing Get-MFGitLatestVersion===========
             Got VersionTags: v1.0.0 v1.2.3 v1.1.0
             Latest Tag Version: 1.2.3
             ```

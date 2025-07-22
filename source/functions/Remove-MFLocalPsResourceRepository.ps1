@@ -10,7 +10,7 @@ function Remove-MFLocalPsResourceRepository
              It will also remove the directory that hosted the local repository   
 
         .EXAMPLE
-            remove-mfLocalPsResourceRepository
+            Remove-MFLocalPsResourceRepository
             
             
             

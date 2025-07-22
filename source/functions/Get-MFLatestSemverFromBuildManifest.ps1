@@ -10,7 +10,7 @@ function Get-MFLatestSemverFromBuildManifest
             
         ------------
         .EXAMPLE
-            get-mfLatestSemverFromBuildManifest
+            Get-MFLatestSemverFromBuildManifest
             
             #### DESCRIPTION
             Import build\module\modulemanifest.psd1

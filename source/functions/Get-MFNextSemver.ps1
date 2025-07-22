@@ -6,13 +6,13 @@ function Get-MFNextSemver
         Increments the version of a Semantic Version (SemVer) object.
 
     .DESCRIPTION
-        The `get-mfNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+        The `Get-MFNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
         It can handle major, minor, and patch increments. 
         The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
     .EXAMPLE
         $Version = [SemVer]::new('1.0.0')
-        get-mfNextSemver -version $Version -increment 'Minor' -prerelease
+        Get-MFNextSemver -Version $Version -Increment 'Minor' -PreRelease
 
         #### DESCRIPTION
         This example takes a SemVer object with version '1.0.0', increments the minor version, and adds a pre-release tag. The output will be '1.1.0-prerelease.1'.
@@ -22,7 +22,7 @@ function Get-MFNextSemver
 
     .EXAMPLE
         $Version = [SemVer]::new('2.0.0-prerelease.1')
-        get-mfNextSemver -version $Version -increment 'Major'
+        Get-MFNextSemver -Version $Version -Increment 'Major'
 
         #### DESCRIPTION
         This example takes a SemVer object with version '2.0.0-prerelease.1', increments the major version, and removes the pre-release tag because the 'prerelease' switch is not set. The output will be '3.0.0'.

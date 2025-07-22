@@ -5,7 +5,7 @@ function Get-MFFolderItems
             Retrieves a filtered list of files from a specified folder, processing '.mfignore' and '.mforder' rules.
             
         .DESCRIPTION
-            The 'get-mfFolderItems' function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
+            The 'Get-MFFolderItems' function scans a folder and applies filtering rules to return a curated list of files. It offers additional filtering logic, such as:
             - Ignoring entries specified in `.mfignore`.
             - Filtering out non-PS1 files using a switch (`-psScriptsOnly`).
             - Excluding test-related files (`*.test.ps1`, `*.tests.ps1`, `*.skip.ps1`).
@@ -16,13 +16,13 @@ function Get-MFFolderItems
             The -copy switch is added to cleanly copy resources and binaries with build-mfProject
             
         .EXAMPLE
-            get-mfFolderItems -path '.\source\functions' -psScriptsOnly
+            Get-MFFolderItems -Path '.\source\functions' -PSScriptsOnly
             
             #### DESCRIPTION
             Scans `.\source\functions`, retrieves only `.ps1` files, and excludes files matching `.mfignore` rules.
 
         .EXAMPLE
-            get-mfFolderItems -path '.\source\functions' -destination '.\build\functions' -copy
+            Get-MFFolderItems -Path '.\source\functions' -Destination '.\build\functions' -Copy
 
             #### DESCRIPTION
             Scans `.\source\functions`, retrieves filtered files, and copies them to `.\build\functions`.

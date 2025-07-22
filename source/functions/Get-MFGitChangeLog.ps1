@@ -8,10 +8,10 @@ function Get-MFGitChangeLog
         This function retrieves Git commit messages between the latest and previous tags, categorizes them based on predefined types, and formats them into a markdown changelog. It ensures the Git environment is correctly set up and handles errors if Git is not recognized or tags are not found.
 
     .EXAMPLE
-        get-mfGitChangeLog
+        Get-MFGitChangeLog
     
         DESCRIPTION
-        Call the `get-mfGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
+        Call the `Get-MFGitChangeLog` function with default change Log Types. The function will generate a markdown changelog that can be sent to release or artifact notes.
         
         #### OUTPUT
         # Change Log
@@ -22,7 +22,7 @@ function Get-MFGitChangeLog
         - Fixed issue with user login
 
     .EXAMPLE
-        get-mfGitChangeLog -changeLogTypes @{
+        Get-MFGitChangeLog -ChangeLogTypes @{
         'feat' = 'New Features'
         'fix' = 'Bug Fixes'
         'chore' = 'Chore and Pipeline work'
@@ -30,7 +30,7 @@ function Get-MFGitChangeLog
         }
         
         DESCRIPTION
-        This example demonstrates how to call the `get-mfGitChangeLog` function with a custom set of changelog types, in case you want to control your own
+        This example demonstrates how to call the `Get-MFGitChangeLog` function with a custom set of changelog types, in case you want to control your own
 
         #### OUTPUT
         # Change Log
@@ -45,7 +45,7 @@ function Get-MFGitChangeLog
         - Added test to user login function
 
     .EXAMPLE
-        get-mfGitChangeLog -All
+        Get-MFGitChangeLog -All
 
         DESCRIPTION
         Generates a full markdown changelog with all versions.
