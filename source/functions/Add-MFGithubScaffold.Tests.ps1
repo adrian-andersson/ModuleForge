@@ -11,7 +11,7 @@ BeforeAll{
     $mockPsScriptRoot = $sourcePath
 
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'azdScaffoldTest'
+    $testPath = join-path -path $currentPath -childPath 'gitScaffoldTest'
     if(!(test-path $testPath)){
         new-Item -ItemType Directory -Path $testPath
     }
@@ -22,19 +22,17 @@ BeforeAll{
     new-Item -ItemType File -Name 'moduleForgeConfig.xml'
     
     #Some references to make things easier
-    $azdFolder = join-path -Path $testPath -ChildPath '.azuredevops'
-    $prTemplateFile = join-path $azdFolder 'pull_request_template.md'
-    $pipelinesFolder = join-path $azdFolder 'pipelines'
-    $pesterTestFile = join-path $pipelinesFolder 'pesterTest.yml'
-    $buildandreleaseFile = join-path $pipelinesFolder 'buildAndRelease.yml'
+    $githubFolder = join-path -Path $testPath -ChildPath '.github'
+    $prTemplateFile = join-path $githubFolder 'PULL_REQUEST_TEMPLATE.md'
+    $workflowsFolder = join-path $githubFolder 'workflows'
+    $pesterTestFile = join-path $workflowsFolder 'pesterTest.yml'
+    $buildandreleaseFile = join-path $workflowsFolder 'buildandrelease.yml'
 
 
      #Load This File
      $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
-     $functionName = 'add-mfAzureDevOpsScaffold'
+     $functionName = 'Add-MFGithubScaffold'
     . $fileName
-
-
     
 }
 
@@ -48,20 +46,19 @@ Describe 'Check Clean Environment' {
     }
 }
 
-Describe 'add-mfAzureDevOpsScaffold should Copy Files' {
+Describe 'Add-MFGithubScaffold should Copy Files' {
     BeforeAll{
-        add-mfAzureDevOpsScaffold
+        Add-MFGithubScaffold
     }
-    
-    It 'Should have created the .azuredevops folder' {
-        get-Item $azdFolder -Force|Should -Not -BeNullOrEmpty
+    It 'Should have created the .github folder' {
+        get-Item $githubFolder -force|Should -Not -BeNullOrEmpty
     }
     It 'Should have created the  PR Template' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty
         get-content $prTemplateFile|should -Not -BeNullOrEmpty
     }
-    It 'Should have created the pipelines folder '  {
-        get-Item $pipelinesFolder|Should -Not -BeNullOrEmpty
+    It 'Should have created the workflows folder '  {
+        get-Item $workflowsFolder|Should -Not -BeNullOrEmpty
     }
     It 'Should have created the pesterTest file '  {
         get-Item $pesterTestFile|Should -Not -BeNullOrEmpty
@@ -74,11 +71,11 @@ Describe 'add-mfAzureDevOpsScaffold should Copy Files' {
 
 }
 
-Describe 'add-mfAzureDevOpsScaffold should NOT copy if files exist' {
+Describe 'Add-MFGithubScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"
         $endOfFileString|Out-File $prTemplateFile -Append
-        add-mfAzureDevOpsScaffold
+        Add-MFGithubScaffold
     }
     
     It 'Rerunning should not remove our end of file message in the PR Template'  {
@@ -89,10 +86,10 @@ Describe 'add-mfAzureDevOpsScaffold should NOT copy if files exist' {
 
 }
 
-Describe 'add-mfAzureDevOpsScaffold should copy if files exist and -force is used' {
+Describe 'Add-MFGithubScaffold should copy if files exist and -force is used' {
 
     BeforeAll{
-        add-mfAzureDevOpsScaffold -force
+        Add-MFGithubScaffold -force
     }
     
     It 'Rerunning should not remove our end of file message in the PR Template'  {
@@ -102,6 +99,8 @@ Describe 'add-mfAzureDevOpsScaffold should copy if files exist and -force is use
     }
 
 }
+
+
 
 AfterAll{
     Remove-Variable mockPsScriptRoot -ErrorAction Ignore

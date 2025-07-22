@@ -1,4 +1,4 @@
-function add-mfRepositoryXmlData
+function Add-MFRepositoryXmlData
 {
 
     <#
@@ -31,7 +31,7 @@ function add-mfRepositoryXmlData
     PARAM(
         #RepositoryUri
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
-        [string]$repositoryUri,
+        [string]$RepositoryUri,
         #Path to the actual file in the repository, should be something like C:\Users\{UserName}\AppData\Local\Temp\LocalTestRepository\{ModuleName}.{ModuleVersion}.nupkg
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
         [string]$NugetPackagePath,
@@ -40,13 +40,13 @@ function add-mfRepositoryXmlData
         $ExtractionPath = $(join-path -path ([System.IO.Path]::GetTempPath()) -childpath 'tempUnzip'),
         #Use force to ignore remove prompt
         [Parameter()]
-        [switch]$force,
+        [switch]$Force,
         #What branch to add to NUSPEC (Optional)
         [Parameter()]
-        [string]$branch,
+        [string]$Branch,
         [Parameter()]
         #What commit to add to NUSPEC (Optional)
-        [string]$commit
+        [string]$Commit
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -78,7 +78,7 @@ function add-mfRepositoryXmlData
             New-Item -Path $ExtractionPath -ItemType Directory
         }else{
             Write-warning "Extraction Path will be removed and recreated`nPath: $($ExtractionPath)"
-            if(!$force)
+            if(!$Force)
             {
                 $action = Read-Host 'Are you sure you want to continue with this action? (y/n)'
                 if ($action -eq 'y') {
@@ -88,7 +88,7 @@ function add-mfRepositoryXmlData
                     throw 'Action cancelled'
                 }
             }
-            if($action -eq 'y' -or $force -eq $true)
+            if($action -eq 'y' -or $Force -eq $true)
             {
                 #Probably dont need this IF statement, just a sanity check we have permission to destroy folder
                 get-item -Path $ExtractionPath |remove-item -recurse -force
@@ -115,19 +115,19 @@ function add-mfRepositoryXmlData
             write-verbose 'Adding Repository Type Attribute'
             $newElement.SetAttribute('type','git')
             write-verbose 'Adding Repository URL Attribute'
-            $newElement.SetAttribute('url',$repositoryUri)
+            $newElement.SetAttribute('url',$RepositoryUri)
 
-            if($branch)
+            if($Branch)
             {
                 write-verbose 'Adding Repository Branch Attribute'
-                $newElement.SetAttribute('branch',$branch)
+                $newElement.SetAttribute('branch',$Branch)
             }
 
 
-            if($commit)
+            if($Commit)
             {
                 write-verbose 'Adding Repository commit Attribute'
-                $newElement.SetAttribute('commit',$commit)
+                $newElement.SetAttribute('commit',$Commit)
             }
 
             write-verbose 'Appending Element to XML'

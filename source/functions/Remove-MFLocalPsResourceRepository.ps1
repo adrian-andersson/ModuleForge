@@ -1,4 +1,4 @@
-function remove-mfLocalPsResourceRepository
+function Remove-MFLocalPsResourceRepository
 {
 
     <#
@@ -22,10 +22,10 @@ function remove-mfLocalPsResourceRepository
     PARAM(
         #Name of the repository
         [Parameter()]
-        [string]$repositoryName = 'LocalTestRepository',
+        [string]$RepositoryName = 'LocalTestRepository',
         #Root path of the module. Uses Temp Path by default
         [Parameter()]
-        [string]$path = [System.IO.Path]::GetTempPath()
+        [string]$Path = [System.IO.Path]::GetTempPath()
 
     )
     begin{
@@ -47,7 +47,7 @@ function remove-mfLocalPsResourceRepository
             throw "Module dependancy Name: $($psResourceGet.Name) minver:$($psResourceGet.version) Not found. Please install from the PSGallery"
         }
 
-        $repositoryLocation = join-path $path -ChildPath $repositoryName
+        $repositoryLocation = join-path $Path -ChildPath $RepositoryName
 
     }
     
@@ -55,13 +55,13 @@ function remove-mfLocalPsResourceRepository
 
         write-verbose 'Clean up the repository'
         
-        write-verbose "Checking we dont already have a repository with name: $repositoryName"
-        $repoRef = (Get-PSResourceRepository -Name $repositoryName -erroraction Ignore)
+        write-verbose "Checking we dont already have a repository with name: $RepositoryName"
+        $repoRef = (Get-PSResourceRepository -Name $RepositoryName -erroraction Ignore)
         if($repoRef)
         {
             write-verbose 'Repository reference found, try and remove'
             Try{
-                unregister-PSResourceRepository -name $repositoryName -ErrorAction Stop
+                unregister-PSResourceRepository -name $RepositoryName -ErrorAction Stop
             }catch{
                 throw 'Error unregistering the Resource Repository'
             }

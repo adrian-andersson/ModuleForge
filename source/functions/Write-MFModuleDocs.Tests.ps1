@@ -5,7 +5,7 @@ BeforeAll{
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('get-mfGitChangeLog.ps1')
+        functions = @('Get-MFGitChangeLog.ps1')
     }
 
     $dependencies.GetEnumerator().ForEach{
@@ -91,8 +91,8 @@ function get-helloWorld
 '@|Out-File $moduleFile
 
     #Load This File
-     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
-     $functionName = 'write-mfModuleDocs'
+    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $functionName = 'Write-MFModuleDocs'
     . $fileName
     
     #Need to ensure PlatyPS is available 

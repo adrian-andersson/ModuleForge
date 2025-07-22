@@ -1,4 +1,4 @@
-function new-mfProject
+function New-MFProject
 {
     <#
         .SYNOPSIS
@@ -47,8 +47,8 @@ function new-mfProject
         [Parameter()]
         [String[]]$moduleTags,
         #Root path of the module. Uses the current working directory by default
-        [alias('modulePath')]
-        [string]$path = $(get-location).path,
+        [alias('Path')]
+        [string]$ModulePath = $(get-location).path,
         #Project URI. Will try and read from Git if your using a git repository.
         [Parameter()]
         [string]$projectUri = $(try{git config remote.origin.url}catch{$null}),
@@ -80,23 +80,23 @@ function new-mfProject
 
 
         #I'm not sure why I had this in here. Cannot remember.
-        if($path -like '*\' -or $path -like '*/' )
+        if($ModulePath -like '*\' -or $ModulePath -like '*/' )
         {
             Write-Verbose 'Superfluous \ or / character found at end of modulePath, removing'
-            $path = $path.Substring(0,$($path.Length-1))
-            Write-Verbose "New path = $path"
+            $ModulePath = $ModulePath.Substring(0,$($ModulePath.Length-1))
+            Write-Verbose "New path = $ModulePath"
         }
 
-        $configPath = join-path -path $path -childpath $configFile
+        $configPath = join-path -path $ModulePath -childpath $configFile
 
     }
     
     process{
 
         write-verbose 'Validating Module Path'
-        if(!(test-path $path))
+        if(!(test-path $ModulePath))
         {
-            throw "ModulePath: $path not found"
+            throw "ModulePath: $ModulePath not found"
         }
 
         write-verbose 'Checking for Existing Config'
@@ -107,7 +107,7 @@ function new-mfProject
 
 
         write-verbose 'Create Folder Scaffold'
-        add-mfFilesAndFolders -moduleRoot $path
+        add-mfFilesAndFolders -moduleRoot $ModulePath
 
 
         #Should we use JSON for this, or CLIXML.

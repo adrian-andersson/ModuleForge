@@ -5,7 +5,7 @@ BeforeAll{
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('get-mfFolderItems.ps1','get-mfDependencyTree.ps1','get-mfFolderItemDetails.ps1','new-mfProject.ps1','register-mfLocalPsResourceRepository.ps1','remove-mfLocalPsResourceRepository.ps1','add-mfRepositoryXmlData.ps1')
+        functions = @('Get-MFFolderItems.ps1','Get-MFDependencyTree.ps1','Get-MFFolderItemDetails.ps1','New-MFProject.ps1','Register-MFLocalPsResourceRepository.ps1','Remove-MFLocalPsResourceRepository.ps1','Add-MFRepositoryXmlData.ps1')
         private = @('add-mfFilesAndFolders.ps1')
     }
 
@@ -25,7 +25,7 @@ BeforeAll{
     
     #Load This File
     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
-    $functionName = 'build-mfProject'
+    $functionName = 'Build-MFProject'
     . $fileName
     
     #Create a temp folder so we don't clobber anything
@@ -63,18 +63,18 @@ Describe 'Check Clean Environment' {
     }
 }
 
-Describe 'build-mfProject' {
+Describe 'Build-MFProject' {
     It 'should throw an error if module path does not exist' {
         $params = @{
             version = [semver]::new('1.0.0')
             ModulePath = 'NonExistentPath'
         }
-        { build-mfProject @params } | Should -Throw "Unable to read from NonExistentPath"
+        { Build-MFProject @params } | Should -Throw "Unable to read from NonExistentPath"
     }
 }
 
 
-describe 'build-mfProject' {
+describe 'Build-MFProject' {
     beforeAll {
         write-verbose 'build test module files'
         $testFunction = @(
@@ -163,7 +163,7 @@ describe 'build-mfProject' {
         $textFile -join "`n" | out-file $resourceFilePath -Force
         $validatorFile -join "`n" | out-file $validatorFilePath -Force
         write-verbose 'Building project'
-        build-mfProject -version '1.0.0-PREv001'
+        Build-MFProject -version '1.0.0-PREv001'
     }
 
     It 'Should have created a build folder' {
@@ -248,10 +248,10 @@ describe 'remove-mfLocalPsResourceRepository'  {
 }
 
 
-describe 'build-mfProject' {
+describe 'Build-MFProject' {
     beforeAll {
         Set-Location $testPath
-        build-mfProject -version '1.0.0-PREv002' -noExternalFiles
+        Build-MFProject -version '1.0.0-PREv002' -noExternalFiles
     }
     it 'Should rebuild the project as a single file ' {
         (get-childItem -path 'build' -recurse -filter '*.Validators.ps1').count |Should -Be 0

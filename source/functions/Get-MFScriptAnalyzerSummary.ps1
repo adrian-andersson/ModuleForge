@@ -1,4 +1,4 @@
-function get-mfScriptAnalyzerSummary
+function Get-MFScriptAnalyzerSummary
 {
 
     <#
@@ -31,23 +31,23 @@ function get-mfScriptAnalyzerSummary
     PARAM(
         #Source Path for function files
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string]$sourcePath = $(join-path $(join-path '.' -childPath 'source') -childPath functions),
+        [string]$SourcePath = $(join-path $(join-path '.' -childPath 'source') -childPath functions),
         [parameter()]
         #What severities should we scan for
-        [string[]]$severity = @('Error','Warning','Information'),
+        [string[]]$Severity = @('Error','Warning','Information'),
         #What weights to provide each severity
         [Parameter(dontshow)]
-        [hashtable]$weights = @{
+        [hashtable]$Weights = @{
             Error = 50
             Warning = 15
             Information = 1
         },
         #Set this switch to only get the summary
         [Parameter()]
-        [switch]$suppressOutput,
+        [switch]$SuppressOutput,
         [Parameter()]
         #Set this for what rules to exclude.
-        [string[]]$excludeRules = @(
+        [string[]]$ExcludeRules = @(
             'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
         )
     )
@@ -58,8 +58,8 @@ function get-mfScriptAnalyzerSummary
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         $psScriptAnalyzerSplat = @{
-            severity = $severity
-            ExcludeRule = $excludeRules
+            severity = $Severity
+            ExcludeRule = $ExcludeRules
         }
 
         if(!(get-module -ListAvailable 'PSScriptAnalyzer')){
@@ -69,13 +69,13 @@ function get-mfScriptAnalyzerSummary
     }
     
     process{
-        $functionFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath 
+        $functionFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $SourcePath 
         #Use a GenList to avoid iterative arrays
         $capture = [System.Collections.Generic.List[object]]::new()
         write-verbose 'Try w a ArrayList'
         $functionFiles.foreach{
             remove-variable invokeResult -errorAction ignore
-            if($suppressOutput)
+            if($SuppressOutput)
             {
                 $invokeResult = Invoke-ScriptAnalyzer -path $_.fullname @psScriptAnalyzerSplat
             }else{
@@ -101,7 +101,7 @@ function get-mfScriptAnalyzerSummary
                 [PSCustomObject]@{
                     ScriptName = $_.Name
                     Counter = "E:$Errors W:$Warnings I:$Informations"
-                    Weight = [int]($($weights.Error * $Errors) +$($weights.Warning * $Warnings) +$($weights.Information * $Informations))
+                    Weight = [int]($($Weights.Error * $Errors) +$($Weights.Warning * $Warnings) +$($Weights.Information * $Informations))
                 }
             }
 

@@ -1,4 +1,4 @@
-function get-mfGitChangeLog
+function Get-MFGitChangeLog
 {
 <#
     .SYNOPSIS
@@ -100,7 +100,7 @@ function get-mfGitChangeLog
         [Parameter(ValueFromPipeline, ParameterSetName = 'Default')]
         [Parameter(ValueFromPipeline, ParameterSetName = 'All')]
         [Parameter(ValueFromPipeline, ParameterSetName = 'FromLastTag')]
-        [hashtable]$changeLogTypes = @{
+        [hashtable]$ChangeLogTypes = @{
             'feat' = 'New Features'
             'fix' = 'Bug Fixes'
             'docs' = 'Documentation Changes'
@@ -111,10 +111,10 @@ function get-mfGitChangeLog
         },
         #Switch to get a full changelog for ALL tags
         [Parameter(ParameterSetName = 'All', Mandatory)]
-        [switch]$all,
+        [switch]$All,
         #Switch to get the changelog from the last tag until this point.
         [Parameter(ParameterSetName = 'FromLastTag', Mandatory)]
-        [switch]$fromLastTag
+        [switch]$FromLastTag
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -150,9 +150,9 @@ function get-mfGitChangeLog
         $tags = @(git tag --sort=-creatordate)
         $tagCount  = $tags.count
         write-verbose "Got $tagCount total tags; ($($tags -join ','))"
-        if($tagCount -gt 1 -and -not $fromLastTag)
+        if($tagCount -gt 1 -and -not $FromLastTag)
         {
-            if($all)
+            if($All)
             {
                 write-verbose 'AllFlag set. Getting complete Change Log'
                 $tagRef = 1 #We need a marker to know what the next tag is. Since we start at 0, the ref should start at 1
@@ -172,9 +172,9 @@ function get-mfGitChangeLog
                     }
                         
                     $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
-                    $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+                    $grouped = $commitObjects.where{$_.type -in $ChangeLogTypes.getEnumerator().name} | group-object -property 'type'
                     $grouped.forEach{
-                        $markDown.Add("`n### $($changeLogTypes.$($_.name))`n")
+                        $markDown.Add("`n### $($ChangeLogTypes.$($_.name))`n")
                         $_.group.Message.ForEach{
                             $markDown.Add("- $_")
                         }
@@ -189,7 +189,7 @@ function get-mfGitChangeLog
                 $commitMessages = git log "$($tags[1])..$($tags[0])" --pretty=format:"%s"
                 $markDown.add("## Version: $($tags[1]) --> $($tags[0])`n")
             }
-        }elseIf($fromLastTag -and $tagCount -gt 0){
+        }elseIf($FromLastTag -and $tagCount -gt 0){
                 write-verbose "fromLastTag set. Getting changelog from the last tagging event until now"
                 write-verbose "Found $tagCount total tags. Sorting to get latest and previous"
                 $commitMessages = git log "$($tags[0])..HEAD" --pretty=format:"%s"
@@ -199,13 +199,13 @@ function get-mfGitChangeLog
             $commitMessages = git log --pretty=format:"%s"
         }
 
-        if(!$all -and $commitMessages)
+        if(!$All -and $commitMessages)
         {
             write-verbose 'Getting Commit Objects, grouping and parsing based on changeLogTypes variable'
             $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
-            $grouped = $commitObjects.where{$_.type -in $changeLogTypes.getEnumerator().name} | group-object -property 'type'
+            $grouped = $commitObjects.where{$_.type -in $ChangeLogTypes.getEnumerator().name} | group-object -property 'type'
             $grouped.forEach{
-                $markDown.Add("`n## $($changeLogTypes.$($_.name))`n")
+                $markDown.Add("`n## $($ChangeLogTypes.$($_.name))`n")
                 $_.group.Message.ForEach{
                     $markDown.Add("- $_")
                 }

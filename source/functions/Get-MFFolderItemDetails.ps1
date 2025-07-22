@@ -1,4 +1,4 @@
-function get-mfFolderItemDetails
+function Get-MFFolderItemDetails
 {
 
     <#
@@ -58,7 +58,7 @@ function get-mfFolderItemDetails
     PARAM(
         #Path to source folder.
         [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
-        [string]$path = ((get-item 'source').fullname)
+        [string]$Path = ((get-item 'source').fullname)
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -71,9 +71,9 @@ function get-mfFolderItemDetails
 
         write-verbose 'Creating Scriptblock'
         [scriptblock]$sblock = {
-            param($path,$folderItems)
+            param($Path,$folderItems)
  
-            function Get-mfScriptDetails {
+            function Get-MFScriptDetails {
                 param(
                     [Parameter(Mandatory)]
                     [string]$Path,
@@ -81,22 +81,22 @@ function get-mfFolderItemDetails
                     [string]$RelativePath,
                     [ValidateSet('Class','Function','All')]
                     [Parameter()]
-                    [string]$type = 'All',
+                    [string]$Type = 'All',
                     [Parameter()]
-                    [string]$folderGroup
+                    [string]$FolderGroup
                 )
                 begin{
                     write-verbose 'Checking Item'
-                    if($path[-1] -eq '\' -or $path[-1] -eq '/')
+                    if($Path[-1] -eq '\' -or $Path[-1] -eq '/')
                     {
                         write-verbose 'Removing extra \ or / from path'
-                        $path = $path.Substring(0,$($path.length-1))
-                        write-verbose "New Path $path"
+                        $Path = $Path.Substring(0,$($Path.length-1))
+                        write-verbose "New Path $Path"
                     }
                     $file = get-item $Path
                     if(!$file)
                     {
-                        throw "File not found at: $path"
+                        throw "File not found at: $Path"
                     }
                 }
                 process{
@@ -127,11 +127,11 @@ function get-mfFolderItemDetails
                     }
                     
                     $Classes = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.TypeDefinitionAst] }, $true)
-                    if($type -eq 'All' -or $type -eq 'Function')
+                    if($Type -eq 'All' -or $Type -eq 'Function')
                     {
                         $functionDetails = foreach ($Function in $TopLevelFunctions) {
                             $cmdletDependenciesList = New-Object System.Collections.Generic.List[string]
-                            $typeDependenciesList = New-Object System.Collections.Generic.List[string]
+                            $TypeDependenciesList = New-Object System.Collections.Generic.List[string]
                             $paramTypeDependenciesList = New-Object System.Collections.Generic.List[string]
                             $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
                             $FunctionName = $Function.Name
@@ -144,7 +144,7 @@ function get-mfFolderItemDetails
                             $TypeExpressions.TypeName.FullName.foreach{
                                 $tname = $_
                                 [string]$tnameReplace = $($tname.Replace('[','')).replace(']','')
-                                $typeDependenciesList.add($tnameReplace)
+                                $TypeDependenciesList.add($tnameReplace)
                             }
                             $Parameters = $Function.Body.ParamBlock.Parameters
                             $Parameters.StaticType.Name.foreach{$paramTypeDependenciesList.add($_)}
@@ -162,13 +162,13 @@ function get-mfFolderItemDetails
                             [psCustomObject]@{
                                 functionName = $FunctionName
                                 cmdLets = $cmdletDependenciesList|group-object|Select-Object Name,Count
-                                types = $typeDependenciesList|group-object|Select-Object Name,Count
+                                types = $TypeDependenciesList|group-object|Select-Object Name,Count
                                 parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
                                 Validators = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
                             }
                         }
                     }
-                    if($type -eq 'all' -or $type -eq 'Class')
+                    if($Type -eq 'all' -or $Type -eq 'Class')
                     {
                         $classDetails = foreach ($Class in $Classes) {
                             $className = $Class.Name
@@ -203,9 +203,9 @@ function get-mfFolderItemDetails
                     {
                         $objectHash.relativePath = $RelativePath
                     }
-                    if($folderGroup)
+                    if($FolderGroup)
                     {
-                        $objectHash.group = $folderGroup
+                        $objectHash.group = $FolderGroup
                     }
                     [psCustomObject]$objectHash
                 }
@@ -224,7 +224,7 @@ function get-mfFolderItemDetails
                 }
             }
 
-            $thisPath = (Get-Item $path)
+            $thisPath = (Get-Item $Path)
             $relPathBase = ".$([IO.Path]::DirectorySeparatorChar)$($thisPath.name)"
             
             $itemDetails = $folderItems.ForEach{
@@ -304,7 +304,7 @@ function get-mfFolderItemDetails
 
         [array]$folders = @('enums','validationClasses','classes','dscClasses','functions','private')
         $folderItems = $folders.ForEach{
-            $folderPath = Join-Path $path -ChildPath $_
+            $folderPath = Join-Path $Path -ChildPath $_
             if(!(test-path $folderPath))
             {
                 write-verbose "$folderPath not found. Skipping"
@@ -314,8 +314,8 @@ function get-mfFolderItemDetails
             }
         }
 
-        write-verbose "Starting Job; arguments `nPath:$($path|out-string)`nFiles:`n$($folderItems.name|out-string))"
-        $job = Start-Job -ScriptBlock $sblock -ArgumentList @($path, $folderItems) -WorkingDirectory $path
+        write-verbose "Starting Job; arguments `nPath:$($Path|out-string)`nFiles:`n$($folderItems.name|out-string))"
+        $job = Start-Job -ScriptBlock $sblock -ArgumentList @($Path, $folderItems) -WorkingDirectory $Path
         $job|Wait-Job|out-null
         write-verbose 'Retrieving output and returning result'
         $output = Receive-Job -Job $job

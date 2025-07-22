@@ -44,9 +44,9 @@ BeforeAll{
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
 }
 
-describe 'get-mfLatestSemverFromBuildManifest with prerelease' {
+describe 'Get-MFLatestSemverFromBuildManifest with prerelease' {
     BeforeAll{
-        $latestVer = get-mfLatestSemverFromBuildManifest
+        $latestVer = Get-MFLatestSemverFromBuildManifest
     }
 
     It 'should have a semver object' {
@@ -59,7 +59,7 @@ describe 'get-mfLatestSemverFromBuildManifest with prerelease' {
     }
 }
 
-describe 'get-mfLatestSemverFromBuildManifest without prerelease' {
+describe 'Get-MFLatestSemverFromBuildManifest without prerelease' {
     BeforeAll{
         $manifestSplat = @{
             Description = 'Test manifest'
@@ -67,7 +67,7 @@ describe 'get-mfLatestSemverFromBuildManifest without prerelease' {
             ModuleVersion = '2.3.4'
         }
         New-ModuleManifest @manifestSplat 
-        $latestVer = get-mfLatestSemverFromBuildManifest
+        $latestVer = Get-MFLatestSemverFromBuildManifest
         
 
     }
