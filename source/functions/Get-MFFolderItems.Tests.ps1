@@ -26,10 +26,10 @@ Describe 'Check Clean Environment' {
     }
 }
 
-Describe 'get-mfFolderItems' {
+Describe 'Get-MFFolderItems' {
 
     BeforeAll {
-        $folderItems = get-mfFolderItems -path $sourcePath -psScriptsOnly
+        $folderItems = Get-MFFolderItems -path $sourcePath -psScriptsOnly
         $relativePath = join-path $(join-path '.' -ChildPath 'functions') -ChildPath 'build-mfProject.ps1'
     }
 
@@ -44,10 +44,10 @@ Describe 'get-mfFolderItems' {
 
 }
 
-Describe 'get-mfFolderItems w trailing directory separator' {
+Describe 'Get-MFFolderItems w trailing directory separator' {
     BeforeAll {
         $sourcePath2 = "$sourcePath$([IO.Path]::DirectorySeparatorChar)"
-        $folderItems = get-mfFolderItems -path $sourcePath2 -psScriptsOnly
+        $folderItems = Get-MFFolderItems -path $sourcePath2 -psScriptsOnly
     }
 
     It 'Should have returned more than 10 of items, even though we added a trailing / to the discovery' {
@@ -56,10 +56,10 @@ Describe 'get-mfFolderItems w trailing directory separator' {
 
 }
 
-Describe 'get-mfFolderItems w Copy' {
+Describe 'Get-MFFolderItems w Copy' {
     BeforeAll {
         new-item -ItemType Directory -Path $tempCopyLocation
-        $folderItems = get-mfFolderItems -path $privatePath -copy -destination $tempCopyLocation
+        $folderItems = Get-MFFolderItems -path $privatePath -copy -destination $tempCopyLocation
     }
 
     It 'Should have returned 1 item' {

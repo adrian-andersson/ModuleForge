@@ -11,13 +11,13 @@ function Write-MFModuleDocs
             Additionally, if specified, it includes a changelog based on Git commits.
 
         .EXAMPLE
-            write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
+            Write-MFModuleDocs -ModuleName 'MyCustomModule' -IncludeChangeLog
 
             #### DESCRIPTION
             Builds documentation for `MyCustomModule` and includes a full Git-based changelog (`changeLog.md`) alongside function help files.
 
         .EXAMPLE
-            write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
+            Write-MFModuleDocs -ModuleName 'MyCustomModule' -SkipIndex
 
             #### DESCRIPTION
             Generates function documentation without updating `index.md`.
@@ -42,7 +42,7 @@ function Write-MFModuleDocs
         [alias('module')]
         [ValidateScript({ Get-Module -Name $_ -ErrorAction SilentlyContinue })]
         [string]$ModuleName,
-        #Specifies the subfolder within `docsFolder` where function-specific documentation should be stored. Defaults to `functions`.
+        #Specify the Document Folder. All files and index.md will be created in this and subsequent subfolders. Defaults to docs. Do not us a full path
         [Parameter()]
         [alias('docsPath')]
         [string]$DocsFolder = 'docs',
@@ -84,7 +84,11 @@ function Write-MFModuleDocs
             'basename'
             @{
                 name = 'baseFolder'
-                expression = {$($_.Directory.FullName.replace($DocsFullPath,''))}
+                expression = {
+                    $relative = $_.Directory.FullName -replace [regex]::Escape($DocsFullPath), ''
+                    $normalized = $relative -replace '\\', '/' -replace '//+', '/'
+                    './' + $normalized.TrimStart('/')
+                }
             }
             @{
                 name = 'leaf'
@@ -92,21 +96,42 @@ function Write-MFModuleDocs
             }
             @{
                 name = 'relLink'
-                expression = {("./$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))/$($_.name)").replace('//','/')}
+                expression = {
+                    $relative = $_.Directory.FullName -replace [regex]::Escape($DocsFullPath), ''
+                    $normalized = $relative -replace '\\', '/' -replace '//+', '/'
+                    if($normalized.length -gt 1)
+                    {
+                        #Indicative of in subfolder
+                        './' + $normalized.TrimStart('/') + '/' + $($_.name)
+                    }else{
+                        './' + $($_.name)
+                    }
+                    
+                }
             }
             @{
                 name = 'subjectGroup'
-                expression = {("$($($_.Directory.FullName.replace($DocsFullPath,'')).replace('\','/'))").replace('//','/').trimStart('/')}
+                expression = {
+                    $relative = $_.Directory.FullName -replace [regex]::Escape($DocsFullPath), ''
+                    $leaf = $(split-path -path $relative -leaf)
+                    $parent = $(split-path -path $relative -parent)
+                    if($parent -and $parent.Length -gt 1)
+                    {
+                        $parentNormalized = $parent.TrimStart('/').TrimStart('\') -replace '\\', ' - ' -replace '//+', '  - '
+                        "$($parentNormalized) - $($leaf.TrimStart('/').TrimStart('\'))"
+                    }else{
+                        $leaf.TrimStart('/').TrimStart('\')
+                    }
+                }
             }
         )
-
-        
     }
     
     process{
         #Checks and parses
         write-verbose "In path $ModulePath"
         $DocsFullPath = join-path -Path $ModulePath -ChildPath $DocsFolder
+        write-verbose "DocsFullPath: $($DocsFullPath)"
         if(!(test-path $DocsFullPath))
         {
             write-verbose 'Need to make docs folder as it does not exist'
@@ -152,7 +177,9 @@ function Write-MFModuleDocs
             $indexContent = [System.Collections.Generic.List[string]]::new()
             $indexContent.add("# Documentation Index`n")
             $folderContent = Get-ChildItem -Path  $DocsFullPath -Filter '*.md' -Recurse|Select-Object $customFolderSelect
+            write-verbose "Folder Content: $($folderContent |format-list|out-string)"
             $folderGroup = $folderContent|Group-Object -Property 'subjectGroup'
+            #write-verbose ($folderGroup|Select-Object -Property 'Name','Count'|out-string)
             ($folderGroup.where{$_.'name' -eq ''}.group).foreach{
                 if($_.'basename' -ne 'index')
                 {
@@ -161,7 +188,7 @@ function Write-MFModuleDocs
     
             }
             $folderGroup.where{$_.'name' -ne ''}.forEach{
-
+                write-verbose "Create foldergroup heading: $($($_.'name'))"
                 $indexContent.add("`n## $($_.'name')`n")
                 $_.group.foreach{
                     $indexContent.add("- [$($_.baseName)]($($_.relLink))")

@@ -31,7 +31,7 @@ BeforeAll{
 
 }
 
-Describe 'update-mfProject' {
+Describe 'Update-MFProject' {
     BeforeAll{
         new-item -ItemType Directory -path $testPath
         Set-Location $testPath
@@ -41,7 +41,7 @@ Describe 'update-mfProject' {
         {$update = @{
                 moduleName = 'UpdatedName'
             };
-        update-mfProject $update} | Should -throw
+        Update-MFProject $update} | Should -throw
     }
 
 
@@ -51,7 +51,7 @@ Describe 'update-mfProject' {
     }
 
 }
-Describe 'update-mfProject' {
+Describe 'Update-MFProject' {
     BeforeAll{
         new-item -ItemType Directory -path $testPath
         set-location $testPath
@@ -85,7 +85,7 @@ Describe 'update-mfProject' {
             RequiredModules = @('Microsoft.PowerShell.PSResourceGet','Pester')
             ExternalModuleDependencies = 'PSReadLine'
         }
-        update-mfProject @update
+        Update-MFProject @update
         $config = Import-Clixml -Path $moduleConfig
         $config.moduleName | Should -Be $update.moduleName
         $config.description | Should -Be $update.description

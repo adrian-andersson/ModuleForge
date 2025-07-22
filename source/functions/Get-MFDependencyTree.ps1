@@ -6,14 +6,14 @@ function Get-MFDependencyTree
             Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal or a mermaid flowchart
             
         .DESCRIPTION
-            The `get-mfDependencyTree` function processes an array of objects representing PowerShell scripts and their dependencies.
+            The `Get-MFDependencyTree` function processes an array of objects representing PowerShell scripts and their dependencies.
             It generates a visual representation of the dependency tree, either as a text-based tree in the terminal or as a Mermaid diagram.
             This function helps in understanding the relationships and dependencies between different scripts and modules in a project.
             
         ------------
         .EXAMPLE
-            $folderItemDetails = get-mfFolderItemDetails -path (get-item .\source).fullname
-            get-mfDependencyTree ($folderItemDetails|Select-Object relativePath,dependencies)
+            $folderItemDetails = Get-MFFolderItemDetails -Path (get-item .\source).fullname
+            Get-MFDependencyTree ($folderItemDetails|Select-Object relativePath,dependencies)
             
             #### DESCRIPTION
             Show files and any dependencies

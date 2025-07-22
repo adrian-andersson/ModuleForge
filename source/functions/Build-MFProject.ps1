@@ -14,7 +14,7 @@ function Build-MFProject
             Tag as a pre-release if a semverPreRelease label is found
 
         .EXAMPLE
-            build-mfProject -version '0.12.2-prerelease.1'
+            Build-MFProject -Version '0.12.2-prerelease.1'
             
             #### DESCRIPTION
             Make a PowerShell module from the current folder, and mark it as a pre-release version

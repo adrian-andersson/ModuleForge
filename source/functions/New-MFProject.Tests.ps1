@@ -31,7 +31,7 @@ BeforeAll{
 
 }
 
-Describe 'new-mfProject' {
+Describe 'New-MFProject' {
     BeforeAll{
         new-item -ItemType Directory -path $testPath -force
         set-location $testPath
@@ -41,7 +41,7 @@ Describe 'new-mfProject' {
             ModuleName = 'TestModule'
             description = 'Test description'
         }
-        new-mfProject @params
+        New-MFProject @params
         $moduleConfig = join-path $testPath -ChildPath moduleForgeConfig.xml
         Test-Path -Path $moduleConfig | Should -Be $true
         $sourceFolder = join-path $testPath -ChildPath 'source'
@@ -58,7 +58,7 @@ Describe 'new-mfProject' {
 
 }
 
-Describe 'new-mfProject' {
+Describe 'New-MFProject' {
     BeforeAll{
         new-item -ItemType Directory -path $testPath
         set-location $testPath
@@ -79,7 +79,7 @@ Describe 'new-mfProject' {
             DefaultCommandPrefix = 'tst'
 
         }
-        new-mfProject @params
+        New-MFProject @params
         $config = Import-Clixml -Path $moduleConfig
         $config.moduleName | Should -Be $params.ModuleName
         $config.description | Should -Be $params.description

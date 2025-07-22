@@ -191,7 +191,7 @@ describe 'Build-MFProject' {
 }
 
 
-describe 'register-psRepository'{
+describe 'Register-PSRepository'{
     BeforeAll {
         Set-Location $testPath
         new-item -ItemType Directory -Path $repoTestPath -Force
@@ -204,7 +204,7 @@ describe 'register-psRepository'{
 }
 
 
-describe 'publish-psResource'{
+describe 'Publish-PSResource'{
     BeforeAll {
         Set-Location $testPath
         $psdReference = $(get-childItem -path 'build' -recurse -filter '*.psd1').fullname
@@ -223,7 +223,7 @@ describe 'publish-psResource'{
 
 
 
-describe 'add-mfRepositoryXmlData'{
+describe 'Add-MFRepositoryXmlData'{
     BeforeAll {
         Set-Location $testPath
         $nuPkgRef = $(get-childItem -path $repoTestPath -recurse -filter '*.nupkg').fullname
@@ -238,7 +238,7 @@ describe 'add-mfRepositoryXmlData'{
     }
 }
 
-describe 'remove-mfLocalPsResourceRepository'  {
+describe 'Remove-MFLocalPsResourceRepository'  {
 
     it 'Should unregister the repository Correctly' {
         remove-mfLocalPsResourceRepository -repositoryName $repoName -path $repoTestPath

@@ -5,13 +5,13 @@ function New-MFProject
             Capture some basic parameters, and create the scaffold file structure
             
         .DESCRIPTION
-            The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
+            The New-MFProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
             Whether you're building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
             Think of it as laying the foundation for your module project.
             
         ------------
         .EXAMPLE
-            new-mfProject -ModuleName "MyModule" -description "A module for automating tasks" -moduleAuthors "John Doe" -companyName "MyCompany" -moduleTags "automation", "tasks" -projectUri "https://github.com/username/repo" -iconUri "https://example.com/icon.png" -licenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
+            New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -RconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 
             #### DESCRIPTION
             This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 

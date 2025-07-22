@@ -6,7 +6,7 @@ function Get-MFFolderItemDetails
             This function analyses a PS1 file, returning its content, any functions, classes and dependencies, as well as a relative location
             
         .DESCRIPTION
-            The `get-mfFolderItemDetails` function takes a path to source folder
+            The `Get-MFFolderItemDetails` function takes a path to source folder
             
             It creates a job that generates a details about all found PS1 files,
             including: The content of PS1 files, the names of any functions, the names of any classes, and any inter-related dependencies
@@ -18,7 +18,7 @@ function Get-MFFolderItemDetails
             
         ------------
         .EXAMPLE
-            get-mfFolderItemDetails .\source
+            Get-MFFolderItemDetails .\source
         
         .INPUTS
             [STRING] - Path to Source Folder is accepted as Pipeline Input or direct assignment

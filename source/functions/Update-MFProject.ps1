@@ -11,20 +11,20 @@ function Update-MFProject
             
         ------------
         .EXAMPLE
-            update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module" -moduleAuthors "Jane Doe" -companyName "UpdatedCompany" -moduleTags "updated", "module" -projectUri "https://github.com/username/updated-repo" -iconUri "https://example.com/updated-icon.png" -licenseUri "https://example.com/updated-license" -RequiredModules @("UpdatedModule1", "UpdatedModule2") -ExternalModuleDependencies @("UpdatedDependency1", "UpdatedDependency2") -DefaultCommandPrefix "UpdMod" -PrivateData @{}
+            Update-MFProject -ModuleName "UpdatedModule" -Description "An updated description for the module" -ModuleAuthors "Jane Doe" -CompanyName "UpdatedCompany" -ModuleTags "updated", "module" -ProjectUri "https://github.com/username/updated-repo" -IconUri "https://example.com/updated-icon.png" -LicenseUri "https://example.com/updated-license" -RequiredModules @("UpdatedModule1", "UpdatedModule2") -ExternalModuleDependencies @("UpdatedDependency1", "UpdatedDependency2") -DefaultCommandPrefix "UpdMod" -PrivateData @{}
 
             #### DESCRIPTION
-            This example demonstrates how to use the `update-mfProject` function to update multiple parameters of an existing module project. 
+            This example demonstrates how to use the `Update-MFProject` function to update multiple parameters of an existing module project. 
             It updates the module name, description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
 
             #### OUTPUT
             The function will update the specified parameters in the module project configuration file.
             
         .EXAMPLE
-            update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module"
+            Update-MFProject -ModuleName "UpdatedModule" -Description "An updated description for the module"
 
             #### DESCRIPTION
-            This example demonstrates how to use the `update-mfProject` function to update only the module name and description of an existing module project. 
+            This example demonstrates how to use the `Update-MFProject` function to update only the module name and description of an existing module project. 
             It leaves all other parameters unchanged.
 
             #### OUTPUT

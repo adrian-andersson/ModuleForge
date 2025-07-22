@@ -18,7 +18,7 @@ function Add-MFGithubScaffold
             Please feel free to change the workflows and template to your own needs and preferences.
             
         .EXAMPLE
-            Add-mfGithubScaffold
+            Add-MFGithubScaffold
 
             #### DESCRIPTION
             Copies the `.GitHub` folder from the module's `resource` directory to the current module, skipping existing files.
@@ -27,7 +27,7 @@ function Add-MFGithubScaffold
             Should have a .github folder, with workflows and a PR template
 
         .EXAMPLE
-            Add-mfGithubScaffold -Force
+            Add-MFGithubScaffold -Force
 
             #### DESCRIPTION
             Copies the `.GitHub` scaffold and overwrites existing files in `.github` directory
