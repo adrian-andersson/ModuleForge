@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# remove-mfLocalPsResourceRepository
+# Remove-MFLocalPsResourceRepository
 
 ## SYNOPSIS
 Remove the local test repository that was created with register-mfLocalPsResourceRepository
@@ -13,7 +13,7 @@ Remove the local test repository that was created with register-mfLocalPsResourc
 ## SYNTAX
 
 ```
-remove-mfLocalPsResourceRepository [[-repositoryName] <String>] [[-path] <String>]
+Remove-MFLocalPsResourceRepository [[-RepositoryName] <String>] [[-Path] <String>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -25,12 +25,12 @@ It will also remove the directory that hosted the local repository
 
 ### EXAMPLE 1
 ```
-remove-mfLocalPsResourceRepository
+Remove-MFLocalPsResourceRepository
 ```
 
 ## PARAMETERS
 
-### -repositoryName
+### -RepositoryName
 Name of the repository
 
 ```yaml
@@ -45,7 +45,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
+### -Path
 Root path of the module.
 Uses Temp Path by default
 

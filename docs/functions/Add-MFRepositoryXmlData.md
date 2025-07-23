@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# add-mfRepositoryXmlData
+# Add-MFRepositoryXmlData
 
 ## SYNOPSIS
 Uncompress a nuspec (Which is just a zip with a different extension), parse the XML, add the URL element for the repository, recreate the ZIP file.
@@ -13,8 +13,8 @@ Uncompress a nuspec (Which is just a zip with a different extension), parse the 
 ## SYNTAX
 
 ```
-add-mfRepositoryXmlData [-repositoryUri] <String> [-NugetPackagePath] <String> [[-ExtractionPath] <Object>]
- [-force] [[-branch] <String>] [[-commit] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Add-MFRepositoryXmlData [-RepositoryUri] <String> [-NugetPackagePath] <String> [[-ExtractionPath] <Object>]
+ [-Force] [[-Branch] <String>] [[-Commit] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -30,7 +30,7 @@ This function provides a work-around
 
 ### EXAMPLE 1
 ```
-add-repositoryXmlData -RepositoryUri 'https://github.com/gituser/example' -NugetPackagePath = 'c:\example\module.1.2.3-beta.4.nupkg -branch 'main' -commit '1234123412341234Y'
+Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/gituser/example' -NugetPackagePath = 'c:\example\module.1.2.3-beta.4.nupkg -branch 'main' -commit '1234123412341234Y'
 ```
 
 #### DESCRIPTION
@@ -38,7 +38,7 @@ Unpack module.1.2.3-beta.4.nupkg to a temp location, open the NUSPEC xml and app
 
 ## PARAMETERS
 
-### -repositoryUri
+### -RepositoryUri
 RepositoryUri
 
 ```yaml
@@ -83,7 +83,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -force
+### -Force
 Use force to ignore remove prompt
 
 ```yaml
@@ -98,7 +98,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -branch
+### -Branch
 What branch to add to NUSPEC (Optional)
 
 ```yaml
@@ -113,7 +113,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -commit
+### -Commit
 What commit to add to NUSPEC (Optional)
 
 ```yaml

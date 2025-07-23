@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfFolderItemDetails
+# Get-MFFolderItemDetails
 
 ## SYNOPSIS
 This function analyses a PS1 file, returning its content, any functions, classes and dependencies, as well as a relative location
@@ -13,11 +13,11 @@ This function analyses a PS1 file, returning its content, any functions, classes
 ## SYNTAX
 
 ```
-get-mfFolderItemDetails [[-path] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFFolderItemDetails [[-Path] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The \`get-mfFolderItemDetails\` function takes a path to source folder
+The \`Get-MFFolderItemDetails\` function takes a path to source folder
 
 It creates a job that generates a details about all found PS1 files,
 including: The content of PS1 files, the names of any functions, the names of any classes, and any inter-related dependencies
@@ -33,12 +33,12 @@ This function is primary used to build dependency trees and during build to get 
 
 ### EXAMPLE 1
 ```
-get-mfFolderItemDetails .\source
+Get-MFFolderItemDetails .\source
 ```
 
 ## PARAMETERS
 
-### -path
+### -Path
 Path to source folder.
 
 ```yaml

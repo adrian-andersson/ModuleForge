@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# new-mfProject
+# New-MFProject
 
 ## SYNOPSIS
 Capture some basic parameters, and create the scaffold file structure
@@ -13,15 +13,15 @@ Capture some basic parameters, and create the scaffold file structure
 ## SYNTAX
 
 ```
-new-mfProject [-ModuleName] <String> [-description] <String> [[-minimumPsVersion] <Version>]
- [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-path] <String>]
+New-MFProject [-ModuleName] <String> [-description] <String> [[-minimumPsVersion] <Version>]
+ [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-ModulePath] <String>]
  [[-projectUri] <String>] [[-iconUri] <String>] [[-licenseUri] <String>] [[-configFile] <String>]
  [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String>]
  [[-PrivateData] <Object[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The new-mfProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
+The New-MFProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
 Whether you're building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
 Think of it as laying the foundation for your module project.
 
@@ -31,7 +31,7 @@ Think of it as laying the foundation for your module project.
 
 ### EXAMPLE 1
 ```
-new-mfProject -ModuleName "MyModule" -description "A module for automating tasks" -moduleAuthors "John Doe" -companyName "MyCompany" -moduleTags "automation", "tasks" -projectUri "https://github.com/username/repo" -iconUri "https://example.com/icon.png" -licenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
+New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -RconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 ```
 
 #### DESCRIPTION
@@ -139,14 +139,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
+### -ModulePath
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: modulePath
+Aliases: Path
 
 Required: False
 Position: 7

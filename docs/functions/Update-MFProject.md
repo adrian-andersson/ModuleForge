@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# update-mfProject
+# Update-MFProject
 
 ## SYNOPSIS
 Update the parameters of a moduleForge project
@@ -13,11 +13,11 @@ Update the parameters of a moduleForge project
 ## SYNTAX
 
 ```
-update-mfProject [[-ModuleName] <String>] [[-description] <String>] [[-minimumPsVersion] <Version>]
- [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-projectUri] <String>]
- [[-iconUri] <String>] [[-licenseUri] <String>] [[-RequiredModules] <Object[]>]
+Update-MFProject [[-ModuleName] <String>] [[-Description] <String>] [[-MinimumPsVersion] <Version>]
+ [[-ModuleAuthors] <String[]>] [[-CompanyName] <String>] [[-ModuleTags] <String[]>] [[-ProjectUri] <String>]
+ [[-IconUri] <String>] [[-LicenseUri] <String>] [[-RequiredModules] <Object[]>]
  [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String[]>] [[-PrivateData] <Object[]>]
- [[-path] <String>] [[-configFile] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [[-ModulePath] <String>] [[-ConfigFile] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -30,11 +30,11 @@ having to recreate the whole project file from scratch.
 
 ### EXAMPLE 1
 ```
-update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module" -moduleAuthors "Jane Doe" -companyName "UpdatedCompany" -moduleTags "updated", "module" -projectUri "https://github.com/username/updated-repo" -iconUri "https://example.com/updated-icon.png" -licenseUri "https://example.com/updated-license" -RequiredModules @("UpdatedModule1", "UpdatedModule2") -ExternalModuleDependencies @("UpdatedDependency1", "UpdatedDependency2") -DefaultCommandPrefix "UpdMod" -PrivateData @{}
+Update-MFProject -ModuleName "UpdatedModule" -Description "An updated description for the module" -ModuleAuthors "Jane Doe" -CompanyName "UpdatedCompany" -ModuleTags "updated", "module" -ProjectUri "https://github.com/username/updated-repo" -IconUri "https://example.com/updated-icon.png" -LicenseUri "https://example.com/updated-license" -RequiredModules @("UpdatedModule1", "UpdatedModule2") -ExternalModuleDependencies @("UpdatedDependency1", "UpdatedDependency2") -DefaultCommandPrefix "UpdMod" -PrivateData @{}
 ```
 
 #### DESCRIPTION
-This example demonstrates how to use the \`update-mfProject\` function to update multiple parameters of an existing module project. 
+This example demonstrates how to use the \`Update-MFProject\` function to update multiple parameters of an existing module project. 
 It updates the module name, description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
 
 #### OUTPUT
@@ -42,11 +42,11 @@ The function will update the specified parameters in the module project configur
 
 ### EXAMPLE 2
 ```
-update-mfProject -ModuleName "UpdatedModule" -description "An updated description for the module"
+Update-MFProject -ModuleName "UpdatedModule" -Description "An updated description for the module"
 ```
 
 #### DESCRIPTION
-This example demonstrates how to use the \`update-mfProject\` function to update only the module name and description of an existing module project. 
+This example demonstrates how to use the \`Update-MFProject\` function to update only the module name and description of an existing module project. 
 It leaves all other parameters unchanged.
 
 #### OUTPUT
@@ -69,7 +69,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -description
+### -Description
 A description of your module.
 Is used as the descriptor in the module repository
 
@@ -85,7 +85,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -minimumPsVersion
+### -MinimumPsVersion
 Minimum PowerShell version.
 Defaults to 7.2 as this is the current LTS version
 
@@ -101,7 +101,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -moduleAuthors
+### -ModuleAuthors
 Who are the primary module authors.
 Can expand later with add-mfmoduleAuthors command
 
@@ -117,7 +117,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -companyName
+### -CompanyName
 Company Name.
 If you are building this module for your organisation, this is where it goes
 
@@ -133,7 +133,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -moduleTags
+### -ModuleTags
 Module Tags.
 Used to help discoverability and compatibility in package repositories
 
@@ -149,7 +149,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -projectUri
+### -ProjectUri
 Source Code Repository to use, i.e.
 your repositories github/azure devops uri
 
@@ -165,7 +165,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -iconUri
+### -IconUri
 A URL to an icon representing this module.
 
 ```yaml
@@ -180,7 +180,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -licenseUri
+### -LicenseUri
 URI to use for your projects license.
 Will try and use the license file if a projectUri is found
 
@@ -256,14 +256,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
+### -ModulePath
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: modulePath
+Aliases: path
 
 Required: False
 Position: 14
@@ -272,7 +272,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -configFile
+### -ConfigFile
 Module Config File
 
 ```yaml

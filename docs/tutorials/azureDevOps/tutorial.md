@@ -22,10 +22,10 @@ Here is a code-snippet to help get you started
 
 ```PowerShell
 #Use the legacy PowerShell Get command to get PSResourceGet
-install-module Microsoft.PowerShell.PSResourceGet
+Install-Module Microsoft.PowerShell.PSResourceGet
 
 #Switch to PSResourceGet for the remainder
-install-psresource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleForge
+Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleForge
 ```
 
 ## Part 1 - New Repository
@@ -43,16 +43,16 @@ install-psresource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 
 ## Part 2 - Create a new ModuleForge Project
 
-1. From your repository directory, run the new-mfProject function to build the files out, as per the example below
+1. From your repository directory, run the `New-MFProject` function to build the files out, as per the example below
 2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory shoud have a number of subfolders
-3. Run the `add-mfAzureDevOpsScaffold` function to add 3 Azure Pipeline YML files, and a PR template to the `.azuredevops` directory of your module folder
+3. Run the `Add-MFAzureDevOpsScaffold` function to add 3 Azure Pipeline YML files, and a PR template to the `.azuredevops` directory of your module folder
 4. Check the files were created
 5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
    - You should use a proper commit message, something like `chore: Initialised ModuleForge project with scaffolding & workflows'
 
 ```PowerShell
-new-mfProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
-add-mfAzureDevOpsScaffold
+New-MFProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
+Add-MFAzureDevOpsScaffold
 ```
 
 ## Part 3 - Add our Azure Pipelines and Build Policies
@@ -111,7 +111,7 @@ add-mfAzureDevOpsScaffold
 2. Create a branch called `feature/hello-world-function`. 
     - You can deviate from this naming convention if you like. The objective is to be consistant.
 3. Create a new file in the `functions` sub-directory of the `source` directory
-   - Call the file `get-helloWorld.ps1`
+   - Call the file `Get-HelloWorld.ps1`
 4. Code up your powershell function code.
    - An example is provided below
    - Make sure you include some form of Inline Help and follow good coding practices
@@ -119,7 +119,7 @@ add-mfAzureDevOpsScaffold
 > Hint: In VSCode you can create a branch by clicking on the current branch name in the bottom left corner, then in the dialog box, selecting `+Create New Branch`. VSCode will automatically switch you to the new branch
 
 ```PowerShell
-function get-helloWorld
+function Get-HelloWorld
 {
 
     <#
@@ -130,13 +130,13 @@ function get-helloWorld
             Return Hello World. Allows you to overwrite the default name of world with 
             
         .EXAMPLE
-            get-helloWorld
+            Get-HelloWorld
             
             #### OUTPUT
             Returns "Hello World!"
 
         .EXAMPLE
-            get-helloWorld -name 'James'
+            Get-HelloWorld -name 'James'
             
             #### OUTPUT
             Returns "Hello James!"
@@ -146,7 +146,7 @@ function get-helloWorld
     PARAM(
         #Name param, specify to override the default of World
         [Parameter()]
-        [string]$name = 'World'
+        [string]$Name = 'World'
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -157,7 +157,7 @@ function get-helloWorld
     }
     
     process{
-        "Hello $name!"
+        "Hello $Name!"
     }
     
 }
@@ -167,7 +167,7 @@ function get-helloWorld
 ### Creating our Pester Test
 
 1. Create a new file in the `functions` sub-directory of the `source` directory
-   - Call the file `get-helloWorld.Tests.ps1`
+   - Call the file `Get-HelloWorld.Tests.ps1`
    - It is important that `Tests` is in the correct, capital-case format for `invoke-pester` to work.
 2. Code up your Pester Test. You can use the example below
    - Don't forget to load your functions file in a before all block
@@ -179,9 +179,9 @@ BeforeAll{
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
 }
 
-Describe "get-helloWorld Default Parameters" {
+Describe "Get-HelloWorld Default Parameters" {
     BeforeAll {
-        $hello = get-helloWorld
+        $hello = Get-HelloWorld
     }
 
     It 'Should not be null or empty' {
@@ -193,9 +193,9 @@ Describe "get-helloWorld Default Parameters" {
     }
 }
 
-Describe "get-helloWorld Custom Name" {
+Describe "Get-HelloWorld Custom Name" {
     BeforeAll {
-        $hello = get-helloWorld -name 'James'
+        $hello = Get-HelloWorld -name 'James'
     }
 
     It 'Should not be null or empty' {
@@ -216,7 +216,7 @@ Describe "get-helloWorld Custom Name" {
     - If everything is working as intended, you should have passed the 4 tests (represented in our Pester test as 'It' blocks)
 
 ```PowerShell
-invoke-pester '.\source\functions\get-helloworld.Tests.ps1'
+Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 ```
 
 ![invoke-pester](./img/invokePester.png)
@@ -291,7 +291,7 @@ To register with a credential, see the example code below
 ### Create a credential object
 ### Your username will be your Azure DevOps account email
 ### The password will be the PAT you created
-$azdCredential = get-credential
+$azdCredential = Get-Credential
 
 #use the register-psResourceRepository commandlet to register
 #This is easier to do with splatting
@@ -301,10 +301,12 @@ $splat = @{
     Uri = 'https://pkgs.dev.azure.com/<ORGANIZATION_NAME>/<PROJECT_NAME>/_packaging/<FEED_NAME>/nuget/v3/index.json'
     Trusted = $true
 }
+#Splat it in
+Register-PSResourceRepository @splat
 
 #Once registered, you can use it in a similar fashion to PSGallery
 #Don't forget to specify the -PreRelease flag
-Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages -Credential $azdCredential
+Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed -Credential $azdCredential
 
 ```
 
@@ -324,16 +326,18 @@ $credentialInfo = [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialIn
 #Don't forget to swap out the azdCredential with your actual azure account
 #
 $splat = @{
-    Name = 'myGithubPackages'
+    Name = 'myAzureDevopsFeed'
     Uri = 'https://pkgs.dev.azure.com/<ORGANIZATION_NAME>/<PROJECT_NAME>/_packaging/<FEED_NAME>/nuget/v3/index.json'
     Trusted = $true
     CredentialInfo = $credentialInfo
 }
+#Splat it in
+Register-PSResourceRepository @splat
 
 #Once registered, you can use it in a similar fashion to PSGallery
 #Don't forget to specify the -PreRelease flag
 #Because we supplied a CredentialInfo pointer, Find-PSResource will automatically open our vault to retrieve the secret when required
-Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages
+Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed
 
 ```
 

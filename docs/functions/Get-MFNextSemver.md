@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfNextSemver
+# Get-MFNextSemver
 
 ## SYNOPSIS
 Increments the version of a Semantic Version (SemVer) object.
@@ -14,24 +14,24 @@ Increments the version of a Semantic Version (SemVer) object.
 
 ### default (Default)
 ```
-get-mfNextSemver -version <SemanticVersion> [-increment <String>] [-stableRelease]
+Get-MFNextSemver -Version <SemanticVersion> [-Increment <String>] [-StableRelease]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### preRelease
 ```
-get-mfNextSemver -version <SemanticVersion> [-increment <String>] [-prerelease] [-preReleaseLabel <String>]
+Get-MFNextSemver -Version <SemanticVersion> [-Increment <String>] [-PreRelease] [-PreReleaseLabel <String>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### Initial
 ```
-get-mfNextSemver [-preReleaseLabel <String>] [-initialPreRelease] [-ProgressAction <ActionPreference>]
+Get-MFNextSemver [-PreReleaseLabel <String>] [-InitialPreRelease] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The \`get-mfNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+The \`Get-MFNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
 It can handle major, minor, and patch increments. 
 The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
@@ -39,8 +39,8 @@ The function also handles pre-release versions and allows the user to optionally
 
 ### EXAMPLE 1
 ```
-$version = [SemVer]::new('1.0.0')
-get-mfNextSemver -version $version -increment 'Minor' -prerelease
+$Version = [SemVer]::new('1.0.0')
+Get-MFNextSemver -Version $Version -Increment 'Minor' -PreRelease
 ```
 
 #### DESCRIPTION
@@ -52,8 +52,8 @@ The output will be '1.1.0-prerelease.1'.
 
 ### EXAMPLE 2
 ```
-$version = [SemVer]::new('2.0.0-prerelease.1')
-get-mfNextSemver -version $version -increment 'Major'
+$Version = [SemVer]::new('2.0.0-prerelease.1')
+Get-MFNextSemver -Version $Version -Increment 'Major'
 ```
 
 #### DESCRIPTION
@@ -65,7 +65,7 @@ The output will be '3.0.0'.
 
 ## PARAMETERS
 
-### -version
+### -Version
 Semver Version
 
 ```yaml
@@ -80,7 +80,7 @@ Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
-### -increment
+### -Increment
 What are we incrementing
 
 ```yaml
@@ -95,7 +95,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -prerelease
+### -PreRelease
 Is this a prerelease
 
 ```yaml
@@ -110,7 +110,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -stableRelease
+### -StableRelease
 Is this a prerelease
 
 ```yaml
@@ -125,7 +125,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -preReleaseLabel
+### -PreReleaseLabel
 Optional override the prerelease label.
 If not supplied will use 'prerelease'
 
@@ -141,7 +141,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -initialPreRelease
+### -InitialPreRelease
 Is this the initial prerelease
 
 ```yaml

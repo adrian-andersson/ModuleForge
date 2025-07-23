@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# register-mfLocalPsResourceRepository
+# Register-MFLocalPsResourceRepository
 
 ## SYNOPSIS
 Add a local file-based PowerShell repository into the systems temp location
@@ -13,7 +13,7 @@ Add a local file-based PowerShell repository into the systems temp location
 ## SYNTAX
 
 ```
-register-mfLocalPsResourceRepository [[-repositoryName] <String>] [[-path] <String>]
+Register-MFLocalPsResourceRepository [[-RepositoryName] <String>] [[-Path] <String>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -25,7 +25,7 @@ for example, to add git data to the nuspec
 
 ### EXAMPLE 1
 ```
-register-mfLocalPsResourceRepository            
+Register-MFLocalPsResourceRepository      
 #### DESCRIPTION
 Create a powershell file repository using default values.
 ```
@@ -35,7 +35,7 @@ Path will be where-ever \[System.IO.Path\]::GetTempPath() points
 
 ## PARAMETERS
 
-### -repositoryName
+### -RepositoryName
 Name of the repository
 
 ```yaml
@@ -50,7 +50,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
+### -Path
 Root path of the module.
 Uses Temp Path by default
 

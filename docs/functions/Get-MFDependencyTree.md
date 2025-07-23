@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfDependencyTree
+# Get-MFDependencyTree
 
 ## SYNOPSIS
 Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal or a mermaid flowchart
@@ -13,12 +13,12 @@ Generate a dependency tree of ModuleForge PowerShell scripts, either in terminal
 ## SYNTAX
 
 ```
-get-mfDependencyTree [[-referenceData] <Object[]>] [[-outputType] <String>]
+Get-MFDependencyTree [[-ReferenceData] <Object[]>] [[-OutputType] <String>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The \`get-mfDependencyTree\` function processes an array of objects representing PowerShell scripts and their dependencies.
+The \`Get-MFDependencyTree\` function processes an array of objects representing PowerShell scripts and their dependencies.
 It generates a visual representation of the dependency tree, either as a text-based tree in the terminal or as a Mermaid diagram.
 This function helps in understanding the relationships and dependencies between different scripts and modules in a project.
 
@@ -28,8 +28,8 @@ This function helps in understanding the relationships and dependencies between 
 
 ### EXAMPLE 1
 ```
-$folderItemDetails = get-mfFolderItemDetails -path (get-item .\source).fullname
-get-mfDependencyTree ($folderItemDetails|Select-Object relativePath,dependencies)
+$folderItemDetails = Get-MFFolderItemDetails -Path (get-item .\source).fullname
+Get-MFDependencyTree ($folderItemDetails|Select-Object relativePath,dependencies)
 ```
 
 #### DESCRIPTION
@@ -37,7 +37,7 @@ Show files and any dependencies
 
 ## PARAMETERS
 
-### -referenceData
+### -ReferenceData
 What Reference Data are we looking at.
 See function example for how to retrieve
 
@@ -53,8 +53,8 @@ Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
-### -outputType
-{{ Fill outputType Description }}
+### -OutputType
+{{ Fill OutputType Description }}
 
 ```yaml
 Type: String

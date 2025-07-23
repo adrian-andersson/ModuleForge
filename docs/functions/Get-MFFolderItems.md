@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# get-mfFolderItems
+# Get-MFFolderItems
 
 ## SYNOPSIS
 Retrieves a filtered list of files from a specified folder, processing '.mfignore' and '.mforder' rules.
@@ -14,17 +14,17 @@ Retrieves a filtered list of files from a specified folder, processing '.mfignor
 
 ### Default (Default)
 ```
-get-mfFolderItems -path <String> [-psScriptsOnly] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFFolderItems -Path <String> [-PSScriptsOnly] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### Copy
 ```
-get-mfFolderItems -path <String> [-psScriptsOnly] [-destination <String>] [-copy]
+Get-MFFolderItems -Path <String> [-PSScriptsOnly] [-Destination <String>] [-Copy]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The 'get-mfFolderItems' function scans a folder and applies filtering rules to return a curated list of files.
+The 'Get-MFFolderItems' function scans a folder and applies filtering rules to return a curated list of files.
 It offers additional filtering logic, such as:
 - Ignoring entries specified in \`.mfignore\`.
 - Filtering out non-PS1 files using a switch (\`-psScriptsOnly\`).
@@ -39,7 +39,7 @@ The -copy switch is added to cleanly copy resources and binaries with build-mfPr
 
 ### EXAMPLE 1
 ```
-get-mfFolderItems -path '.\source\functions' -psScriptsOnly
+Get-MFFolderItems -Path '.\source\functions' -PSScriptsOnly
 ```
 
 #### DESCRIPTION
@@ -47,7 +47,7 @@ Scans \`.\source\functions\`, retrieves only \`.ps1\` files, and excludes files 
 
 ### EXAMPLE 2
 ```
-get-mfFolderItems -path '.\source\functions' -destination '.\build\functions' -copy
+Get-MFFolderItems -Path '.\source\functions' -Destination '.\build\functions' -Copy
 ```
 
 #### DESCRIPTION
@@ -55,13 +55,13 @@ Scans \`.\source\functions\`, retrieves filtered files, and copies them to \`.\b
 
 ## PARAMETERS
 
-### -path
+### -Path
 Path to get items from
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: s
+Aliases:
 
 Required: True
 Position: Named
@@ -70,7 +70,7 @@ Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
-### -psScriptsOnly
+### -PSScriptsOnly
 Flag to copy scripts only
 
 ```yaml
@@ -85,7 +85,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -destination
+### -Destination
 Flag to copy scripts only
 
 ```yaml
@@ -100,7 +100,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -copy
+### -Copy
 Flag to actually copy files and not just output
 
 ```yaml

@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# build-mfProject
+# Build-MFProject
 
 ## SYNOPSIS
 Grab all the files from source, compile them into a single PowerShell module file, create a new module manifest.
@@ -13,8 +13,8 @@ Grab all the files from source, compile them into a single PowerShell module fil
 ## SYNTAX
 
 ```
-build-mfProject [-version] <SemanticVersion> [[-path] <String>] [[-configFile] <String>] [-exportClasses]
- [-exportEnums] [-noExternalFiles] [[-releaseNotes] <String>] [-includeReleaseNotesInDescription]
+Build-MFProject [-Version] <SemanticVersion> [[-ModulePath] <String>] [[-ConfigFile] <String>] [-ExportClasses]
+ [-ExportEnums] [-NoExternalFiles] [[-ReleaseNotes] <String>] [-IncludeReleaseNotesInDescription]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -30,7 +30,7 @@ Tag as a pre-release if a semverPreRelease label is found
 
 ### EXAMPLE 1
 ```
-build-mfProject -version '0.12.2-prerelease.1'
+Build-MFProject -Version '0.12.2-prerelease.1'
 ```
 
 #### DESCRIPTION
@@ -38,7 +38,7 @@ Make a PowerShell module from the current folder, and mark it as a pre-release v
 
 ## PARAMETERS
 
-### -version
+### -Version
 What version are we building?
 
 ```yaml
@@ -53,14 +53,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -path
+### -ModulePath
 Root path of the module.
 Uses the current working directory by default
 
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases: ModulePath
+Aliases: Path
 
 Required: False
 Position: 2
@@ -69,8 +69,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -configFile
-{{ Fill configFile Description }}
+### -ConfigFile
+{{ Fill ConfigFile Description }}
 
 ```yaml
 Type: String
@@ -84,7 +84,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -exportClasses
+### -ExportClasses
 Use this flag to put any classes in ScriptsToProcess
 
 ```yaml
@@ -99,7 +99,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -exportEnums
+### -ExportEnums
 Use this flag to put any enums in ScriptsToProcess
 
 ```yaml
@@ -114,7 +114,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -noExternalFiles
+### -NoExternalFiles
 Use this to not put anything in nestedmodules, making everything a single file.
 By default validators are put in a separate nestedmodule script to ensure they are loaded properly
 
@@ -130,8 +130,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -releaseNotes
-{{ Fill releaseNotes Description }}
+### -ReleaseNotes
+{{ Fill ReleaseNotes Description }}
 
 ```yaml
 Type: String
@@ -145,8 +145,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -includeReleaseNotesInDescription
-{{ Fill includeReleaseNotesInDescription Description }}
+### -IncludeReleaseNotesInDescription
+{{ Fill IncludeReleaseNotesInDescription Description }}
 
 ```yaml
 Type: SwitchParameter
