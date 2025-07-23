@@ -97,7 +97,10 @@ jobs:
           }else{
             write-warning 'No module found'
           }
-          $moduleFound = get-module $moduleName -listAvailable
+          #Need to handle case insensitive
+          $moduleFound = $(Get-Module -ListAvailable).where{
+            $_.Name -ieq $moduleName
+          }           
           if($moduleFound)
           {
             write-verbose "ModuleFound:`n$($moduleFound|out-string)"
