@@ -20,7 +20,7 @@ This tutorial will demonstrate how to create a simple, single-function module us
 
 Here is a code-snippet to help get you started
 
-```PowerShell
+```powershell
 #Use the legacy PowerShell Get command to get PSResourceGet
 Install-Module Microsoft.PowerShell.PSResourceGet
 
@@ -50,7 +50,7 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
    - You should use a proper commit message, something like `chore: Initialised ModuleForge project with scaffolding & workflows'
 
-```PowerShell
+```powershell
 New-MFProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
 Add-MFAzureDevOpsScaffold
 ```
@@ -118,7 +118,7 @@ Add-MFAzureDevOpsScaffold
 
 > Hint: In VSCode you can create a branch by clicking on the current branch name in the bottom left corner, then in the dialog box, selecting `+Create New Branch`. VSCode will automatically switch you to the new branch
 
-```PowerShell
+```powershell
 function Get-HelloWorld
 {
 
@@ -173,7 +173,7 @@ function Get-HelloWorld
    - Don't forget to load your functions file in a before all block
    - This can be achieved dynamically with this little piece of code: `. $PSCommandPath.Replace('.Tests.ps1','.ps1')`
 
-```PowerShell
+```powershell
 BeforeAll{
     #Load The Function File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
@@ -215,7 +215,7 @@ Describe "Get-HelloWorld Custom Name" {
     - We can do that from our invoking pester from our working directory, as per below
     - If everything is working as intended, you should have passed the 4 tests (represented in our Pester test as 'It' blocks)
 
-```PowerShell
+```powershell
 Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 ```
 
@@ -287,7 +287,7 @@ You can read more about the next steps [here](https://learn.microsoft.com/en-us/
 #### Using Azure DevOps Package Feed with Credentials
 To register with a credential, see the example code below
 
-```PowerShell
+```powershell
 ### Create a credential object
 ### Your username will be your Azure DevOps account email
 ### The password will be the PAT you created
@@ -314,7 +314,7 @@ Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed 
 
 To register with  `Microsoft.PowerShell.SecretManagement`, first, create a new secret in your secret vault. The username should be your Azure DevOps account email, and the password the PAT you created
 
-```PowerShell
+```powershell
 ### Create a pointer to your secret and vault
 ### Your username will be your AZD email
 ### The password will be the AZD PAT you created

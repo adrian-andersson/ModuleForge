@@ -50,7 +50,7 @@ As such, care must be taken to ensure that newer preRelease versions are not inc
 
 `1.0.0-prev2` will order more recently than than `1.0.0-prev10`, even though from a readability stand-point v2 is much lower than v10.
 
-```PowerShell
+```powershell
 
 $versionStrings = @(
     '1.0.0-prev1'
@@ -103,7 +103,7 @@ As such, in order to clearly identify correct versions whilst maintaining simpli
 
 Here's a quick PowerShell snippet to show how this may work in practice
 
-```PowerShell
+```powershell
 $versionStrings = @(
     '1.0.0-prev001' #The first build
     '1.0.0-prev002' #Tested and fixed some bugs
