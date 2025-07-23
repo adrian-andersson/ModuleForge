@@ -8,7 +8,7 @@ I find this a little too rigid in practice, so it's best used if you need a spec
 
 I find that using `ExternalModuleDependencies` is more flexible, it puts the onus of installing the dependency back on to the user. Then in order to make it clear, I'll often put something like this in the begin block of my functions that have a dependency:
 
-```Powershell
+```powershell
 Begin {
 #...
 $requiredModules = @(
@@ -30,7 +30,7 @@ $requiredModules.foreach{
 
 And if I have lots of functions that might have such dependencies, I tend to make a private function that just does this, and call that in the begin block.
 
-```Powershell
+```powershell
 function test-moduleDependencies
 #...
 $requiredModules = @(

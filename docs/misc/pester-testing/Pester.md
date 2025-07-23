@@ -19,7 +19,7 @@ A better way, and the way Pester was meant to work, would be to run Pester on th
 
 I've solved this by adding a `get-mfDependencyTree` function to moduleForge, you can use it like this
 
-```PowerShell
+```powershell
 $folderItemDetails = get-mfFolderItemDetails -path $sourcePath
 get-mfDependencyTree -referenceData $($folderItemDetails|Select-Object relativePath,Dependencies)
 
@@ -27,7 +27,7 @@ get-mfDependencyTree -referenceData $($folderItemDetails|Select-Object relativeP
 
 That will output this:
 
-```PowerShell
+```powershell
 .\source\functions\build-mfProject.ps1
      >--DEPENDS-ON--> .\source\functions\get-mfDependencyTree.ps1
      >--DEPENDS-ON--> .\source\functions\get-mfFolderItemDetails.ps1
@@ -42,7 +42,7 @@ That will output this:
 And then in the BeforeAll block of the Pester Tests, I just include the relevant dependencies.
 I've simplified this for my pester tests with this code:
 
-```PowerShell
+```powershell
 BeforeAll{
 
     #Reference Current Path
