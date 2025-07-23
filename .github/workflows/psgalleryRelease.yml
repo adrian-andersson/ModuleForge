@@ -98,6 +98,9 @@ jobs:
             write-warning 'No module found'
           }
           #Need to handle case insensitive
+          $allModules = $(Get-Module -ListAvailable)
+          write-verbose "All Found Modules:`n$($allModules|format-table|out-string)"
+          write-verbose "Checking for $moduleName installation"
           $moduleFound = $(Get-Module -ListAvailable).where{
             $_.Name -ieq $moduleName
           }           
