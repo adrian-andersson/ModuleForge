@@ -27,7 +27,7 @@ Additionally, if specified, it includes a changelog based on Git commits.
 
 ### EXAMPLE 1
 ```
-write-mfModuleDocs -ModuleName 'MyCustomModule' -includeChangeLog
+Write-MFModuleDocs -ModuleName 'MyCustomModule' -IncludeChangeLog
 ```
 
 #### DESCRIPTION
@@ -35,7 +35,7 @@ Builds documentation for \`MyCustomModule\` and includes a full Git-based change
 
 ### EXAMPLE 2
 ```
-write-mfModuleDocs -ModuleName 'MyCustomModule' -skipIndex
+Write-MFModuleDocs -ModuleName 'MyCustomModule' -SkipIndex
 ```
 
 #### DESCRIPTION
@@ -75,8 +75,10 @@ Accept wildcard characters: False
 ```
 
 ### -DocsFolder
-Specifies the subfolder within \`docsFolder\` where function-specific documentation should be stored.
-Defaults to \`functions\`.
+Specify the Document Folder.
+All files and index.md will be created in this and subsequent subfolders.
+Defaults to docs.
+Do not us a full path
 
 ```yaml
 Type: String

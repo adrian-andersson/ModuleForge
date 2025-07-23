@@ -33,7 +33,7 @@ Please feel free to change the workflows and template to your own needs and pref
 
 ### EXAMPLE 1
 ```
-add-mfAzureDevOpsScaffold
+Add-MFAzureDevOpsScaffold
 ```
 
 #### DESCRIPTION
@@ -44,7 +44,7 @@ Should have a .azuredevops folder, with pipelines and a PR template
 
 ### EXAMPLE 2
 ```
-add-mfAzureDevOpsScaffold -Force
+Add-MFAzureDevOpsScaffold -Force
 ```
 
 #### DESCRIPTION

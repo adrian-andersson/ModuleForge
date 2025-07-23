@@ -17,7 +17,7 @@ Get-MFFolderItemDetails [[-Path] <String>] [-ProgressAction <ActionPreference>] 
 ```
 
 ## DESCRIPTION
-The \`get-mfFolderItemDetails\` function takes a path to source folder
+The \`Get-MFFolderItemDetails\` function takes a path to source folder
 
 It creates a job that generates a details about all found PS1 files,
 including: The content of PS1 files, the names of any functions, the names of any classes, and any inter-related dependencies
@@ -33,7 +33,7 @@ This function is primary used to build dependency trees and during build to get 
 
 ### EXAMPLE 1
 ```
-get-mfFolderItemDetails .\source
+Get-MFFolderItemDetails .\source
 ```
 
 ## PARAMETERS

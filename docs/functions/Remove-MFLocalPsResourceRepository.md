@@ -25,7 +25,7 @@ It will also remove the directory that hosted the local repository
 
 ### EXAMPLE 1
 ```
-remove-mfLocalPsResourceRepository
+Remove-MFLocalPsResourceRepository
 ```
 
 ## PARAMETERS

@@ -26,7 +26,7 @@ Detailed Description
 
 ### EXAMPLE 1
 ```
-get-mfLatestSemverFromBuildManifest
+Get-MFLatestSemverFromBuildManifest
 ```
 
 #### DESCRIPTION

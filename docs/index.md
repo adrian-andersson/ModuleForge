@@ -1,6 +1,7 @@
 # Documentation Index
 
-## Functions
+
+## functions
 
 - [Add-MFAzureDevOpsScaffold](./functions/Add-MFAzureDevOpsScaffold.md)
 - [Add-MFGithubScaffold](./functions/Add-MFGithubScaffold.md)
@@ -20,19 +21,26 @@
 - [Update-MFProject](./functions/Update-MFProject.md)
 - [Write-MFModuleDocs](./functions/Write-MFModuleDocs.md)
 
-## Misc
+## misc
 
-- [bartenderCompatibility](./misc/bartenderCompatibility.md)
-- [Pester](./misc/Pester.md)
-- [Ramble_TestingExternalFileDependencies](./misc/Ramble_TestingExternalFileDependencies.md)
 - [RequiredModules_vs_ExternalModuleDependencies](./misc/RequiredModules_vs_ExternalModuleDependencies.md)
 - [SemVer_Interpretation](./misc/SemVer_Interpretation.md)
 
-## AzureDevOps
+## misc - compatibility
+
+- [bartenderCompatibility](./misc/compatibility/bartenderCompatibility.md)
+
+## misc - pester-testing
+
+- [Pester](./misc/pester-testing/Pester.md)
+- [TestingExternalFileDependencies](./misc/pester-testing/TestingExternalFileDependencies.md)
+
+## tutorials - azureDevOps
 
 - [azureDevOps_preRequisit](./tutorials/azureDevOps/azureDevOps_preRequisit.md)
 - [tutorial](./tutorials/azureDevOps/tutorial.md)
 
-## Github
+## tutorials - github
 
+- [psGallery-Release-Workflow](./tutorials/github/psGallery-Release-Workflow.md)
 - [tutorial](./tutorials/github/tutorial.md)

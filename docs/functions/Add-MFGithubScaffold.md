@@ -33,7 +33,7 @@ Please feel free to change the workflows and template to your own needs and pref
 
 ### EXAMPLE 1
 ```
-Add-mfGithubScaffold
+Add-MFGithubScaffold
 ```
 
 #### DESCRIPTION
@@ -44,7 +44,7 @@ Should have a .github folder, with workflows and a PR template
 
 ### EXAMPLE 2
 ```
-Add-mfGithubScaffold -Force
+Add-MFGithubScaffold -Force
 ```
 
 #### DESCRIPTION

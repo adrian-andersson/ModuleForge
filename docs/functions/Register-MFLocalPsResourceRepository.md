@@ -25,7 +25,7 @@ for example, to add git data to the nuspec
 
 ### EXAMPLE 1
 ```
-register-mfLocalPsResourceRepository            
+Register-MFLocalPsResourceRepository      
 #### DESCRIPTION
 Create a powershell file repository using default values.
 ```

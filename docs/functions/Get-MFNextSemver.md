@@ -31,7 +31,7 @@ Get-MFNextSemver [-PreReleaseLabel <String>] [-InitialPreRelease] [-ProgressActi
 ```
 
 ## DESCRIPTION
-The \`get-mfNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
+The \`Get-MFNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
 It can handle major, minor, and patch increments. 
 The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
@@ -40,7 +40,7 @@ The function also handles pre-release versions and allows the user to optionally
 ### EXAMPLE 1
 ```
 $Version = [SemVer]::new('1.0.0')
-get-mfNextSemver -version $Version -increment 'Minor' -prerelease
+Get-MFNextSemver -Version $Version -Increment 'Minor' -PreRelease
 ```
 
 #### DESCRIPTION
@@ -53,7 +53,7 @@ The output will be '1.1.0-prerelease.1'.
 ### EXAMPLE 2
 ```
 $Version = [SemVer]::new('2.0.0-prerelease.1')
-get-mfNextSemver -version $Version -increment 'Major'
+Get-MFNextSemver -Version $Version -Increment 'Major'
 ```
 
 #### DESCRIPTION

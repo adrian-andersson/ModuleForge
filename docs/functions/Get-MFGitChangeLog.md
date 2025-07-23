@@ -37,11 +37,11 @@ It ensures the Git environment is correctly set up and handles errors if Git is 
 
 ### EXAMPLE 1
 ```
-get-mfGitChangeLog
+Get-MFGitChangeLog
 ```
 
 DESCRIPTION
-Call the \`get-mfGitChangeLog\` function with default change Log Types.
+Call the \`Get-MFGitChangeLog\` function with default change Log Types.
 The function will generate a markdown changelog that can be sent to release or artifact notes.
 
 #### OUTPUT
@@ -54,7 +54,7 @@ Version: v1.0.0 --\> v1.1.0
 
 ### EXAMPLE 2
 ```
-get-mfGitChangeLog -changeLogTypes @{
+Get-MFGitChangeLog -ChangeLogTypes @{
 'feat' = 'New Features'
 'fix' = 'Bug Fixes'
 'chore' = 'Chore and Pipeline work'
@@ -63,7 +63,7 @@ get-mfGitChangeLog -changeLogTypes @{
 ```
 
 DESCRIPTION
-This example demonstrates how to call the \`get-mfGitChangeLog\` function with a custom set of changelog types, in case you want to control your own
+This example demonstrates how to call the \`Get-MFGitChangeLog\` function with a custom set of changelog types, in case you want to control your own
 
 #### OUTPUT
 # Change Log
@@ -79,7 +79,7 @@ Version: v1.0.0 --\> v1.1.0
 
 ### EXAMPLE 3
 ```
-get-mfGitChangeLog -All
+Get-MFGitChangeLog -All
 ```
 
 DESCRIPTION

@@ -27,7 +27,7 @@ This function scans \`.ps1\` files using PSScriptAnalyzer and returns grouped su
 
 ### EXAMPLE 1
 ```
-get-mfScriptAnalyzerSummary -sourcePath '.\source\functions'
+Get-MFScriptAnalyzerSummary -SourcePath '.\source\functions'
 ```
 
 #### DESCRIPTION

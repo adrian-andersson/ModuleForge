@@ -27,7 +27,7 @@ If Git is unavailable or returns an error, a warning is displayed, and processin
 
 ### EXAMPLE 1
 ```
-get-mfGitLatestVersion
+Get-MFGitLatestVersion
 ```
 
 #### DESCRIPTION
@@ -40,7 +40,7 @@ and returns it in \`major.minor.patch\` format.
 
 ### EXAMPLE 2
 ```
-get-mfGitLatestVersion -Verbose
+Get-MFGitLatestVersion -Verbose
 ```
 
 #### DESCRIPTION
@@ -49,7 +49,7 @@ about the Git command execution and version determination.
 
 #### OUTPUT
 \`\`\`
-===========Executing get-mfGitLatestVersion===========
+===========Executing Get-MFGitLatestVersion===========
 Got VersionTags: v1.0.0 v1.2.3 v1.1.0
 Latest Tag Version: 1.2.3
 \`\`\`

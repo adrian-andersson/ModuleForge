@@ -30,7 +30,7 @@ Tag as a pre-release if a semverPreRelease label is found
 
 ### EXAMPLE 1
 ```
-build-mfProject -version '0.12.2-prerelease.1'
+Build-MFProject -Version '0.12.2-prerelease.1'
 ```
 
 #### DESCRIPTION
