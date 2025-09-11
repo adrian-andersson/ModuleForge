@@ -39,7 +39,7 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
    - You can leave .gitignore set to _none_
 4. Clone your repository to your local environment
 
-> hint: If you are unsure of how to clone a repository, copy the URI from the browser address bar and use it with the `git clone` command, e.g. `git clone https://github.com/adrian-andersson/ModuleForge`
+> hint: If you are unsure of how to clone a repository, copy the URI from the browser address bar and use it with the `git clone` command, e.g. `git clone https://dev.azure.com/AzureDevOps-OrgName/AzureDevOps-ProjectName/_git/AzureDevOps-RepoName`
 
 ## Part 2 - Create a new ModuleForge Project
 
