@@ -26,7 +26,7 @@ This step is important to allow the Build and Release step to successfully publi
 2. With your `psPackages` (or alternative name) feed selected, click on the small cog (⚙️) icon in the top right, that when hovered over states `Feed Settings`
 3. Select the `Permissions` tab
 4. Find and select the User/Group item that is labelled as Build Service, something like: `{ProjectName} Build Service ({OrganizationName})`
-5. Select _Edit_ and add the `Feed Publisher (Contributor)` permission
+5. Select _Edit_ and add the `Feed Publisher (Contributor)` permissions
 6. Save the changes
 
 ![New Repository](./img/pre_feedPerms2.png)
@@ -41,6 +41,14 @@ This step allows the Build Service agent to post comments to PRs within workflow
 4. Ensure that the top of the display states `All Repositories`.
     - If you like, you can permission this to individual repositories. Note that if you do so, you will need to follow this process for any new repositories in the future
 4. Find the Build Service account. something like: `{ProjectName} Build Service ({OrganizationName})`
-5. Set the _Contribute to pull requests_ permission to `Allow`
+5. Ensure the following permissions are set to `Allow` :
+   - _Contribute to pull requests_
+      - (Allows commenting on PRs for Lint and Pester Results)
+   - _Contribute_
+     - (Required for the BuildAndRelease process to correctly tag)
+   - _Read_ 
+     - (Required by all pipelines to pull the repository, read tags etc)
+   - _Create Tag_ 
+     - (Required for the BuildAndRelease process to correctly tag)
 
 ![New Repository](./img/pre_repoPerms.png)
