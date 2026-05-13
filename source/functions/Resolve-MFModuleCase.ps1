@@ -54,7 +54,7 @@ function Resolve-MFModuleCase
     
     process{
         write-verbose "Checking for module $ModuleName via Get-Module -ListAvailable" 
-        $module = Get-Module -ListAvailable | Where-Object { $_.Name -ieq $ModuleName }
+        $module = Get-Module -ListAvailable -ErrorAction SilentlyContinue| Where-Object { $_.Name -ieq $ModuleName }
         if ($module) {
             Write-Verbose "Module already discoverable. No casing fix required."
             return $module
@@ -124,7 +124,7 @@ function Resolve-MFModuleCase
         Write-Verbose 'Pausing for 5 seconds to allow IO-ops to finish'
         Start-Sleep -Seconds 5 
         write-verbose "Rechecking for module $ModuleName via Get-Module -ListAvailable" 
-        $module = Get-Module -ListAvailable | Where-Object { $_.Name -ieq $ModuleName }
+        $module = Get-Module -ListAvailable -ErrorAction SilentlyContinue| Where-Object { $_.Name -ieq $ModuleName }
         if ($module) {
             Write-Verbose "Module Discovered"
             return $module
