@@ -105,14 +105,21 @@ function Resolve-MFModuleCase
             {
                 Write-Warning "Manifest not found at $($_.FullName)"
             }else{
+                #Apparently renaming folders on linux when case is the same is problematic
+                #And the solution is a 2 step rename
+                #I'm dubious, but I'll try it
                 $folderName = $_.BaseName
                 $manifestName = $manifest.BaseName
+                $tempName = 'tempName'
+                $tempPath = Join-Path $_.Directory.FullName $tempName
                 Write-Verbose "Comparing folder name: $folderName with manifest name: $manifestName"
                 if($folderName -cne $manifestName){
                     Write-Warning "Casing mismatch detected: folder $folderName vs manifest $manifestName"
                     Write-Verbose "Attempting rename…"
                     try {
-                        Rename-Item -Path $_.FullName -NewName $manifestName -Force -ErrorAction Stop
+                        Rename-Item -Path $_.FullName -NewName $tempName -Force -ErrorAction Stop
+                        Start-Sleep -Seconds 5
+                        Rename-Item -Path $tempPath -NewName $manifestName -Force -ErrorAction Stop
                     }catch{
                         throw "Failed to rename module folder: $_"
                     }
