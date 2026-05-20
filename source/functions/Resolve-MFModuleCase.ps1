@@ -7,28 +7,31 @@ function Resolve-MFModuleCase
             This is fine until you install a module from Nuget 2+ on a *NIX platform
             It will install fine, but the folder case will be lowercase, and the manifest will be whatever the module name is
             This means discoverability (Get-Module, Import-Module) are effectively broken
+            This function attempts to fix that discrepency by renaming the module folder to the same as the manifest
             
         .DESCRIPTION
-            1. Tries to find a module with Get-Module -listavailable
-            2. If it cannot find the module, iterate all the module paths and try and case-insensitive match
-            3. If found at step 2, compare the folder name to the manifest basename
-            4. If the Case issue is identified, warn, and try and rename. Throw on rename error
-            5. Do a final check with Get-Module -listavailable (which should now work after a rename). Throw if fail
+            Try and find a module folder based on a module name
+            If module folders are found, for each one, try and find the latest Semver version
+            If Semvers are identified, choose the latest
+            If the latest version folder (As identified above) has a manifest, get the manifest name
+            Case-Compare the manifest name with the folder name. 
+            If the name does not match, try and rename the folder
+            On rename, sleep for 4 seconds, then proceed to other found locations and repeat if necessary
             
         ------------
         .EXAMPLE
-            Verb-Noun Param1
+            Resolve-MFModuleCase -ModuleName moduleforgecasetest -Verbose
             
             #### DESCRIPTION
-            Line by line of what this example will do
+            VERBOSE: ===========Executing Resolve-MFModuleCase===========
+            VERBOSE: Found 1 locations. Getting latest manifest
+            VERBOSE: Checking folder C:\Users\example\Documents\PowerShell\Modulesmmoduleforgecasetest
+            VERBOSE: Found latest version of: 1.0.1
+            VERBOSE: Found Manifest name with: ModuleForgeCaseTest
+            WARNING: Case mismatch between module folder moduleforgecasetest and ModuleForgeCaseTest
+            VERBOSE: Attempt to rename folder to manifest basename to correct for casing
+            VERBOSE: Folder Rename attempted
             
-            
-            #### OUTPUT
-            Copy of the output of this line
-
-        .OUTPUTS
-            [PSModuleInfo[]] - Should return a PSModule on success
-                
         .NOTES
             Author: Adrian Andersson
             
@@ -49,95 +52,95 @@ function Resolve-MFModuleCase
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+        $folderVersionSelect = @(
+            'FullName'
+            'Name'
+            @{
+                Name = 'Semver'
+                Expression = {
+                    try {
+                        [semver]"$($_.Name)"
+                    }catch {
+                        $null
+                    }
+                }
+            }
+        )
         
     }
     
     process{
-        write-verbose "Checking for module $ModuleName via Get-Module -ListAvailable" 
-        $module = Get-Module -ListAvailable -ErrorAction SilentlyContinue| Where-Object { $_.Name -ieq $ModuleName }
-        if ($module) {
-            Write-Verbose "Module already discoverable. No casing fix required."
-            return $module
-        }
-
-        Write-Verbose "Module not discoverable. Searching module paths for case-insensitive match…"
+        #Hold any module candidates in a collection
+        $moduleCandidates = [System.Collections.Generic.List[string]]::new()
         if($ModuleFolder)
         {
-            Write-Verbose "Module path override set to: $ModuleFolder"
-            $modulePaths = $ModuleFolder
+            write-verbose "Checking defined folder: $ModuleFolder"
+            $foundItems = Get-ChildItem -Path $ModuleFolder -Recurse -Filter $ModuleName -Directory
+            $foundItems.foreach{
+                $moduleCandidates.Add($_.FullName)
+            }
         }else{
-            Write-Verbose 'Retrieving Module paths from $env:PSModulePath'
-            $modulePaths = $env:PSModulePath -split [IO.Path]::PathSeparator
-        }
-        $moduleCandidates = [System.Collections.Generic.List[object]]::new()
-
-        $modulePaths.ForEach{
-            remove-variable Folder -ErrorAction Ignore
-            Write-Verbose "Checking Module Path: $($_)"
-            if(!(Test-Path $_)){
-                Write-Warning "Module Path:$($_) Not Found - Skipping"
-                continue
-            }
-            $Folder = $(Get-ChildItem -Path $_ -Directory -ErrorAction SilentlyContinue).where{
-                $_.Name -ieq $ModuleName 
-            } | Select-Object -First 1
-                
-            if($Folder)
-            {
-                Write-Verbose "Potential Candidate located at $($Folder).FullName"
-                $moduleCandidates.Add($Folder)
-            }
-        }
-
-        $moduleCandidatesArr = $moduleCandidates.ToArray()
-        if($moduleCandidatesArr.count -lt 1)
-        {
-            throw "Module [$ModuleName] not found in any PSModulePath location"
-        }
-
-        Write-Verbose "Found $($moduleCandidatesArr.count) Module Candidates"
-
-        Write-Verbose "Checking manifest and basenames to ensure correct casing"
-        $moduleCandidatesArr.ForEach{
-            remove-variable manifest,folderName,manifestName -ErrorAction Ignore
-            $manifest = Get-ChildItem -Path $_.FullName -Recurse -Filter *.psd1 | Select-Object -First 1
-            if(!$manifest)
-            {
-                Write-Warning "Manifest not found at $($_.FullName)"
-            }else{
-                #Apparently renaming folders on linux when case is the same is problematic
-                #And the solution is a 2 step rename
-                #I'm dubious, but I'll try it
-                $folderName = $_.BaseName
-                $manifestName = $manifest.BaseName
-                $tempName = 'tempName'
-                $tempPath = Join-Path $_.Directory.FullName $tempName
-                Write-Verbose "Comparing folder name: $folderName with manifest name: $manifestName"
-                if($folderName -cne $manifestName){
-                    Write-Warning "Casing mismatch detected: folder $folderName vs manifest $manifestName"
-                    Write-Verbose "Attempting rename…"
-                    try {
-                        Rename-Item -Path $_.FullName -NewName $tempName -Force -ErrorAction Stop
-                        Start-Sleep -Seconds 5
-                        Rename-Item -Path $tempPath -NewName $manifestName -Force -ErrorAction Stop
-                    }catch{
-                        throw "Failed to rename module folder: $_"
-                    }
-                }else{
-                    Write-Verbose "Folder and manifest names already match. No rename needed."
+            $locations = $env:PSModulePath -split [IO.Path]::PathSeparator
+            $locations.Foreach{
+                $foundItems = Get-ChildItem -Path $_ -Recurse -Filter $ModuleName -Directory
+                $foundItems.foreach{
+                    $moduleCandidates.Add($_.FullName)
                 }
             }
         }
-        Write-Verbose 'Pausing for 5 seconds to allow IO-ops to finish'
-        Start-Sleep -Seconds 5 
-        write-verbose "Rechecking for module $ModuleName via Get-Module -ListAvailable" 
-        $module = Get-Module -ListAvailable -ErrorAction SilentlyContinue| Where-Object { $_.Name -ieq $ModuleName }
-        if ($module) {
-            Write-Verbose "Module Discovered"
-            return $module
-        }else{
-            throw "Module $ModuleName still not discoverable after casing correction"
-        }       
+        $moduleCandidates = $moduleCandidates.ToArray()
+        Write-Verbose "Found $($moduleCandidates.count) locations."
+        if(!$moduleCandidates -or $moduleCandidates.Count -lt 1)
+        {
+            Write-Warning "No module folders found for module: $ModuleName"
+        }
+        $moduleCandidates.forEach{
+            $moduleFolderBasename = $(Get-Item $_).BaseName
+            Remove-Variable latestVersion,modManifest,BaseFolderRefresh -ErrorAction Ignore
+            #Whilst risky, this seems a good compromise. We need to find the latest version somehow
+            Write-Verbose "Checking folder $_ for latest module version"
+            $latestVersion = $(Get-ChildItem -path $_|Select-Object $folderVersionSelect).where{$_.Semver -ne $null}|Sort-Object -Property Semver -Descending|Select-Object -First 1
+            if($latestVersion)
+            {
+                Write-Verbose "Found latest version of: $($latestVersion.Name)"
+                $modManifest = $(Get-ChildItem -Path $latestVersion.FullName).where{$_.name -eq  "$ModuleName.psd1"}|Select-Object -first 1
+                Write-Verbose "Found Manifest name with: $($modManifest.basename)"
+                If($(Get-Item $_).BaseName -cne $modManifest.basename)
+                {
+                    Write-Warning "Case mismatch between module folder $moduleFolderBasename and $($modManifest.basename)"
+                    write-verbose "Attempt to rename folder to manifest basename to correct for casing"
+                    try{
+                        Rename-Item -path $_ -NewName $modManifest.BaseName -Force -Erroraction Stop
+                        #Small 4 second sleep for IOPS
+                        Start-Sleep -Seconds 4
+                        Write-Verbose 'Folder Rename attempted'
+                    }catch{
+                        write-warning 'Error renaming folder'
+                        
+                    }
+                    $BaseFolderRefresh = Get-Item $_
+                    [PSCustomObject]@{
+                        FolderFullName = $BaseFolderRefresh.FullName
+                        FolderBaseName = $BaseFolderRefresh.BaseName
+                        ManifestName = $modManifest.BaseName
+                        RenameAttempt = $true
+                        ManifestAndFolderMatch = if($BaseFolderRefresh.BaseName -ceq $modManifest.BaseName){$true}else{$false}
+                    }
+                }else{
+                    Write-Verbose "Case match between module folder $moduleFolderBasename and $($modManifest.basename) - All Ok"
+                    [PSCustomObject]@{
+                        FolderFullName = $_
+                        FolderBaseName = $moduleFolderBasename
+                        ManifestName = $modManifest.BaseName
+                        RenameAttempt = $false
+                        ManifestAndFolderMatch = if($moduleFolderBasename -ceq $modManifest.BaseName){$true}else{$false}
+                    }
+                }
+                Write-Verbose "Finished checking folder $_"
+            }else{
+                Write-Warning "No module versions found for $modulename in folder $_"
+            }
+        }
     }
-    
 }
