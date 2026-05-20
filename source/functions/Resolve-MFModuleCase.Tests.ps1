@@ -18,7 +18,7 @@ BeforeAll{
     $ModuleFolder = Split-Path $ModuleBase -Parent
     If($ModuleFolder)
     {
-        Rename-Item -Path $ModuleInstallLocation -NewName $TestModuleName.ToLower() 
+        Rename-Item -Path $ModuleFolder -NewName $TestModuleName.ToLower() 
         Start-Sleep -Seconds 4
     }
 }
