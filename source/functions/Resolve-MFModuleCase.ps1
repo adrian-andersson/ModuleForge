@@ -83,10 +83,15 @@ function Resolve-MFModuleCase
         }else{
             $locations = $env:PSModulePath -split [IO.Path]::PathSeparator
             $locations.Foreach{
-                $foundItems = Get-ChildItem -Path $_ -Recurse -Filter $ModuleName -Directory
-                $foundItems.foreach{
-                    $moduleCandidates.Add($_.FullName)
+                try{
+                    $foundItems = Get-ChildItem -Path $_ -Recurse -Filter $ModuleName -Directory -ErrorAction Ignore
+                    $foundItems.foreach{
+                        $moduleCandidates.Add($_.FullName)
+                    }
+                }catch{
+                    Write-Warning "Skipping path $_ due to read or permission errors"
                 }
+                
             }
         }
         $moduleCandidates = $moduleCandidates.ToArray()
