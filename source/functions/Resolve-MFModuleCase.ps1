@@ -124,7 +124,17 @@ function Resolve-MFModuleCase
                         write-warning 'Error renaming folder'
                         
                     }
-                    $BaseFolderRefresh = Get-Item $_
+                    #We need to do it this way, because we just renamed our folder, and that matters on linux
+                    $Parent = Split-Path $_ -Parent
+                    $NewFullPath = Join-Path $Parent $modManifest.BaseName
+                    try{
+                        #Try and get the new item
+                        $BaseFolderRefresh = Get-Item $NewFullPath
+                    }catch{
+                        #If that fails, go and get the old item
+                        $BaseFolderRefresh = Get-Item $_
+                    }
+                    
                     [PSCustomObject]@{
                         FolderFullName = $BaseFolderRefresh.FullName
                         FolderBaseName = $BaseFolderRefresh.BaseName
