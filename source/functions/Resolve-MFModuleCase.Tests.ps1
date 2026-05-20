@@ -14,10 +14,11 @@ BeforeAll{
 
     #Now we need to figure out how to do a rename of our module
     #I suspect things from the PSGallery are discoverable with Get-Module, because they won't have this problem
-    $ModuleInstallLocation = Split-Path $(Get-Module $TestModuleName -ListAvailable|Select-Object -First 1).ModuleBase -Parent
-    If($ModuleInstallLocation)
+    $ModuleBase = (Get-Module $TestModuleName -ListAvailable | Select-Object -First 1).ModuleBase
+    $ModuleFolder = Split-Path $ModuleBase -Parent
+    If($ModuleFolder)
     {
-        Rename-Item -Path $ModuleInstallLocation -NewName $TestModuleName.ToLower()
+        Rename-Item -Path $ModuleInstallLocation -NewName $TestModuleName.ToLower() 
         Start-Sleep -Seconds 4
     }
 }
