@@ -1,47 +1,67 @@
 # ModuleForge
 
-![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-blue?logo=powershell&logoColor=white)
-![Cross-Platform](https://img.shields.io/badge/Cross--Platform-Yes-brightgreen)
-![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=github-actions&logoColor=white)
-![Azure DevOps](https://img.shields.io/badge/Azure%20DevOps-Pipelines-0078D7?logo=azuredevops&logoColor=white)
+[![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-blue?logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
+[![Cross-Platform](https://img.shields.io/badge/Cross--Platform-Yes-brightgreen)](https://adrian-andersson.github.io/ModuleForge/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=github-actions&logoColor=white)](https://github.com/features/actions)
+[![Azure DevOps](https://img.shields.io/badge/Azure%20DevOps-Pipelines-0078D7?logo=azuredevops&logoColor=white)](https://azure.microsoft.com/en-us/products/devops)
+[![PSGallery](https://img.shields.io/badge/PSGallery-ModuleForge-5391FE?logo=powershell&logoColor=white)](https://www.powershellgallery.com/packages/ModuleForge)
 
-ModuleForge is a scaffolding and build tool designed to streamline PowerShell module creation. It simplifies the process of setting up a module, automating versioning, and ensuring compatibility with modern CI/CD workflows with a minimal amount of effort.
+> **From a blank slate to a production-ready PowerShell module -> with CI/CD, versioning, release notes and publishing sorted, up and running in minutes**
 
-## Full Documentation Available Here
+PowerShell modules are the standard way to package and share reusable PowerShell code, but building and iterating modules with a consistent structure, versioning, tests, and a publishing pipeline involves a lot of moving parts.
 
-Tutorials, function documentation, examples, and other information is published [here](https://adrian-andersson.github.io/ModuleForge/)
+**ModuleForge** is a scaffolding and build tool that takes the grunt work out of PowerShell module development. Stop copy-pasting boilerplate, wrestling with versioning, or hand-rolling CI pipelines. ModuleForge handles the infrastructure so you can focus on writing great code.
 
-## Design Goals
+📦 **[Install from PowerShell Gallery](https://www.powershellgallery.com/packages/ModuleForge)**  
+📖 **[Read the Full Documentation](https://adrian-andersson.github.io/ModuleForge/)**
 
-ModuleForge was built to achieve the following goals
+```powershell
+Install-PSResource -Name ModuleForge
+```
 
+## Why ModuleForge?
 
-- PowerShell CI/CD with minimal config
-- Standardised, fast module setup
-- Cross-platform, OS agnostic
-- Semantic Versioning with easy prerelease support and incrementing
-- Orchestration tool agnostic
-- Support and use the latest versions of PowerShell 7+, Pester, and PSResourceGet
-- Compatible with GitHub Packages
-- Support simple and complex PowerShell modules alike
-- Easily identify function and file dependencies in your project
+Setting up a PowerShell module correctly is tedious. Consistent folder structure, semantic versioning, changelog automation, CI/CD pipelines for both GitHub and Azure DevOps, Pester integration, PSResourceGet compatibility: There is a lot to know, a lot to get right, and even more to maintain across projects.
 
-ModuleForge is designed for flexibility.
+ModuleForge solves this with a single, opinionated CI/CD toolchain that gets out of your way once you're up and running.
 
 ## Key Features
 
-- One-line module scaffolding with standard file layout
-- Add CI workflows for GitHub or Azure DevOps (Feature Parity)
-  - Pester tests are hard-fail, code coverage is soft-fail, ScriptAnalyzer is advisory
-  - PR comments auto-generated with lint/test results
-  - ![PR Comments](/img/moduleForge_pr_comments.png)
-- Semantic changelog automation from commit prefixes (`feat`, `fix`, etc.)
-  - GitHub Packages release integration
-  - ![GH Release](/img/changelog.png)
-- Support for enumerators, classes, and advanced PowerShell constructs
-- Tag-based automated versioning with pre-release support
-  - ![GH Release](/img/versions.png)
-- Works with GitHub Packages and Azure DevOps feeds for module repositories
+### 🏗️ One-Line Module Scaffolding
+
+Spin up a standardised, ready-to-build module structure in seconds. No more blank-page paralysis or inconsistent project layouts across your team.
+
+### ⚙️ CI/CD Workflows — GitHub & Azure DevOps
+
+Add production-grade pipelines with full feature parity across both platforms:
+
+- **Pester tests** are hard-fail — broken code doesn't ship
+- **Code coverage** is soft-fail — tracked without blocking releases
+- **PSScriptAnalyzer** runs in advisory mode — keeping your code clean without the noise
+- **Auto-generated PR comments** surface lint and test results directly in your review workflow
+
+![PR Comments](/img/moduleForge_pr_comments.png)
+
+### 🏷️ Tag-Based Semantic Versioning
+
+Auto-Applied tagging tracks build versions so you don't have to, including pre-release support for staging and beta builds.
+
+![Versioning](/img/versions.png)
+
+### 📋 Automated Changelog Generation
+
+Commit prefixes (`feat:`, `fix:`, `chore:`, etc.) drive automatic changelog creation and GitHub Packages release notes — no manual changelog maintenance required.
+
+![Changelog](/img/changelog.png)
+
+### 📦 Flexible Publishing
+
+Publish to **GitHub Packages** or **Azure DevOps Artifacts** feeds for personal projects or testing, and one-click publish to PSGallery when you're ready.
+Options for whatever fits your workflow and requirements
+
+### 🛠️ Full PowerShell 7+ Support
+
+Built for modern PowerShell, including enumerators, classes, and advanced language constructs. Classes, enumerators, complex dependencies -> if PowerShell supports it, ModuleForge handles it.
 
 ## Workflow Overview
 
@@ -62,3 +82,27 @@ graph TD
   H --> B
 
 ```
+
+## Design Goals
+
+ModuleForge was built around a clear set of principles:
+
+| Goal | What It Means |
+| - | - |
+| **Minimal config** | PowerShell CI/CD that just works |
+| **Standardised setup** | Fast, consistent module scaffolding every time |
+| **Cross-platform** | Fully OS agnostic; Windows, macOS, Linux |
+| **Semantic versioning** | Easy pre-release support and version incrementing |
+| **Orchestrator agnostic** | Works with GitHub Actions, Azure DevOps, or your own tooling |
+| **Modern stack** | PowerShell 7+, Pester, and PSResourceGet |
+| **Scalable** | Handles simple scripts and complex multi-dependency modules alike |
+
+## Getting Started
+
+Full tutorials, function reference, and examples are available in the **[ModuleForge documentation](https://adrian-andersson.github.io/ModuleForge/)**.
+
+---
+
+## Contributing
+
+Issues and PRs welcome. Please review the documentation before submitting.
