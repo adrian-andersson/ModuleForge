@@ -88,7 +88,7 @@ graph TD
 ModuleForge was built around a clear set of principles:
 
 | Goal | What It Means |
-|---|---|
+| - | - |
 | **Minimal config** | PowerShell CI/CD that just works |
 | **Standardised setup** | Fast, consistent module scaffolding every time |
 | **Cross-platform** | Fully OS agnostic; Windows, macOS, Linux |
