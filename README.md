@@ -8,6 +8,8 @@
 
 > **From a blank slate to a production-ready PowerShell module -> with CI/CD, versioning, release notes and publishing sorted, up and running in minutes**
 
+PowerShell modules are the standard way to package and share reusable PowerShell code, but building and iterating modules with a consistent structure, versioning, tests, and a publishing pipeline involves a lot of moving parts.
+
 **ModuleForge** is a scaffolding and build tool that takes the grunt work out of PowerShell module development. Stop copy-pasting boilerplate, wrestling with versioning, or hand-rolling CI pipelines. ModuleForge handles the infrastructure so you can focus on writing great code.
 
 📦 **[Install from PowerShell Gallery](https://www.powershellgallery.com/packages/ModuleForge)**  
@@ -54,14 +56,12 @@ Commit prefixes (`feat:`, `fix:`, `chore:`, etc.) drive automatic changelog crea
 
 ### 📦 Flexible Publishing
 
-Publish to **GitHub Packages** or **Azure DevOps Artifacts** feeds for personal projects or testing, and one-click publish to PSGallery when your ready.
+Publish to **GitHub Packages** or **Azure DevOps Artifacts** feeds for personal projects or testing, and one-click publish to PSGallery when you're ready.
 Options for whatever fits your workflow and requirements
 
 ### 🛠️ Full PowerShell 7+ Support
 
-Built for modern PowerShell — including enumerators, classes, and advanced language constructs. Uses the latest versions of **Pester** and **PSResourceGet**.
-
-Advanced modules including classes and enumerators, it's your project, your choice what to code
+Built for modern PowerShell, including enumerators, classes, and advanced language constructs. Classes, enumerators, complex dependencies -> if PowerShell supports it, ModuleForge handles it.
 
 ## Workflow Overview
 
