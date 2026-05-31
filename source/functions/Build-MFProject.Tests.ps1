@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
 
     #Reference Current Path
@@ -258,7 +261,33 @@ describe 'Build-MFProject' {
     }
 }
 
+describe 'Build-MFProject with ExportClasses and ExportEnums' {
+    beforeAll {
+        Set-Location $testPath
+        Build-MFProject -version '1.0.0-PREv003' -ExportClasses -ExportEnums
+    }
+    it 'Should have created an external Classes file' {
+        (get-childItem -path 'build' -recurse -filter '*.Classes.ps1').count | Should -Be 1
+    }
+    it 'Should have created an external Enums file' {
+        (get-childItem -path 'build' -recurse -filter '*.Enums.ps1').count | Should -Be 1
+    }
+}
 
+describe 'Build-MFProject with ReleaseNotes' {
+    beforeAll {
+        Set-Location $testPath
+        Build-MFProject -version '1.0.0-PREv004' -ReleaseNotes 'Test release notes' -IncludeReleaseNotesInDescription
+    }
+    it 'Should have release notes in the manifest' {
+        $manifest = Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $manifest.PrivateData.PSData.ReleaseNotes | Should -Be 'Test release notes'
+    }
+    it 'Should have release notes appended to the description' {
+        $manifest = Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $manifest.Description | Should -BeLike '*Test release notes*'
+    }
+}
 
 afterAll {
 
