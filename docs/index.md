@@ -23,24 +23,22 @@
 
 ## misc
 
+- [Classes_Enums_And_Validators](./misc/Classes_Enums_And_Validators.md)
+- [CommitStrategy_And_PRProcess](./misc/CommitStrategy_And_PRProcess.md)
+- [ModuleVersioning_With_SemVer](./misc/ModuleVersioning_With_SemVer.md)
 - [RequiredModules_vs_ExternalModuleDependencies](./misc/RequiredModules_vs_ExternalModuleDependencies.md)
-- [SemVer_Interpretation](./misc/SemVer_Interpretation.md)
-
-## misc - compatibility
-
-- [bartenderCompatibility](./misc/compatibility/bartenderCompatibility.md)
 
 ## misc - pester-testing
 
 - [Pester](./misc/pester-testing/Pester.md)
-- [TestingExternalFileDependencies](./misc/pester-testing/TestingExternalFileDependencies.md)
 
 ## tutorials - azureDevOps
 
-- [azureDevOps_preRequisit](./tutorials/azureDevOps/azureDevOps_preRequisit.md)
-- [tutorial](./tutorials/azureDevOps/tutorial.md)
+- [azureDevOps-preRequisites](./tutorials/azureDevOps/azureDevOps-preRequisites.md)
+- [azureDevOps-tutorial-01-getting-started](./tutorials/azureDevOps/azureDevOps-tutorial-01-getting-started.md)
 
 ## tutorials - github
 
+- [github-tutorial-01-getting-started](./tutorials/github/github-tutorial-01-getting-started.md)
+- [github-tutorial-02-full-ModuleForge-Featureset](./tutorials/github/github-tutorial-02-full-ModuleForge-Featureset.md)
 - [psGallery-Release-Workflow](./tutorials/github/psGallery-Release-Workflow.md)
-- [tutorial](./tutorials/github/tutorial.md)
