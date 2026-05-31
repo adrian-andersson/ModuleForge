@@ -45,33 +45,29 @@ jobs:
           $releaseSelector = '${{ github.event.inputs.release_selector }}'
           write-verbose "Release selector: $releaseSelector"
 
+          write-verbose 'Getting release list'
+          $releases = gh release list --limit 100 --json tagName,name,isPrerelease,createdAt | ConvertFrom-Json -ErrorAction Stop
           if($releaseSelector -eq 'latest-release')
           {
-            write-verbose 'Getting latest release'
-            $releaseJson = gh release view --json tagName,name,isPrerelease
-            $release = $releaseJson | ConvertFrom-Json -ErrorAction Stop
+            write-verbose 'Selecting most recently created release'
+            $release = $releases | Select-Object -First 1
+          }
+          elseif($releaseSelector -eq 'latest-stable')
+          {
+            write-verbose 'Filtering to latest stable release'
+            $release = $releases | Where-Object { -not $_.isPrerelease } | Select-Object -First 1
           }
           else
           {
-            write-verbose 'Getting release list for filtering'
-            $releases = gh release list --limit 100 --json tagName,name,isPrerelease,createdAt | ConvertFrom-Json -ErrorAction Stop
-            if($releaseSelector -eq 'latest-stable')
-            {
-              write-verbose 'Filtering to latest stable release'
-              $release = $releases | Where-Object { -not $_.isPrerelease } | Select-Object -First 1
-            }
-            else
-            {
-              write-verbose 'Filtering to latest prerelease'
-              $release = $releases | Where-Object { $_.isPrerelease } | Select-Object -First 1
-            }
-            if(!$release)
-            {
-              throw "No matching release found for selector: $releaseSelector"
-            }
-            write-verbose "Selected tag: $($release.tagName) — fetching full details"
-            $release = gh release view $release.tagName --json tagName,name,isPrerelease | ConvertFrom-Json -ErrorAction Stop
+            write-verbose 'Filtering to latest prerelease'
+            $release = $releases | Where-Object { $_.isPrerelease } | Select-Object -First 1
           }
+          if(!$release)
+          {
+            throw "No matching release found for selector: $releaseSelector"
+          }
+          write-verbose "Selected tag: $($release.tagName) — fetching full details"
+          $release = gh release view $release.tagName --json tagName,name,isPrerelease | ConvertFrom-Json -ErrorAction Stop
 
           write-verbose "Release: tagName=$($release.tagName) name=$($release.name) isPrerelease=$($release.isPrerelease)"
           if($release.isPrerelease)
