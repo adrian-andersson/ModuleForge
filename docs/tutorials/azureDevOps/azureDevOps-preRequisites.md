@@ -1,8 +1,8 @@
-# Prerequisits before using Azure DevOps with Moduleforge
+# Prerequisites for Azure DevOps with ModuleForge
 
 The following steps need to be completed once per Azure DevOps project. You do _NOT_ need to repeat this for each subsequent repository within an Azure DevOps project space.
 
-## Pt 1 - Create a package feed
+## Part 1 - Create a package feed
 
 In order for us to _publish_ and host our private modules, we need to setup a package feed.
 
@@ -18,9 +18,9 @@ If you have an existing feed, you can skip this process
 
 ![New Repository](./img/pre_newFeed.png)
 
-## Pt 2 - Grant Build Service Feed Permissions
+## Part 2 - Grant Build Service Feed Permissions
 
-This step is important to allow the Build and Release step to successfully publish artifcats to our feed
+This step is important to allow the Build and Release step to successfully publish artifacts to our feed
 
 1. Click on Artifacts again
 2. With your `psPackages` (or alternative name) feed selected, click on the small cog (⚙️) icon in the top right, that when hovered over states `Feed Settings`
@@ -31,7 +31,7 @@ This step is important to allow the Build and Release step to successfully publi
 
 ![New Repository](./img/pre_feedPerms2.png)
 
-## Pt 3 - Grant Build Service PR Permissions
+## Part 3 - Grant Build Service PR Permissions
 
 This step allows the Build Service agent to post comments to PRs within workflows
 

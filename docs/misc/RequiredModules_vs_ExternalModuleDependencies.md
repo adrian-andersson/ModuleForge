@@ -1,63 +1,77 @@
 # Required Modules vs External Module Dependencies
 
-The Module Manifest has 2 ways to handle module dependencies; `RequiredModules`, and `ExternalModuleDependencies`. How these work is quite different, and what you choose to use depends, ultimately, on what you are trying to achieve.
+The module manifest supports two ways to declare dependencies: `RequiredModules` and `ExternalModuleDependencies`. They behave quite differently, and choosing between them depends on what you need from the dependency relationship.
 
-`RequiredModules` will only really work if the publishing repository (E.g. PSGallery) has the module already. If it doesn't, your `publish-psresource` or `publish-module` command will fail, as it checks for the dependent modules before it pushes your module. The benefit of this approach is that it will also install any module dependencies for the user when you run `install-psresource` or `install-module`.
+## Quick Comparison
 
-I find this a little too rigid in practice, so it's best used if you need a specific version of a module that you want to pin to yours, and you have made sure it's in the resource repository already, and it is unlikely to be removed by the owner.
+| | `RequiredModules` | `ExternalModuleDependencies` |
+| --- | --- | --- |
+| Auto-installs on `Install-PSResource` | ✅ Yes | ❌ No |
+| Blocks publish if dependency missing from feed | ✅ Yes | ❌ No |
+| Requires dependency to be in the same repository | ✅ Yes | ❌ No |
+| Flexible about how the dependency was installed | ❌ No | ✅ Yes |
+| Avoids republishing third-party modules to private feeds | ❌ No | ✅ Yes |
 
-I find that using `ExternalModuleDependencies` is more flexible, it puts the onus of installing the dependency back on to the user. Then in order to make it clear, I'll often put something like this in the begin block of my functions that have a dependency:
+## RequiredModules
+
+`RequiredModules` creates a hard dependency. When publishing, the repository (e.g. PSGallery) checks that all listed modules are already present — if they're not, the publish will fail. On the user side, `Install-PSResource` or `Install-Module` will automatically pull in the dependencies.
+
+This is useful when you need to pin to a specific version of a module and you can be confident that dependency will remain available in the target repository. In practice it can be too rigid — any module you list must exist in every repository you publish to, which becomes a problem with private feeds.
+
+## ExternalModuleDependencies
+
+`ExternalModuleDependencies` declares a dependency without enforcing it at publish time. The module will publish regardless of whether the dependency exists in the feed, and installation does not pull it in automatically. The responsibility for installing the dependency falls on the consumer.
+
+This is the more flexible approach for most real-world scenarios — it avoids republishing third-party modules to private repositories, keeps feed trust boundaries clean, and removes any license concerns around redistributing other authors' packages.
+
+To make the dependency clear to consumers, it is good practice to add an explicit check in the `begin` block of any function that requires it:
 
 ```powershell
-Begin {
-#...
-$requiredModules = @(
-    'Microsoft.Graph.Authentication'
-    'Microsoft.Graph.Beta.DeviceManagement'
-    'Microsoft.Graph.Users'
-)
-$requiredModules.foreach{
-    if((-not (get-module $_ -listavailable)))
-    {
-        throw "Module $_ not found. Please install it first"
-    }else{
+begin {
+    $requiredModules = @(
+        'Microsoft.Graph.Authentication'
+        'Microsoft.Graph.Beta.DeviceManagement'
+        'Microsoft.Graph.Users'
+    )
+    $requiredModules.foreach{
+        if (-not (get-module $_ -listavailable)) {
+            throw "Module '$_' not found. Please install it before using this module."
+        }
         write-verbose "Found module: $_"
     }
 }
-#...
-}
 ```
 
-And if I have lots of functions that might have such dependencies, I tend to make a private function that just does this, and call that in the begin block.
+If many functions share the same dependency check, a private helper function keeps things tidy:
 
 ```powershell
-function test-moduleDependencies
-#...
-$requiredModules = @(
-    'Microsoft.Graph.Authentication'
-    'Microsoft.Graph.Beta.DeviceManagement'
-    'Microsoft.Graph.Users'
-)
-$requiredModules.foreach{
-    if((-not (get-module $_ -listavailable)))
-    {
-        throw "Module $_ not found. Please install it first"
-    }else{
+function Test-ModuleDependency {
+    param(
+        [string[]]$Modules
+    )
+    $Modules.foreach{
+        if (-not (get-module $_ -listavailable)) {
+            throw "Module '$_' not found. Please install it before using this module."
+        }
         write-verbose "Found module: $_"
     }
-    return $true
 }
-#...
 ```
 
-This way, I'm making it clear what's gone wrong, but I'm not dictating how the module was installed, or what version is running.
+Call it from the `begin` block of any function that has an external dependency. This makes the error clear to the consumer without dictating how or from where the dependency was installed.
 
-It also means I'm not republishing other peoples modules to my private repository, maintaining the repository trust setting, and avoiding any license concerns.
+## Which Should I Use?
 
-Ultimately, try both ways, and find something that works for you, your organisation and your specific module.
+For most PowerShell modules — particularly those that depend on large third-party packages like the Microsoft Graph SDK — `ExternalModuleDependencies` is the better fit. Use `RequiredModules` when you are pinning a specific version of a small, stable dependency that you know is already present in every feed you publish to.
 
-If you want more details, check out [this on reddit](https://www.reddit.com/r/PowerShell/comments/7lt6mz/module_manifests_requiredmodules_vs/) and [in this linked github issue](https://github.com/OneGet/oneget/issues/164)
+Both parameters are available on `New-MFProject` when scaffolding a new module, so dependencies can be declared from the start.
 
- > So a brief bit of googling turned this up. It seems that, on some level, RequiredModules should be used for all internal and external modules that your module depends on. ExternalModuleDependencies apparently identifies which modules you're not including in the package itself and must also be obtained somehow/somewhere. So you'd list internal dependencies once in RequiredModules and external dependencies twice (once with name and version in RequiredModules and once by name only in ExternalModuleDependencies).
+## A Note on Official Documentation Intent
 
-I'm not sure I agree with the approach suggested, but it does help frame the thought-process.
+The Microsoft documentation suggests a dual-listing approach: list all dependencies (internal and external) in `RequiredModules`, then also list the external ones in `ExternalModuleDependencies` to signal they are not bundled in the package. In practice this is uncommon and reintroduces the publish-time enforcement problem for external dependencies. The guidance on this page reflects real-world usage rather than a strict reading of the spec.
+
+For more background, the [OneGet GitHub issue #164](https://github.com/OneGet/oneget/issues/164) has a useful discussion on how this distinction evolved.
+
+## Further Reading
+
+- [New-ModuleManifest — Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest) — official parameter reference for both `RequiredModules` and `ExternalModuleDependencies`

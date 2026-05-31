@@ -1,4 +1,4 @@
-# Tutorial
+# Getting Started with ModuleForge and GitHub
 
 This tutorial will demonstrate how to create a simple, single-function module using ModuleForge, with 1 pester test, and deploy via Github workflows.
 
@@ -15,7 +15,7 @@ This tutorial will demonstrate how to create a simple, single-function module us
     - `Microsoft.PowerShell.PSResourceGet` 1.1.1+
     - `ModuleForge` 1.2.0+
 
-> Note: All the required modules are cross-platform compatible. You're OS of choice does not matter.
+> Note: All the required modules are cross-platform compatible. Your OS of choice does not matter.
 
 Here is a code-snippet to help get you started
 
@@ -291,8 +291,10 @@ Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages
 
 ```
 
-> A note on V3 nuget feeds and PSResourceGet. Wildcard searching is not supplied, you will need to know the exact name of your module for find and install commands to work.
+> A note on V3 nuget feeds and PSResourceGet. Wildcard searching is not supported, you will need to know the exact name of your module for find and install commands to work.
 
 ## Wrapping up
 
 In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Github Packages repository for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge, and published a single-function module.
+
+Ready to go further? The [Advanced ModuleForge Tutorial](./github-tutorial-02-full-ModuleForge-Featureset.md) covers the full source folder structure — enums, validation classes, classes with inheritance, private functions, and resource files.

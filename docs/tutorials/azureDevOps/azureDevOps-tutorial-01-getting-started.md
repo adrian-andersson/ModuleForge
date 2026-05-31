@@ -1,10 +1,10 @@
-# Tutorial
+# Getting Started with ModuleForge and Azure DevOps
 
 This tutorial will demonstrate how to create a simple, single-function module using ModuleForge, with 1 pester test, and deploy via Azure DevOps Pipelines.
 
 ## Part 0 - Local Environment Setup
 
-1. Make sure you have completed the [prerequisit](./azureDevOps_preRequisit.md)
+1. Make sure you have completed the [prerequisit](./azureDevOps-preRequisites.md)
 2. Setup your local workspace. You will need to have installed
     - PowerShell 7+
     - VSCode (or your IDE of choice)
@@ -16,7 +16,7 @@ This tutorial will demonstrate how to create a simple, single-function module us
     - `Microsoft.PowerShell.PSResourceGet` 1.1.1+
     - `ModuleForge` 1.2.0+
 
-> Note: All the required modules are cross-platform compatible. You're OS of choice does not matter.
+> Note: All the required modules are cross-platform compatible. Your OS of choice does not matter.
 
 Here is a code-snippet to help get you started
 
@@ -44,7 +44,7 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 ## Part 2 - Create a new ModuleForge Project
 
 1. From your repository directory, run the `New-MFProject` function to build the files out, as per the example below
-2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory shoud have a number of subfolders
+2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory should have a number of subfolders
 3. Run the `Add-MFAzureDevOpsScaffold` function to add 3 Azure Pipeline YML files, and a PR template to the `.azuredevops` directory of your module folder
 4. Check the files were created
 5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
@@ -83,8 +83,8 @@ Add-MFAzureDevOpsScaffold
 
 ### Adding Branch Build Policies
 
-1. Go to your newly created Repo and select _Branches` option
-2. At the far right, when hoverign over the _main_ branch item, there will be a `More Options` menu. Open it, and select `💡Branch policies`
+1. Go to your newly created Repo and select _Branches_ option
+2. At the far right, when hovering over the _main_ branch item, there will be a `More Options` menu. Open it, and select `💡Branch policies`
 3. Under Build Validation, add a new item
     - Point to the `psScriptAnalyzer` pipeline we made in the previous section
     - Trigger should be `Automatic`
@@ -97,7 +97,7 @@ Add-MFAzureDevOpsScaffold
     - Policy should be `Required`
     - Expiry can be left at default
     - Change the displayname to `Pester` for easier visualisation
-5. You should now have 2 Build Validation steps, 1 _Opotional_ Script Analyzer step, and 1 _Required_ Pester step
+5. You should now have 2 Build Validation steps, 1 _Optional_ Script Analyzer step, and 1 _Required_ Pester step
 
 - ![Pipelines](./img/tut_buildPols.png)
 
@@ -269,7 +269,7 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 
 >If you want to `manually` download and install your new module, you can download the nupkg from the package feed, rename the extension to `.zip` and uncompress to find your module.
 
-## Part 5 - Install locally with PSresourceGet
+## Part 6 - Install locally with PSresourceGet
 
 In your PowerShell terminal with PSResourceGet ready to go, you can register a new repository. You will only need to register the repository once.
 
@@ -345,4 +345,4 @@ Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed
 
 ## Wrapping up
 
-In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Azure DevOps Packages feed for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge, and published a single-function module.
+In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Azure DevOps Packages feed for consumption. We effectively made a CI/CD PowerShell Pipeline using Azure DevOps Pipelines + ModuleForge, and published a single-function module.
