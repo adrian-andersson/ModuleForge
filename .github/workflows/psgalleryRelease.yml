@@ -1,7 +1,25 @@
-name: PSGallery Latest Release
+name: PSGallery Release
 
 on:
   workflow_dispatch:
+    inputs:
+      release_selector:
+        description: 'Which release to publish to PSGallery'
+        required: true
+        default: 'latest'
+        type: choice
+        options:
+          - latest
+          - latest-stable
+          - latest-prerelease
+      moduleforge_release_toggle:
+        description: 'Select ModuleForge Release Type'
+        required: false
+        default: 'moduleforge-latest-stable-only'
+        type: choice
+        options:
+          - moduleforge-latest-stable-only
+          - moduleforge-latest-prerelease-allowed
 
 jobs:
   psgalleryDeploy:
@@ -11,109 +29,159 @@ jobs:
       packages: read
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 #Ensure we are getting all the tag history
+          fetch-depth: 0
 
-      - name: Get latest release details
+      - name: Get release details
         id: get_release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $verbosePreference = 'Continue'
-          $release = gh release view --json tagName,name,body,createdAt,author,assets,isPrerelease
-          write-verbose "Release:`n$($release|out-string)"
-          $releaseFromJson = $release|convertFrom-json -errorAction ignore
-          $tagName = $releaseFromJson.tagName
-          $releaseName = $releaseFromJson.name
-          $isPreRelease = $releaseFromJson.isPrerelease
-          write-verbose "tagName: $($tagName) releaseName: $($releaseName) isPreRelease: $($isPreRelease)"
-          Write-Output "tag_name=$tagName" >> $env:GITHUB_OUTPUT
-          Write-Output "release_name=$releaseName" >> $env:GITHUB_OUTPUT
-          Write-Output "release_isPreRelease=$isPreRelease" >> $env:GITHUB_OUTPUT
+          $VerbosePreference = 'Continue'
+          $releaseSelector = '${{ github.event.inputs.release_selector }}'
+          write-verbose "Release selector: $releaseSelector"
+
+          if($releaseSelector -eq 'latest')
+          {
+            write-verbose 'Getting latest release'
+            $releaseJson = gh release view --json tagName,name,isPrerelease
+            $release = $releaseJson | ConvertFrom-Json -ErrorAction Stop
+          }
+          else
+          {
+            write-verbose 'Getting release list for filtering'
+            $releases = gh release list --limit 100 --json tagName,name,isPrerelease,createdAt | ConvertFrom-Json -ErrorAction Stop
+            if($releaseSelector -eq 'latest-stable')
+            {
+              write-verbose 'Filtering to latest stable release'
+              $release = $releases | Where-Object { -not $_.isPrerelease } | Select-Object -First 1
+            }
+            else
+            {
+              write-verbose 'Filtering to latest prerelease'
+              $release = $releases | Where-Object { $_.isPrerelease } | Select-Object -First 1
+            }
+            if(!$release)
+            {
+              throw "No matching release found for selector: $releaseSelector"
+            }
+            write-verbose "Selected tag: $($release.tagName) — fetching full details"
+            $release = gh release view $release.tagName --json tagName,name,isPrerelease | ConvertFrom-Json -ErrorAction Stop
+          }
+
+          write-verbose "Release: tagName=$($release.tagName) name=$($release.name) isPrerelease=$($release.isPrerelease)"
+          if($release.isPrerelease)
+          {
+            write-verbose '⚠️  Selected release is a prerelease — PSGallery will list it as a prerelease version'
+          }
+          Write-Output "tag_name=$($release.tagName)" >> $env:GITHUB_OUTPUT
+          Write-Output "release_name=$($release.name)" >> $env:GITHUB_OUTPUT
+          Write-Output "release_isPreRelease=$($release.isPrerelease)" >> $env:GITHUB_OUTPUT
 
       - name: Install dependencies
         shell: pwsh
         run: |
           $VerbosePreference = 'Continue'
           Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
-          $moduleList = @('Microsoft.PowerShell.PSResourceGet')
-          import-module $moduleList
-          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+          $mfReleaseType = '${{ github.event.inputs.moduleforge_release_toggle }}'
+          if($mfReleaseType -eq 'moduleforge-latest-prerelease-allowed')
+          {
+            write-verbose '⚠️  Will use latest ModuleForge including prereleases'
+            Install-Module -Name ModuleForge -AllowPrerelease -Force -SkipPublisherCheck
+          }
+          else
+          {
+            write-verbose 'Will use latest stable ModuleForge'
+            Install-Module -Name ModuleForge -Force -SkipPublisherCheck
+          }
+          $moduleList = @('Microsoft.PowerShell.PSResourceGet', 'ModuleForge')
+          Import-Module $moduleList
+          Get-Module $moduleList | Select-Object Name, @{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}} | Format-Table
 
-      - name: Register Repository
+      - name: Register GitHub Packages repository
         shell: pwsh
         id: repoSetup
-        if: success()  
+        if: success()
         run: |
           $VerbosePreference = 'Continue'
           $repoUrl = "https://nuget.pkg.github.com/$($env:GITHUB_REPOSITORY_OWNER)/index.json"
           write-verbose "Got repoUrl: $repoUrl"
           $repositorySplat = @{
-            uri = $repoUrl
-            trusted = $true
-            name = 'myGHPackages'
+            Uri     = $repoUrl
+            Trusted = $true
+            Name    = 'myGHPackages'
           }
-          register-psresourcerepository @repositorySplat
-          write-verbose "Repositories:`n $(get-psresourceRepository|select name,uri,trusted|format-list|out-string)"
+          Register-PSResourceRepository @repositorySplat
+          write-verbose "Repositories:`n$(Get-PSResourceRepository | Select-Object Name,Uri,Trusted | Format-List | Out-String)"
 
-      - name: Install Latest Module And Publish to Gallery
+      - name: Install module from GitHub Packages and publish to PSGallery
         shell: pwsh
         id: moduleInstall
         env:
           GH_TOKEN: ${{ github.token }}
           PSGalleryToken: ${{ secrets.PSGALLERY }}
-          isPreRelease: ${{ steps.get_release.outputs.release_isPreRelease }}
           tagName: ${{ steps.get_release.outputs.tag_name }}
-        if: success()  
+        if: success()
         run: |
           $VerbosePreference = 'Continue'
-          $isPreRelease = $env:isPreRelease
-          if(!(test-path .\moduleForgeConfig.xml)){
+          if(!(Test-Path .\moduleForgeConfig.xml))
+          {
             throw 'Error reading ModuleForge Config'
           }
-          $config = import-clixml .\moduleForgeConfig.xml
+          $config = Import-Clixml .\moduleForgeConfig.xml
           $moduleName = $config.moduleName
           write-verbose "ModuleName: $moduleName"
-          $credential = New-Object System.Management.Automation.PSCredential("githubActions", (ConvertTo-SecureString $env:GH_TOKEN -AsPlainText -Force))
+          $credential = New-Object System.Management.Automation.PSCredential(
+            'githubActions',
+            (ConvertTo-SecureString $env:GH_TOKEN -AsPlainText -Force)
+          )
           $versionString = $env:tagName
-          write-verbose "Version from Tag: $versionString"
-          $version = $versionString.substring(1)
+          write-verbose "Version from tag: $versionString"
+          $version = $versionString.Substring(1)
           $semver = [semver]::New($version)
-          write-verbose "VersionConvert : $semver"
+          write-verbose "Parsed version: $semver"
           $fetchSplat = @{
             Repository = 'myGHPackages'
-            name = $moduleName
-            credential = $credential
-            version = $semver
+            Name       = $moduleName
+            Credential = $credential
+            Version    = $semver
           }
-          $latestRelease = find-psresource @fetchSplat
-          write-verbose "latestRelease: $($latestRelease|format-list|out-string)"
-          if($latestRelease)
+          $selectedRelease = Find-PSResource @fetchSplat
+          write-verbose "Found release: $($selectedRelease | Format-List | Out-String)"
+          if($selectedRelease)
           {
-            $latestRelease|install-psresource -credential $credential
-          }else{
-            write-warning 'No module found'
+            $selectedRelease | Install-PSResource -Credential $credential
           }
-          #Need to handle case insensitive
-          $allModules = $(Get-Module -ListAvailable)
-          write-verbose "All Found Modules:`n$($allModules|format-table|out-string)"
-          write-verbose "Checking for $moduleName installation"
-          $moduleFound = $(Get-Module -ListAvailable).where{
-            $_.Name -ieq $moduleName
-          }           
+          else
+          {
+            throw "Module $moduleName version $semver not found in GitHub Packages"
+          }
+          write-verbose 'Resolving module case for PSGallery compatibility'
+          Resolve-MFModuleCase -ModuleName $moduleName
+          $moduleFound = $(Get-Module -ListAvailable).where{ $_.Name -ieq $moduleName }
           if($moduleFound)
           {
-            write-verbose "ModuleFound:`n$($moduleFound|out-string)"
-          }else{
-            throw 'Module failed install'
+            write-verbose "Module found at: $($moduleFound.moduleBase)"
           }
-          write-verbose 'Push Package to PSGallery'
+          else
+          {
+            throw 'Module not found after install — case resolution may have failed'
+          }
+          write-verbose 'Publishing to PSGallery'
           $publishSplat = @{
-            repository = 'PSGallery'
-            APIKey = $env:PSGalleryToken
-            Path = $moduleFound.moduleBase
+            Repository = 'PSGallery'
+            APIKey     = $env:PSGalleryToken
+            Path       = $moduleFound.moduleBase
           }
-          publish-psResource @publishSplat
+          Publish-PSResource @publishSplat
+
+      - name: Hints and Extras
+        if: success()
+        shell: pwsh
+        run: |
+          write-verbose 'PSGallery publish completed successfully'
+          write-verbose 'Tip: To verify without publishing, comment out the Publish-PSResource call and inspect the Install step verbose output'
