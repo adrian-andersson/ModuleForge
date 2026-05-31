@@ -15,3 +15,10 @@ body:
     attributes:
       label: Motivation / Use Case
       description: Why does this feature matter? How would it improve workflows?
+
+  - type: checkboxes
+    id: roadmap-check
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have checked the [Roadmap](https://github.com/adrian-andersson/ModuleForge/blob/main/Roadmap.md) to confirm this isn't already planned

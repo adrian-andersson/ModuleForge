@@ -9,7 +9,7 @@ body:
       options:
         - Bug report - PowerShell Code and Functions
         - Bug report - Github Workflows
-        - Bug report - AzureDevOps Pipelines 
+        - Bug report - AzureDevOps Pipelines
 
   # Bug Report Section
   - type: textarea
