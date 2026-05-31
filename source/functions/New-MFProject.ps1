@@ -26,7 +26,7 @@ function New-MFProject
             
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     PARAM(
         #The name of your module
         [Parameter(Mandatory)]
@@ -58,6 +58,7 @@ function New-MFProject
         #URI to use for your projects license. Will try and use the license file if a projectUri is found
         [Parameter()]
         [string]$licenseUri,
+        #Name of the ModuleForge config file. Defaults to 'moduleForgeConfig.xml'
         [Parameter(DontShow)]
         [string]$configFile = 'moduleForgeConfig.xml',
         #Modules that must be imported into the global environment prior to importing this module
@@ -66,8 +67,10 @@ function New-MFProject
         #Modules that must be imported into the global environment prior to importing this module
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
+        #Default command prefix applied to all exported function names in the module manifest
         [Parameter()]
         [String]$DefaultCommandPrefix,
+        #Additional private data to include in the module manifest PrivateData section
         [Parameter()]
         [object[]]$PrivateData
 
@@ -143,10 +146,13 @@ function New-MFProject
         
 
         write-verbose "Exporting config to: $configPath"
-        try{
-            $config|export-clixml $configPath
-        }catch{
-            throw 'Error exporting config'
+        if($PSCmdlet.ShouldProcess($configPath, 'Create new ModuleForge project configuration'))
+        {
+            try{
+                $config|export-clixml $configPath
+            }catch{
+                throw 'Error exporting config'
+            }
         }
     }
 }

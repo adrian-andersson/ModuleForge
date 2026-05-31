@@ -27,12 +27,13 @@ function Build-MFProject
     [CmdletBinding()]
     PARAM(
         #What version are we building?
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
         [semver]$Version,
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
         [alias('Path')]
         [string]$ModulePath = $(get-location).path,
+        #Path to the ModuleForge config file. Defaults to 'moduleForgeConfig.xml' in the module root
         [Parameter(DontShow)]
         [string]$ConfigFile = 'moduleForgeConfig.xml',
         #Use this flag to put any classes in ScriptsToProcess
@@ -44,8 +45,10 @@ function Build-MFProject
         #Use this to not put anything in nestedmodules, making everything a single file. By default validators are put in a separate nestedmodule script to ensure they are loaded properly
         [Parameter()]
         [switch]$NoExternalFiles,
+        #Release notes to include in the module manifest and GitHub release output
         [Parameter()]
         [string]$ReleaseNotes,
+        #If set, appends the release notes to the module description in the manifest
         [Parameter()]
         [switch]$IncludeReleaseNotesInDescription
 

@@ -30,7 +30,7 @@ function Get-MFFolderItems
         .INPUTS
             [String] - Accepts a folder path via parameter or pipeline (`ValueFromPipelineByPropertyName`).
 
-        OUTPUTS
+        .OUTPUTS
             [Object[]] - Returns an array of objects containing:
                 - **Name** (`[String]`) - Name of the file.
                 - **Path** (`[String]`) - Full file path.
@@ -55,7 +55,7 @@ function Get-MFFolderItems
         [parameter(ParameterSetName ='Default')]
         [parameter(ParameterSetName ='Copy')]
         [switch]$PSScriptsOnly,
-        #Flag to copy scripts only
+        #Destination path to copy files to. Used in conjunction with the -Copy switch
         [parameter(ParameterSetName ='Copy')]
         [string]$Destination,
         #Flag to actually copy files and not just output

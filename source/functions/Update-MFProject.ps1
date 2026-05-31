@@ -34,7 +34,7 @@ function Update-MFProject
             Author: Adrian Andersson
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     PARAM(
         #The name of your module
         [Parameter()]
@@ -193,10 +193,13 @@ function Update-MFProject
         }
 
         write-verbose "Exporting config to: $configPath"
-        try{
-            $config|export-clixml $configPath
-        }catch{
-            throw 'Error exporting config'
+        if($PSCmdlet.ShouldProcess($configPath, 'Update ModuleForge project configuration'))
+        {
+            try{
+                $config|export-clixml $configPath
+            }catch{
+                throw 'Error exporting config'
+            }
         }
     }
 }

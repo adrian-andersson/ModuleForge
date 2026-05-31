@@ -6,7 +6,9 @@ function Get-MFLatestSemverFromBuildManifest
             If you are manually building, and you have access to the \build folder, you can use this to get the next semver
             
         .DESCRIPTION
-            Detailed Description
+            Reads the compiled module manifest from the build folder and returns the current version as a semver object.
+            Useful when building locally and needing to determine the current version before calculating the next one.
+            Supports an optional module name override for cases where the config file is unavailable.
             
         ------------
         .EXAMPLE
@@ -37,8 +39,10 @@ function Get-MFLatestSemverFromBuildManifest
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
         [alias('Path')]
         [string]$ModulePath  = $(get-location).path,
+        #Name of the ModuleForge config file. Defaults to 'moduleForgeConfig.xml'
         [Parameter(DontShow)]
         [string]$ConfigFile = 'moduleForgeConfig.xml',
+        #Override the module name from config. Useful when the config file is unavailable and the module name is already known
         [Parameter(DontShow)]
         [string]$ModuleNameOverride
 

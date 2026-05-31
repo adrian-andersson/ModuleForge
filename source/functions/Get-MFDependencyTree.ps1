@@ -33,10 +33,12 @@ function Get-MFDependencyTree
     #>
 
     [CmdletBinding()]
+    [OutputType([string])]
     PARAM(
         #What Reference Data are we looking at. See function example for how to retrieve
         [Parameter(ValueFromPipeline)]
         [object[]]$ReferenceData = (get-mfFolderItemDetails -path (get-item source).fullname),
+        #Output format — 'Terminal' prints a text-based dependency tree, 'Mermaid' outputs a flowchart, 'MermaidMarkdown' wraps the flowchart in a markdown code block for embedding in docs
         [Parameter()]
         [ValidateSet('Mermaid','MermaidMarkdown','Terminal')]
         [string]$OutputType = 'Terminal'

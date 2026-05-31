@@ -22,12 +22,16 @@ function Get-MFScriptAnalyzerSummary
             
             
             
+        .OUTPUTS
+            [PSCustomObject] - Returns a summary object containing Errors, Warnings, Informational counts, top-flagged rules, and top-flagged files
+
         .NOTES
             Author: Adrian Andersson
-            
+
     #>
 
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     PARAM(
         #Source Path for function files
         [Parameter(ValueFromPipelineByPropertyName)]
