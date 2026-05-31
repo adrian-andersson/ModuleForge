@@ -5,11 +5,14 @@
 - [x] Add `Resolve-MFModuleCase` to fix NuGet package ID casing for GitHub Packages
 - [ ] Add PSGallery publish YAML — install dependencies, pull module from git, run `Resolve-MFModuleCase`, validate with `Get-Module`, publish to PSGallery
 - [ ] Add a function/method to invoke Pester locally
+- [ ] Clean up function documentation — fill missing parameter descriptions in `Build-MFProject`, `New-MFProject`, `Get-MFLatestSemverFromBuildManifest`, and `Get-MFDependencyTree`; consider stripping `ProgressAction` from generated docs
 
 ## v1.4.0
 
 - [ ] CLM compatibility check — scan for classes, `Add-Type`, COM objects and other CLM-incompatible constructs, surface as soft-fail advisory in PR pipeline
 - [ ] Add CLM compatibility marker to build output / module tags
+- [ ] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
+- [ ] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
 
 ## v1.5.0
 
@@ -25,13 +28,12 @@
 ## Docs Site
 
 - [ ] Write "Why ModuleForge" background page — origin story, cross-pollination from Terraform/React patterns, pure PowerShell decision
-- [ ] Add commit prefix reference page — `feat:`, `fix:`, `chore:` etc. with examples showing how they drive changelog output
+- [x] Add commit prefix reference page — covered in `CommitStrategy_And_PRProcess.md`
 - [ ] Add document signing tutorial — working YAML example showing how to bolt signing onto the existing pipeline
-- [ ] Add note on test-alongside-function convention and why it works
+- [x] Add note on test-alongside-function convention and why it works — covered in `Pester.md`
 - [ ] Add `Get-MFDependencyTree` Mermaid output example to function page
 - [ ] Document `-ExportClasses` and `-ExportEnums` properly — explain the PowerShell scoping problem they solve
-- [ ] Fill in missing parameter descriptions for `-ConfigFile` and `-ReleaseNotes` on `Build-MFProject`
-- [ ] Investigate GH Pages light/dark mode via `prefers-color-scheme` — check if Just The Docs theme supports it natively
+- [x] Investigate GH Pages light/dark mode — implemented Just The Docs theme with dark colour scheme
 - [ ] Add a list of bugs, quirks, and behaviours that were worked around in the making of this project, including:
   - Upper-Case Azure-DevOps Packages + Nuget + PreRelease Tags
   - Unpacking the NUPKG to inject the source repository URL to ensure compatibility with NUGET v3 and GHPackages
