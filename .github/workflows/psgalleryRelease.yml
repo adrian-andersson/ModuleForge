@@ -6,10 +6,10 @@ on:
       release_selector:
         description: 'Which release to publish to PSGallery'
         required: true
-        default: 'latest'
+        default: 'latest-release'
         type: choice
         options:
-          - latest
+          - latest-release
           - latest-stable
           - latest-prerelease
       moduleforge_release_toggle:
@@ -45,7 +45,7 @@ jobs:
           $releaseSelector = '${{ github.event.inputs.release_selector }}'
           write-verbose "Release selector: $releaseSelector"
 
-          if($releaseSelector -eq 'latest')
+          if($releaseSelector -eq 'latest-release')
           {
             write-verbose 'Getting latest release'
             $releaseJson = gh release view --json tagName,name,isPrerelease
@@ -171,6 +171,23 @@ jobs:
           {
             throw 'Module not found after install — case resolution may have failed'
           }
+          write-verbose 'Checking if version already exists on PSGallery'
+          $galleryCheckSplat = @{
+            Name       = $moduleName
+            Version    = $version
+            Repository = 'PSGallery'
+            ErrorAction = 'SilentlyContinue'
+          }
+          if($semver.PreReleaseLabel)
+          {
+            $galleryCheckSplat.Prerelease = $true
+          }
+          $existingOnGallery = Find-PSResource @galleryCheckSplat
+          if($existingOnGallery)
+          {
+            throw "Version $semver of $moduleName already exists on PSGallery. Increment the version before publishing."
+          }
+          write-verbose "Version $semver not found on PSGallery — proceeding with publish"
           write-verbose 'Publishing to PSGallery'
           $publishSplat = @{
             Repository = 'PSGallery'
