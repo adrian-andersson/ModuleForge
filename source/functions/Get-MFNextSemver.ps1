@@ -41,6 +41,7 @@ function Get-MFNextSemver
     #>
 
     [CmdletBinding(DefaultParameterSetName='default')]
+    [OutputType([semver])]
     PARAM(
         #Semver Version
         [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,ParameterSetName='default')]

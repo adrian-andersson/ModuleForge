@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
 
     #Reference Current Path
@@ -63,6 +66,19 @@ describe 'Get-MFScriptAnalyzerSummary' {
 
     It 'Should have returned a summary with 1 warning' {
         $output[1].Warnings | should -be 1
+    }
+}
+
+describe 'Get-MFScriptAnalyzerSummary with SuppressOutput' {
+    BeforeAll {
+        $suppressedOutput = Get-MFScriptAnalyzerSummary $sourcePath -SuppressOutput
+    }
+    It 'Should return only the summary object — not individual findings' {
+        $suppressedOutput.PSObject.Properties.Name | Should -Contain 'Warnings'
+        $suppressedOutput.PSObject.Properties.Name | Should -Not -Contain 'RuleName'
+    }
+    It 'Should still report 1 warning in the summary' {
+        $suppressedOutput.Warnings | Should -Be 1
     }
 }
 

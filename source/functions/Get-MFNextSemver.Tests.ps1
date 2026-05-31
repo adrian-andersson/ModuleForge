@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
     #Load This File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
@@ -41,5 +44,22 @@ Describe 'Get-MFNextSemver' {
     It 'Should create a new prerelease label and restart the prerelease numbering'  {
         $newPreRelease = get-mfNextSemver -version $([semver]::new('3.0.0')) -prerelease -preReleaseLabel 'stage'
         $newPreRelease.ToString() | should -BeExactly '3.0.1-stagev001'
+    }
+}
+
+Describe 'Get-MFNextSemver Error Handling' {
+    It 'Should throw when no increment or switch is provided' {
+        { Get-MFNextSemver -Version ([semver]::new('1.0.0')) } | Should -Throw
+    }
+    It 'Should throw when StableRelease is used on a non-prerelease version' {
+        { Get-MFNextSemver -Version ([semver]::new('1.0.0')) -StableRelease } | Should -Throw
+    }
+}
+
+Describe 'Get-MFNextSemver Prerelease Label Change' {
+    It 'Should reset prerelease counter to 001 when label changes' {
+        $preReleaseVersion = [semver]::new('1.0.0-prev003')
+        $result = Get-MFNextSemver -Version $preReleaseVersion -PreRelease -PreReleaseLabel 'stage'
+        $result.ToString() | Should -BeExactly '1.0.0-stagev001'
     }
 }

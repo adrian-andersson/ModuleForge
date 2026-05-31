@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
 
     #Reference Current Path
@@ -56,6 +59,22 @@ Describe 'New-MFProject' {
         start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
     }
 
+}
+
+Describe 'New-MFProject should throw if config already exists' {
+    BeforeAll{
+        new-item -ItemType Directory -path $testPath -force
+        set-location $testPath
+        New-MFProject -ModuleName 'TestModule' -description 'Test description'
+    }
+    It 'Should throw when a config file already exists in the target path' {
+        { New-MFProject -ModuleName 'TestModule' -description 'Test description' } | Should -Throw
+    }
+    AfterAll{
+        Set-Location $currentPath
+        Remove-Item $testPath -Force -Recurse
+        Start-Sleep -Seconds 2
+    }
 }
 
 Describe 'New-MFProject' {

@@ -44,6 +44,7 @@ function Get-MFGitLatestVersion
     #>
 
     [CmdletBinding()]
+    [OutputType([semver])]
     PARAM(
 
     )

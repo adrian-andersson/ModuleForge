@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
 
     #Reference Current Path
@@ -251,6 +254,21 @@ Describe 'write-mfModuleDocs' {
         $content |Should -contain '- [changeLog](./changeLog.md)'
         $content |Should -contain '## functions'
         $content |Should -contain '- [get-helloWorld](./functions/get-helloWorld.md)'
+    }
+
+    Describe 'write-mfModuleDocs with SkipIndex' {
+        BeforeAll {
+            # Remove index.md so we can verify -SkipIndex does not recreate it
+            # Running again also exercises the functions folder recreation path
+            Remove-Item (join-path $newDocsPath 'index.md') -ErrorAction Ignore
+            write-mfModuleDocs -modulename platyPsTest -path $docsPath -SkipIndex
+        }
+        It 'Should not create index.md when SkipIndex is set' {
+            Test-Path (join-path $newDocsPath 'index.md') | Should -Be $false
+        }
+        It 'Should still regenerate function documentation' {
+            (Get-ChildItem -Path $newFuncsPath -Filter '*.md').Count | Should -BeGreaterThan 0
+        }
     }
 
     AfterAll{

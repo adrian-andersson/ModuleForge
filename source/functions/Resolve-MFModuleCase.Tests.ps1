@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
     #Load This File
     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
@@ -56,6 +59,13 @@ Describe 'Check Resolve-MFModuleCase with good case folder' {
     }
     It 'Should still have case matching Manifest and FolderBase names' {
         $Result2.ManifestAndFolderMatch |  Should -Be $true
+    }
+}
+
+Describe 'Resolve-MFModuleCase with a module that does not exist' {
+    It 'Should warn and return nothing when the module is not installed' {
+        $result = Resolve-MFModuleCase -ModuleName 'ThisModuleDefinitelyDoesNotExist99999'
+        $result | Should -BeNullOrEmpty
     }
 }
 

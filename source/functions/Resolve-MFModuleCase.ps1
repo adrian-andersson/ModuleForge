@@ -31,16 +31,20 @@ function Resolve-MFModuleCase
             WARNING: Case mismatch between module folder moduleforgecasetest and ModuleForgeCaseTest
             VERBOSE: Attempt to rename folder to manifest basename to correct for casing
             VERBOSE: Folder Rename attempted
-            
+
+        .OUTPUTS
+            [PSCustomObject] - Returns a result object per module location found, containing FolderFullName, FolderBaseName, ManifestName, RenameAttempt, and ManifestAndFolderMatch
+
         .NOTES
             Author: Adrian Andersson
-            
+
     #>
 
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     PARAM(
         #Name of the Module to resolve
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
         [string]$ModuleName,
         #ModuleFolder to use. If you want to override the module locations manually, use this
         [Parameter()]
@@ -105,7 +109,7 @@ function Resolve-MFModuleCase
             Remove-Variable latestVersion,modManifest,BaseFolderRefresh -ErrorAction Ignore
             #Whilst risky, this seems a good compromise. We need to find the latest version somehow
             Write-Verbose "Checking folder $_ for latest module version"
-            $latestVersion = $(Get-ChildItem -path $_|Select-Object $folderVersionSelect).where{$_.Semver -ne $null}|Sort-Object -Property Semver -Descending|Select-Object -First 1
+            $latestVersion = $(Get-ChildItem -path $_|Select-Object $folderVersionSelect).where{$_.Semver}|Sort-Object -Property Semver -Descending|Select-Object -First 1
             if($latestVersion)
             {
                 Write-Verbose "Found latest version of: $($latestVersion.Name)"

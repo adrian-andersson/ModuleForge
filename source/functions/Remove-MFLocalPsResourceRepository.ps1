@@ -18,7 +18,7 @@ function Remove-MFLocalPsResourceRepository
             Author: Adrian Andersson
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     PARAM(
         #Name of the repository
         [Parameter()]
@@ -60,21 +60,27 @@ function Remove-MFLocalPsResourceRepository
         if($repoRef)
         {
             write-verbose 'Repository reference found, try and remove'
-            Try{
-                unregister-PSResourceRepository -name $RepositoryName -ErrorAction Stop
-            }catch{
-                throw 'Error unregistering the Resource Repository'
+            if($PSCmdlet.ShouldProcess($RepositoryName, 'Unregister PSResource repository'))
+            {
+                Try{
+                    unregister-PSResourceRepository -name $RepositoryName -ErrorAction Stop
+                }catch{
+                    throw 'Error unregistering the Resource Repository'
+                }
             }
         }
 
         if((test-path $repositoryLocation))
         {
             write-verbose "File folder found at: $repositoryLocation"
-            try{
-                remove-item $repositoryLocation -force -ErrorAction Stop -Recurse
-                write-verbose 'Directory removed'
-            }Catch{
-                Throw 'Error Removing directory'
+            if($PSCmdlet.ShouldProcess($repositoryLocation, 'Remove local repository directory'))
+            {
+                try{
+                    remove-item $repositoryLocation -force -ErrorAction Stop -Recurse
+                    write-verbose 'Directory removed'
+                }Catch{
+                    Throw 'Error Removing directory'
+                }
             }
         }
     }
