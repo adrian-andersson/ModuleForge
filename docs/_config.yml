@@ -1,0 +1,6 @@
+remote_theme: just-the-docs/just-the-docs
+
+title: ModuleForge
+description: PowerShell module scaffolding and build tool
+
+color_scheme: dark
