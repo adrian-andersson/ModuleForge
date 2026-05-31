@@ -1,0 +1,302 @@
+name: PSGallery Release - No ModuleForge
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_selector:
+        description: 'Which release to publish to PSGallery'
+        required: true
+        default: 'latest-release'
+        type: choice
+        options:
+          - latest-release
+          - latest-stable
+          - latest-prerelease
+
+jobs:
+  psgalleryDeploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get release details
+        id: get_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $VerbosePreference = 'Continue'
+          $releaseSelector = '${{ github.event.inputs.release_selector }}'
+          write-verbose "Release selector: $releaseSelector"
+
+          write-verbose 'Getting release list'
+          $releases = gh release list --limit 100 --json tagName,name,isPrerelease,createdAt | ConvertFrom-Json -ErrorAction Stop
+          if($releaseSelector -eq 'latest-release')
+          {
+            write-verbose 'Selecting most recently created release'
+            $release = $releases | Select-Object -First 1
+          }
+          elseif($releaseSelector -eq 'latest-stable')
+          {
+            write-verbose 'Filtering to latest stable release'
+            $release = $releases | Where-Object { -not $_.isPrerelease } | Select-Object -First 1
+          }
+          else
+          {
+            write-verbose 'Filtering to latest prerelease'
+            $release = $releases | Where-Object { $_.isPrerelease } | Select-Object -First 1
+          }
+          if(!$release)
+          {
+            throw "No matching release found for selector: $releaseSelector"
+          }
+          write-verbose "Selected tag: $($release.tagName) — fetching full details"
+          $release = gh release view $release.tagName --json tagName,name,isPrerelease | ConvertFrom-Json -ErrorAction Stop
+
+          write-verbose "Release: tagName=$($release.tagName) name=$($release.name) isPrerelease=$($release.isPrerelease)"
+          if($release.isPrerelease)
+          {
+            write-verbose '⚠️  Selected release is a prerelease — PSGallery will list it as a prerelease version'
+          }
+          Write-Output "tag_name=$($release.tagName)" >> $env:GITHUB_OUTPUT
+          Write-Output "release_name=$($release.name)" >> $env:GITHUB_OUTPUT
+          Write-Output "release_isPreRelease=$($release.isPrerelease)" >> $env:GITHUB_OUTPUT
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          $VerbosePreference = 'Continue'
+          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
+          $moduleList = @('Microsoft.PowerShell.PSResourceGet')
+          import-module $moduleList
+          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+
+      - name: Register GitHub Packages repository
+        shell: pwsh
+        id: repoSetup
+        if: success()
+        run: |
+          $VerbosePreference = 'Continue'
+          $repoUrl = "https://nuget.pkg.github.com/$($env:GITHUB_REPOSITORY_OWNER)/index.json"
+          write-verbose "Got repoUrl: $repoUrl"
+          $repositorySplat = @{
+            Uri     = $repoUrl
+            Trusted = $true
+            Name    = 'myGHPackages'
+          }
+          Register-PSResourceRepository @repositorySplat
+          write-verbose "Repositories:`n$(Get-PSResourceRepository | Select-Object Name,Uri,Trusted | Format-List | Out-String)"
+
+      - name: Install module from GitHub Packages and publish to PSGallery
+        shell: pwsh
+        id: moduleInstall
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PSGalleryToken: ${{ secrets.PSGALLERY }}
+          tagName: ${{ steps.get_release.outputs.tag_name }}
+        if: success()
+        run: |
+          #Shortened version of Resolve-MFModuleCase from the ModuleForge source, to attempt to resolve any case issues with the module folder after installation from GitHub Packages, to ensure the module is discoverable for publishing to PSGallery
+          function Resolve-MFModuleCase
+          {
+              [CmdletBinding()]
+              [OutputType([PSCustomObject])]
+              PARAM(
+                  #Name of the Module to resolve
+                  [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+                  [string]$ModuleName,
+                  #ModuleFolder to use. If you want to override the module locations manually, use this
+                  [Parameter()]
+                  [string[]]$ModuleFolder
+
+              )
+              begin{
+                  $folderVersionSelect = @(
+                      'FullName'
+                      'Name'
+                      @{
+                          Name = 'Semver'
+                          Expression = {
+                              try {
+                                  [semver]"$($_.Name)"
+                              }catch {
+                                  $null
+                              }
+                          }
+                      }
+                  )
+                  
+              }
+              
+              process{
+                  $moduleCandidates = [System.Collections.Generic.List[string]]::new()
+                  if($ModuleFolder)
+                  {
+                      write-verbose "Checking defined folder: $ModuleFolder"
+                      $foundItems = Get-ChildItem -Path $ModuleFolder -Recurse -Filter $ModuleName -Directory
+                      $foundItems.foreach{
+                          $moduleCandidates.Add($_.FullName)
+                      }
+                  }else{
+                      $locations = $env:PSModulePath -split [IO.Path]::PathSeparator
+                      $locations.Foreach{
+                          try{
+                              $foundItems = Get-ChildItem -Path $_ -Recurse -Filter $ModuleName -Directory -ErrorAction Ignore
+                              $foundItems.foreach{
+                                  $moduleCandidates.Add($_.FullName)
+                              }
+                          }catch{
+                              Write-Warning "Skipping path $_ due to read or permission errors"
+                          }
+                          
+                      }
+                  }
+                  $moduleCandidates = $moduleCandidates.ToArray()
+                  Write-Verbose "Found $($moduleCandidates.count) locations."
+                  if(!$moduleCandidates -or $moduleCandidates.Count -lt 1)
+                  {
+                      Write-Warning "No module folders found for module: $ModuleName"
+                  }
+                  $moduleCandidates.forEach{
+                      $moduleFolderBasename = $(Get-Item $_).BaseName
+                      Remove-Variable latestVersion,modManifest,BaseFolderRefresh -ErrorAction Ignore
+                      #Whilst risky, this seems a good compromise. We need to find the latest version somehow
+                      Write-Verbose "Checking folder $_ for latest module version"
+                      $latestVersion = $(Get-ChildItem -path $_|Select-Object $folderVersionSelect).where{$_.Semver}|Sort-Object -Property Semver -Descending|Select-Object -First 1
+                      if($latestVersion)
+                      {
+                          Write-Verbose "Found latest version of: $($latestVersion.Name)"
+                          $modManifest = $(Get-ChildItem -Path $latestVersion.FullName).where{$_.name -eq  "$ModuleName.psd1"}|Select-Object -first 1
+                          Write-Verbose "Found Manifest name with: $($modManifest.basename)"
+                          If($(Get-Item $_).BaseName -cne $modManifest.basename)
+                          {
+                              Write-Warning "Case mismatch between module folder $moduleFolderBasename and $($modManifest.basename)"
+                              write-verbose "Attempt to rename folder to manifest basename to correct for casing"
+                              try{
+                                  Rename-Item -path $_ -NewName $modManifest.BaseName -Force -Erroraction Stop
+                                  #Small 4 second sleep for IOPS
+                                  Start-Sleep -Seconds 4
+                                  Write-Verbose 'Folder Rename attempted'
+                              }catch{
+                                  write-warning 'Error renaming folder'
+                                  
+                              }
+                              #We need to do it this way, because we just renamed our folder, and that matters on linux
+                              $Parent = Split-Path $_ -Parent
+                              $NewFullPath = Join-Path $Parent $modManifest.BaseName
+                              try{
+                                  #Try and get the new item
+                                  $BaseFolderRefresh = Get-Item $NewFullPath
+                              }catch{
+                                  #If that fails, go and get the old item
+                                  $BaseFolderRefresh = Get-Item $_
+                              }
+                              
+                              [PSCustomObject]@{
+                                  FolderFullName = $BaseFolderRefresh.FullName
+                                  FolderBaseName = $BaseFolderRefresh.BaseName
+                                  ManifestName = $modManifest.BaseName
+                                  RenameAttempt = $true
+                                  ManifestAndFolderMatch = if($BaseFolderRefresh.BaseName -ceq $modManifest.BaseName){$true}else{$false}
+                              }
+                          }else{
+                              Write-Verbose "Case match between module folder $moduleFolderBasename and $($modManifest.basename) - All Ok"
+                              [PSCustomObject]@{
+                                  FolderFullName = $_
+                                  FolderBaseName = $moduleFolderBasename
+                                  ManifestName = $modManifest.BaseName
+                                  RenameAttempt = $false
+                                  ManifestAndFolderMatch = if($moduleFolderBasename -ceq $modManifest.BaseName){$true}else{$false}
+                              }
+                          }
+                          Write-Verbose "Finished checking folder $_"
+                      }else{
+                          Write-Warning "No module versions found for $modulename in folder $_"
+                      }
+                  }
+              }
+          }
+          #Now carry on with the rest of the push process
+          $VerbosePreference = 'Continue'
+          if(!(Test-Path .\moduleForgeConfig.xml))
+          {
+            throw 'Error reading ModuleForge Config'
+          }
+          $config = Import-Clixml .\moduleForgeConfig.xml
+          $moduleName = $config.moduleName
+          write-verbose "ModuleName: $moduleName"
+          $credential = New-Object System.Management.Automation.PSCredential(
+            'githubActions',
+            (ConvertTo-SecureString $env:GH_TOKEN -AsPlainText -Force)
+          )
+          $versionString = $env:tagName
+          write-verbose "Version from tag: $versionString"
+          $version = $versionString.Substring(1)
+          $semver = [semver]::New($version)
+          write-verbose "Parsed version: $semver"
+          $fetchSplat = @{
+            Repository = 'myGHPackages'
+            Name       = $moduleName
+            Credential = $credential
+            Version    = $semver
+          }
+          $selectedRelease = Find-PSResource @fetchSplat
+          write-verbose "Found release: $($selectedRelease | Format-List | Out-String)"
+          if($selectedRelease)
+          {
+            $selectedRelease | Install-PSResource -Credential $credential
+          }
+          else
+          {
+            throw "Module $moduleName version $semver not found in GitHub Packages"
+          }
+          write-verbose 'Resolving module case for PSGallery compatibility'
+          Resolve-MFModuleCase -ModuleName $moduleName
+          $moduleFound = $(Get-Module -ListAvailable).where{ $_.Name -ieq $moduleName }
+          if($moduleFound)
+          {
+            write-verbose "Module found at: $($moduleFound.moduleBase)"
+          }
+          else
+          {
+            throw 'Module not found after install — case resolution may have failed'
+          }
+          write-verbose 'Checking if version already exists on PSGallery'
+          $galleryCheckSplat = @{
+            Name       = $moduleName
+            Version    = $version
+            Repository = 'PSGallery'
+            ErrorAction = 'SilentlyContinue'
+          }
+          if($semver.PreReleaseLabel)
+          {
+            $galleryCheckSplat.Prerelease = $true
+          }
+          $existingOnGallery = Find-PSResource @galleryCheckSplat
+          if($existingOnGallery)
+          {
+            throw "Version $semver of $moduleName already exists on PSGallery. Increment the version before publishing."
+          }
+          write-verbose "Version $semver not found on PSGallery — proceeding with publish"
+          write-verbose 'Publishing to PSGallery'
+          $publishSplat = @{
+            Repository = 'PSGallery'
+            APIKey     = $env:PSGalleryToken
+            Path       = $moduleFound.moduleBase
+          }
+          Publish-PSResource @publishSplat
+
+      - name: Hints and Extras
+        if: success()
+        shell: pwsh
+        run: |
+          write-verbose 'PSGallery publish completed successfully'
+          write-verbose 'Tip: To verify without publishing, comment out the Publish-PSResource call and inspect the Install step verbose output'
