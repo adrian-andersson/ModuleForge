@@ -105,4 +105,4 @@ Full tutorials, function reference, and examples are available in the **[ModuleF
 
 ## Contributing
 
-Issues and PRs welcome. Please review the documentation before submitting.
+Issues and PRs welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
