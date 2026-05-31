@@ -26,6 +26,7 @@ function Get-MFDependencyTree
                         - Multi-line string expected to print to terminal (Default Behaviour)
                         - A mermaid chart (If specified with Output Type 'Mermaid') 
                         - A mermaid chart encapsulated in a markdown code block ('MermaidMarkdown')
+                        
             
         .NOTES
             Author: Adrian Andersson
