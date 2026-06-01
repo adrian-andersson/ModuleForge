@@ -22,8 +22,8 @@ BeforeAll{
 
 Describe 'Invoke-MFPester' {
     BeforeAll{
-        $testRoot = join-path $env:TEMP "MFTest_$([System.IO.Path]::GetRandomFileName())"
-        $testFunctionsDir = join-path $testRoot 'source\functions'
+        $testRoot = join-path ([System.IO.Path]::GetTempPath())"MFTest_$([System.IO.Path]::GetRandomFileName())"
+        $testFunctionsDir = join-path $testRoot 'source' 'functions'
         New-Item -ItemType Directory -Path $testFunctionsDir -Force | Out-Null
         @{moduleName = 'TestModule'} | Export-Clixml (join-path $testRoot 'moduleForgeConfig.xml')
 
@@ -63,8 +63,8 @@ Describe 'Invoke-MFPester' {
 
 Describe 'Invoke-MFPester ExcludeFromCoverage' {
     BeforeAll{
-        $testRoot = join-path $env:TEMP "MFTest_$([System.IO.Path]::GetRandomFileName())"
-        $testFunctionsDir = join-path $testRoot 'source\functions'
+        $testRoot = join-path ([System.IO.Path]::GetTempPath())"MFTest_$([System.IO.Path]::GetRandomFileName())"
+        $testFunctionsDir = join-path $testRoot 'source' 'functions'
         New-Item -ItemType Directory -Path $testFunctionsDir -Force | Out-Null
         @{moduleName = 'TestModule'} | Export-Clixml (join-path $testRoot 'moduleForgeConfig.xml')
 
@@ -92,7 +92,7 @@ Describe 'Invoke-MFPester ExcludeFromCoverage' {
 
 Describe 'Invoke-MFPester Error Handling' {
     It 'should throw when no moduleForgeConfig.xml is found' {
-        $emptyDir = join-path $env:TEMP "MFEmpty_$([System.IO.Path]::GetRandomFileName())"
+        $emptyDir = join-path ([System.IO.Path]::GetTempPath())"MFEmpty_$([System.IO.Path]::GetRandomFileName())"
         New-Item -ItemType Directory -Path $emptyDir | Out-Null
         try{
             {Invoke-MFPester -ModulePath $emptyDir} | Should -Throw
@@ -102,7 +102,7 @@ Describe 'Invoke-MFPester Error Handling' {
     }
 
     It 'should throw when source\functions folder does not exist' {
-        $noFunctionsDir = join-path $env:TEMP "MFNoFns_$([System.IO.Path]::GetRandomFileName())"
+        $noFunctionsDir = join-path ([System.IO.Path]::GetTempPath())"MFNoFns_$([System.IO.Path]::GetRandomFileName())"
         New-Item -ItemType Directory -Path $noFunctionsDir | Out-Null
         @{moduleName = 'TestModule'} | Export-Clixml (join-path $noFunctionsDir 'moduleForgeConfig.xml')
         try{

@@ -23,12 +23,12 @@ BeforeAll{
 
 Describe 'Invoke-MFBuildPreRelease' {
     BeforeAll{
-        $testRoot = join-path $env:TEMP "MFTest_$([System.IO.Path]::GetRandomFileName())"
+        $testRoot = join-path ([System.IO.Path]::GetTempPath())"MFTest_$([System.IO.Path]::GetRandomFileName())"
         New-Item -ItemType Directory -Path $testRoot | Out-Null
 
         @{moduleName = 'TestModule'} | Export-Clixml (join-path $testRoot 'moduleForgeConfig.xml')
 
-        $moduleFolder = join-path $testRoot 'build\TestModule'
+        $moduleFolder = join-path $testRoot 'build' 'TestModule'
         New-Item -ItemType Directory -Path $moduleFolder -Force | Out-Null
         New-ModuleManifest -Path (join-path $moduleFolder 'TestModule.psd1') `
             -ModuleVersion '1.0.0' `
@@ -58,7 +58,7 @@ Describe 'Invoke-MFBuildPreRelease' {
     }
 
     It 'should find the project root when called from a subdirectory' {
-        $subDir = join-path $testRoot 'source\functions'
+        $subDir = join-path $testRoot 'source' 'functions'
         New-Item -ItemType Directory -Path $subDir -Force | Out-Null
         Invoke-MFBuildPreRelease -ModulePath $subDir
         Should -Invoke Build-MFProject -Times 1
@@ -67,7 +67,7 @@ Describe 'Invoke-MFBuildPreRelease' {
 
 Describe 'Invoke-MFBuildPreRelease Error Handling' {
     It 'should throw when no moduleForgeConfig.xml is found' {
-        $emptyDir = join-path $env:TEMP "MFEmpty_$([System.IO.Path]::GetRandomFileName())"
+        $emptyDir = join-path ([System.IO.Path]::GetTempPath())"MFEmpty_$([System.IO.Path]::GetRandomFileName())"
         New-Item -ItemType Directory -Path $emptyDir | Out-Null
         try{
             {Invoke-MFBuildPreRelease -ModulePath $emptyDir} | Should -Throw
