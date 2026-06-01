@@ -31,13 +31,13 @@ ModuleForge solves this with a single, opinionated CI/CD toolchain that gets out
 
 Spin up a standardised, ready-to-build module structure in seconds. No more blank-page paralysis or inconsistent project layouts across your team.
 
-### ⚙️ CI/CD Workflows — GitHub & Azure DevOps
+### ⚙️ CI/CD Workflows -> GitHub & Azure DevOps
 
 Add production-grade pipelines with full feature parity across both platforms:
 
-- **Pester tests** are hard-fail — broken code doesn't ship
-- **Code coverage** is soft-fail — tracked without blocking releases
-- **PSScriptAnalyzer** runs in advisory mode — keeping your code clean without the noise
+- **Pester tests** are hard-fail -> broken code doesn't ship
+- **Code coverage** is soft-fail -> tracked without blocking releases
+- **PSScriptAnalyzer** runs in advisory mode -> keeping your code clean without the noise
 - **Auto-generated PR comments** surface lint and test results directly in your review workflow
 
 ![PR Comments](/img/moduleForge_pr_comments.png)
@@ -50,7 +50,7 @@ Auto-Applied tagging tracks build versions so you don't have to, including pre-r
 
 ### 📋 Automated Changelog Generation
 
-Commit prefixes (`feat:`, `fix:`, `chore:`, etc.) drive automatic changelog creation and GitHub Packages release notes — no manual changelog maintenance required.
+Commit prefixes (`feat:`, `fix:`, `chore:`, etc.) drive automatic changelog creation and GitHub Packages release notes -> no manual changelog maintenance required.
 
 ![Changelog](/img/changelog.png)
 
@@ -96,6 +96,45 @@ ModuleForge was built around a clear set of principles:
 | **Orchestrator agnostic** | Works with GitHub Actions, Azure DevOps, or your own tooling |
 | **Modern stack** | PowerShell 7+, Pester, and PSResourceGet |
 | **Scalable** | Handles simple scripts and complex multi-dependency modules alike |
+
+## 🔍 Dependency Visualisation
+
+ModuleForge can map the call relationships between your module's source files and render them in the terminal or as a [Mermaid](https://mermaid.js.org/) flowchart. Run it from your project root:
+
+```powershell
+Get-MFDependencyTree
+```
+
+Useful for:
+
+- **Writing Pester tests** -> see exactly which private functions a public function calls so you can dot-source the right dependencies in `BeforeAll`
+- **Load order** -> identify which classes or private helpers must resolve before a function, informing what goes in `ScriptsToProcess` or `NestedModules`
+- **Spotting circular dependencies** -> cycles are immediately visible in the flowchart before they cause a build failure
+- **Living architecture docs** -> embed the output directly in a README or docs page and it stays current with the code
+
+For quick local inspection without leaving the terminal (truncated):
+
+```text
+.\source\functions\Invoke-MFBuildPreRelease.ps1
+     >--DEPENDS-ON--> .\source\functions\Build-MFProject.ps1
+         >--DEPENDS-ON--> .\source\functions\Get-MFFolderItemDetails.ps1
+             >--DEPENDS-ON--> .\source\functions\Get-MFFolderItems.ps1
+     >--DEPENDS-ON--> .\source\private\Get-MFProjectRoot.ps1
+```
+
+Add `-OutputType MermaidMarkdown` to embed directly in docs -> GitHub renders it inline (truncated):
+
+```mermaid
+flowchart TD
+'.\source\functions\Invoke-MFBuildPreRelease.ps1' --> '.\source\functions\Build-MFProject.ps1'
+'.\source\functions\Invoke-MFBuildPreRelease.ps1' --> '.\source\private\Get-MFProjectRoot.ps1'
+'.\source\functions\Build-MFProject.ps1' --> '.\source\functions\Get-MFFolderItemDetails.ps1'
+'.\source\functions\Build-MFProject.ps1' --> '.\source\functions\Get-MFFolderItems.ps1'
+'.\source\functions\Get-MFFolderItemDetails.ps1' --> '.\source\functions\Get-MFFolderItems.ps1'
+'.\source\functions\Write-MFModuleDocs.ps1' --> '.\source\private\ConvertTo-MFNavTitle.ps1'
+'.\source\functions\Write-MFModuleDocs.ps1' --> '.\source\private\Get-MFH1FromFile.ps1'
+'.\source\functions\New-MFProject.ps1' --> '.\source\private\add-mfFilesAndFolders.ps1'
+```
 
 ## Getting Started
 
