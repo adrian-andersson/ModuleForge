@@ -17,12 +17,24 @@ BeforeAll{
             if($item){. $item.FullName}else{write-warning "Dependency not found: $itemPath"}
         }
     }
+    #Stub BuildMFProject so we can check the parameters sent to it without actually running a build
+    function Build-MFProject {
+        param(
+            [Parameter()]$Version,
+            [Parameter()]$ModulePath,
+            [Parameter()]$ConfigFile
+        )
+        throw "Stub should be mocked"
+    }
+
+    $global:__BuildMFProjectCalls = @()
 
     #Load This File
      $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
      $functionName = 'Invoke-MFBuildPreRelease'
     . $fileName
 }
+
 
 Describe 'Check Clean Environment' {
     BeforeAll {
@@ -82,7 +94,6 @@ Describe 'Invoke-MFBuildPreRelease Error Handling' {
     BeforeAll{
         Mock Build-MFProject {}
     }
-
     It 'should throw when no moduleForgeConfig.xml is found' {
         $emptyDir = join-path ([System.IO.Path]::GetTempPath())"MFEmpty_$([System.IO.Path]::GetRandomFileName())"
         New-Item -ItemType Directory -Path $emptyDir | Out-Null
