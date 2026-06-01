@@ -1,3 +1,8 @@
+---
+layout: default
+title: Commit Strategy and PR Process
+parent: Misc
+---
 # Commit Strategy and PR Process
 
 This page describes the commit message conventions and pull request process used by ModuleForge, and how the two work together to drive automated changelog generation and semantic versioning.
@@ -91,3 +96,4 @@ These inputs directly reflect the decisions already made during the PR process �
 > **`none` for version type** does not skip versioning — it increments the prerelease counter without changing the major.minor.patch version. This is the default and is safe for iterative prerelease builds.
 
 Before the build proceeds, the pipeline validates that the latest Pester test run passed and that its commit SHA matches the current branch. This acts as a safety gate — a build cannot be triggered against code that has not passed automated tests.
+

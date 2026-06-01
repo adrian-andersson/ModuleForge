@@ -1,3 +1,9 @@
+---
+layout: default
+title: Publishing your private modules to PSGallery
+parent: Github
+grand_parent: Tutorials
+---
 # Publishing your private modules to PSGallery
 
 If you want to publish your modules to PSGallery, this workflow will get you started. It will push the latest released and packaged module to PSGallery.

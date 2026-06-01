@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Remove-MFLocalPsResourceRepository
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -14,7 +17,7 @@ Remove the local test repository that was created with register-mfLocalPsResourc
 
 ```
 Remove-MFLocalPsResourceRepository [[-RepositoryName] <String>] [[-Path] <String>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -61,13 +64,29 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
-Type: ActionPreference
+Type: SwitchParameter
 Parameter Sets: (All)
-Aliases: proga
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -87,3 +106,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Author: Adrian Andersson
 
 ## RELATED LINKS
+

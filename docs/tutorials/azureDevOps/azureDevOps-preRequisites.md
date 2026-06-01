@@ -1,3 +1,9 @@
+---
+layout: default
+title: Prerequisites for Azure DevOps with ModuleForge
+parent: Azure Dev Ops
+grand_parent: Tutorials
+---
 # Prerequisites for Azure DevOps with ModuleForge
 
 The following steps need to be completed once per Azure DevOps project. You do _NOT_ need to repeat this for each subsequent repository within an Azure DevOps project space.
@@ -52,3 +58,4 @@ This step allows the Build Service agent to post comments to PRs within workflow
      - (Required for the BuildAndRelease process to correctly tag)
 
 ![New Repository](./img/pre_repoPerms.png)
+

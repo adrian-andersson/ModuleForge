@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Get-MFDependencyTree
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -54,7 +57,7 @@ Accept wildcard characters: False
 ```
 
 ### -OutputType
-{{ Fill OutputType Description }}
+Output format  - 'Terminal' prints a text-based dependency tree, 'Mermaid' outputs a flowchart, 'MermaidMarkdown' wraps the flowchart in a markdown code block for embedding in docs
 
 ```yaml
 Type: String
@@ -64,21 +67,6 @@ Aliases:
 Required: False
 Position: 2
 Default value: Terminal
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -99,3 +87,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Author: Adrian Andersson
 
 ## RELATED LINKS
+

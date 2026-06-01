@@ -1,3 +1,8 @@
+---
+layout: default
+title: Module Versioning with SemVer
+parent: Misc
+---
 # Module Versioning with SemVer
 
 Semantic Versioning (SemVer) is a versioning convention that communicates the nature of changes through the version number itself — `MAJOR.MINOR.PATCH`. The full specification is at [semver.org](https://semver.org/). The following describes how those principles are applied in the context of PowerShell modules and ModuleForge specifically, including the constraints imposed by PSGallery's SemVer V1 support.
@@ -162,3 +167,4 @@ $versions|sort-object
 ($versions|sort-object -descending|select -first 1)
 
 ```
+

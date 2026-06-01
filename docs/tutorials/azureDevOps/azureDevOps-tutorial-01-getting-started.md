@@ -1,3 +1,9 @@
+---
+layout: default
+title: Getting Started with ModuleForge and Azure DevOps
+parent: Azure Dev Ops
+grand_parent: Tutorials
+---
 # Getting Started with ModuleForge and Azure DevOps
 
 This tutorial will demonstrate how to create a simple, single-function module using ModuleForge, with 1 pester test, and deploy via Azure DevOps Pipelines.
@@ -346,3 +352,4 @@ Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed
 ## Wrapping up
 
 In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Azure DevOps Packages feed for consumption. We effectively made a CI/CD PowerShell Pipeline using Azure DevOps Pipelines + ModuleForge, and published a single-function module.
+

@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Get-MFFolderItems
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -86,7 +89,8 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-Flag to copy scripts only
+Destination path to copy files to.
+Used in conjunction with the -Copy switch
 
 ```yaml
 Type: String
@@ -115,28 +119,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### [String] - Accepts a folder path via parameter or pipeline (`ValueFromPipelineByPropertyName`).
-### OUTPUTS
+## OUTPUTS
+
 ### [Object[]] - Returns an array of objects containing:
 ###     - **Name** (`[String]`) - Name of the file.
 ###     - **Path** (`[String]`) - Full file path.
@@ -144,9 +134,8 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ###     - **Folder** (`[String]`) - Name of the source folder.
 ###     - **(Optional) newPath** (`[String]`) - Destination path if copying.
 ###     - **(Optional) newFolder** (`[String]`) - Destination folder name if copying.
-## OUTPUTS
-
 ## NOTES
 Author: Adrian Andersson
 
 ## RELATED LINKS
+

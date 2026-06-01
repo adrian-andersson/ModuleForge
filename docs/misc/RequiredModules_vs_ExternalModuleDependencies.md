@@ -1,3 +1,8 @@
+---
+layout: default
+title: Required Modules vs External Module Dependencies
+parent: Misc
+---
 # Required Modules vs External Module Dependencies
 
 The module manifest supports two ways to declare dependencies: `RequiredModules` and `ExternalModuleDependencies`. They behave quite differently, and choosing between them depends on what you need from the dependency relationship.
@@ -75,3 +80,4 @@ For more background, the [OneGet GitHub issue #164](https://github.com/OneGet/on
 ## Further Reading
 
 - [New-ModuleManifest — Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest) — official parameter reference for both `RequiredModules` and `ExternalModuleDependencies`
+

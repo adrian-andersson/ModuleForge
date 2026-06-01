@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Write-MFModuleDocs
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -14,14 +17,21 @@ Generates and updates function documentation using PlatyPS, and creates an index
 
 ```
 Write-MFModuleDocs [[-ModulePath] <String>] [-ModuleName] <String> [[-DocsFolder] <String>]
- [[-FunctionsFolder] <String>] [-IncludeChangeLog] [-SkipIndex] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+ [[-FunctionsFolder] <String>] [-IncludeChangeLog] [-SkipIndex] [-StampAllDocs]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-This function automates documentation generation based on module functions, leveraging PlatyPS to create and update Markdown help files.
-It also builds an \`index.md\` file for organizing documentation, making it easier to integrate with GitHub Pages or other documentation platforms.
-Additionally, if specified, it includes a changelog based on Git commits.
+Automates documentation generation based on module functions, leveraging PlatyPS to create and
+update Markdown help files.
+Injects Just The Docs front matter into every generated page so the
+Jekyll sidebar renders a proper navigation hierarchy without manual editing.
+
+The -StampAllDocs switch extends that treatment to the entire docs folder: it scans every
+subdirectory, creates parent index pages with child link lists, and non-destructively injects
+front matter into any page that does not already carry a 'layout:' field.
+Pages with existing
+Just The Docs front matter are never modified.
 
 ## EXAMPLES
 
@@ -31,15 +41,26 @@ Write-MFModuleDocs -ModuleName 'MyCustomModule' -IncludeChangeLog
 ```
 
 #### DESCRIPTION
-Builds documentation for \`MyCustomModule\` and includes a full Git-based changelog (\`changeLog.md\`) alongside function help files.
+Builds documentation for MyCustomModule and includes a full Git-based changelog alongside
+function help files.
 
 ### EXAMPLE 2
+```
+Write-MFModuleDocs -ModuleName 'MyCustomModule' -StampAllDocs -IncludeChangeLog
+```
+
+#### DESCRIPTION
+Generates function docs, stamps all existing docs pages with Just The Docs front matter,
+and produces a changelog.
+Ideal for a CI pipeline docs update step.
+
+### EXAMPLE 3
 ```
 Write-MFModuleDocs -ModuleName 'MyCustomModule' -SkipIndex
 ```
 
 #### DESCRIPTION
-Generates function documentation without updating \`index.md\`.
+Generates function documentation without updating index.md.
 
 ## PARAMETERS
 
@@ -75,10 +96,9 @@ Accept wildcard characters: False
 ```
 
 ### -DocsFolder
-Specify the Document Folder.
-All files and index.md will be created in this and subsequent subfolders.
-Defaults to docs.
-Do not us a full path
+Specify the docs folder.
+All files and index.md will be created here and in subfolders.
+Defaults to 'docs'.
 
 ```yaml
 Type: String
@@ -93,8 +113,8 @@ Accept wildcard characters: False
 ```
 
 ### -FunctionsFolder
-Specifies the subfolder within \`docsFolder\` where function-specific documentation should be stored.
-Defaults to \`functions\`.
+Subfolder within DocsFolder where function documentation is stored.
+Defaults to 'functions'.
 
 ```yaml
 Type: String
@@ -124,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -SkipIndex
-If specified, skips creating or updating the \`index.md\` file.
+If specified, skips creating or updating the index.md homepage.
 
 ```yaml
 Type: SwitchParameter
@@ -138,17 +158,19 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
+### -StampAllDocs
+If specified, scans all subdirectories of the docs folder and non-destructively injects
+Just The Docs front matter into pages that do not already have a 'layout:' field.
+Creates parent index pages with child link lists where none exist.
 
 ```yaml
-Type: ActionPreference
+Type: SwitchParameter
 Parameter Sets: (All)
-Aliases: proga
+Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -158,10 +180,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### [string] - Path is accepted as pipeline input or via direct assignment. It has a defaulf value and does not need to be set
+### [string] - ModulePath is accepted as pipeline input or via direct assignment.
 ## OUTPUTS
 
 ## NOTES
 Author: Adrian Andersson
 
 ## RELATED LINKS
+

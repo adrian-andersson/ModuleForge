@@ -1,3 +1,9 @@
+---
+layout: default
+title: Pester Testing
+parent: Pester Testing
+grand_parent: Misc
+---
 # Pester Testing
 
 [Pester](https://pester.dev) is the standard testing framework for PowerShell. ModuleForge is built around Pester 5+ and expects tests to live alongside their functions in the source folder — each `FunctionName.ps1` has a corresponding `FunctionName.Tests.ps1` in the same directory. This convention keeps tests close to the code they cover and makes the dependency between them explicit.
@@ -114,3 +120,4 @@ The first assertion confirms the resolved path matches what was loaded. The seco
 
 - [Classes, Enums and Validators — Scoping Concerns](../Classes_Enums_And_Validators.md) — why load order in your `BeforeAll` matters, and how PowerShell scopes special types
 - [Pester documentation](https://pester.dev/docs/quick-start) — official Pester 5 quick start
+

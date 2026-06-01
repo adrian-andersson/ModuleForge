@@ -1,3 +1,8 @@
+---
+layout: default
+title: Classes, Enums and Validators — Scoping Concerns
+parent: Misc
+---
 # Classes, Enums and Validators — Scoping Concerns
 
 When building PowerShell modules that use classes, enums, and custom validator extensions, scoping becomes a significant concern — both at runtime and during testing. Understanding how PowerShell handles these types determines how they should be structured in your module and how they need to be loaded in your Pester `BeforeAll` blocks.
@@ -63,3 +68,4 @@ When deciding whether a custom validator is the right tool, follow this order of
 > **Note:** These observations are from testing circa 2018 and may not reflect current behaviour. DSC support in ModuleForge is not currently in scope — see [Community Contributions](../../CONTRIBUTING.md).
 
 When DSC resources are present, `NestedModules` and `ScriptsToProcess` appear not to load in time (or possibly at all). This means everything must be loaded together in the root module in the correct order. It also implies that custom validator classes and DSC resources should not coexist in the same module.
+

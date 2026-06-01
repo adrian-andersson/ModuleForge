@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Build-MFProject
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -49,7 +52,7 @@ Aliases:
 Required: True
 Position: 1
 Default value: None
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -70,7 +73,8 @@ Accept wildcard characters: False
 ```
 
 ### -ConfigFile
-{{ Fill ConfigFile Description }}
+Path to the ModuleForge config file.
+Defaults to 'moduleForgeConfig.xml' in the module root
 
 ```yaml
 Type: String
@@ -131,7 +135,7 @@ Accept wildcard characters: False
 ```
 
 ### -ReleaseNotes
-{{ Fill ReleaseNotes Description }}
+Release notes to include in the module manifest and GitHub release output
 
 ```yaml
 Type: String
@@ -146,7 +150,7 @@ Accept wildcard characters: False
 ```
 
 ### -IncludeReleaseNotesInDescription
-{{ Fill IncludeReleaseNotesInDescription Description }}
+If set, appends the release notes to the module description in the manifest
 
 ```yaml
 Type: SwitchParameter
@@ -156,21 +160,6 @@ Aliases:
 Required: False
 Position: Named
 Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -186,3 +175,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Author: Adrian Andersson
 
 ## RELATED LINKS
+
