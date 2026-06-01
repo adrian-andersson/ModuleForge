@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Get-MFLatestSemverFromBuildManifest
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -18,7 +21,9 @@ Get-MFLatestSemverFromBuildManifest [[-ModulePath] <String>] [[-ConfigFile] <Str
 ```
 
 ## DESCRIPTION
-Detailed Description
+Reads the compiled module manifest from the build folder and returns the current version as a semver object.
+Useful when building locally and needing to determine the current version before calculating the next one.
+Supports an optional module name override for cases where the config file is unavailable.
 
 ------------
 
@@ -60,7 +65,8 @@ Accept wildcard characters: False
 ```
 
 ### -ConfigFile
-{{ Fill ConfigFile Description }}
+Name of the ModuleForge config file.
+Defaults to 'moduleForgeConfig.xml'
 
 ```yaml
 Type: String
@@ -75,7 +81,8 @@ Accept wildcard characters: False
 ```
 
 ### -ModuleNameOverride
-{{ Fill ModuleNameOverride Description }}
+Override the module name from config.
+Useful when the config file is unavailable and the module name is already known
 
 ```yaml
 Type: String
@@ -84,21 +91,6 @@ Aliases:
 
 Required: False
 Position: 3
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -116,3 +108,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Author: Adrian Andersson
 
 ## RELATED LINKS
+

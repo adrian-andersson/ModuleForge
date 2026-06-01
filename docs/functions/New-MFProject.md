@@ -1,4 +1,7 @@
 ---
+layout: default
+title: New-MFProject
+parent: Functions
 external help file: ModuleForge-help.xml
 Module Name: ModuleForge
 online version:
@@ -17,7 +20,7 @@ New-MFProject [-ModuleName] <String> [-description] <String> [[-minimumPsVersion
  [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-ModulePath] <String>]
  [[-projectUri] <String>] [[-iconUri] <String>] [[-licenseUri] <String>] [[-configFile] <String>]
  [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String>]
- [[-PrivateData] <Object[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [[-PrivateData] <Object[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -203,7 +206,8 @@ Accept wildcard characters: False
 ```
 
 ### -configFile
-{{ Fill configFile Description }}
+Name of the ModuleForge config file.
+Defaults to 'moduleForgeConfig.xml'
 
 ```yaml
 Type: String
@@ -248,7 +252,7 @@ Accept wildcard characters: False
 ```
 
 ### -DefaultCommandPrefix
-{{ Fill DefaultCommandPrefix Description }}
+Default command prefix applied to all exported function names in the module manifest
 
 ```yaml
 Type: String
@@ -263,7 +267,7 @@ Accept wildcard characters: False
 ```
 
 ### -PrivateData
-{{ Fill PrivateData Description }}
+Additional private data to include in the module manifest PrivateData section
 
 ```yaml
 Type: Object[]
@@ -277,13 +281,29 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
-Type: ActionPreference
+Type: SwitchParameter
 Parameter Sets: (All)
-Aliases: proga
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -303,3 +323,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Author: Adrian Andersson
 
 ## RELATED LINKS
+

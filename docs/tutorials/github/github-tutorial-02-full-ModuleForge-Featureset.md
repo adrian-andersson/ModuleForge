@@ -1,3 +1,9 @@
+---
+layout: default
+title: AstroCmdlets: An Advanced ModuleForge Tutorial
+parent: Github
+grand_parent: Tutorials
+---
 # AstroCmdlets: An Advanced ModuleForge Tutorial
 
 This tutorial builds on the [GitHub Getting Started tutorial](./github-tutorial-01-getting-started.md) and demonstrates the full range of ModuleForge source folder types by building a space-themed PowerShell module called **AstroCmdlets**.
@@ -1172,3 +1178,4 @@ Install-PSResource -Name 'AstroCmdlets' -Repository 'MyGitHubPackages'
 ```
 
 > **Note:** PSResourceGet does not support wildcard searching from NuGet v3 APIs. You must know the exact module name. `Find-PSResource -Repository 'MyGitHubPackages'` will not return results.
+
