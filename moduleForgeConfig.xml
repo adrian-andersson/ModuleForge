@@ -6,7 +6,7 @@
     </TN>
     <MS>
       <S N="moduleName">ModuleForge</S>
-      <S N="description">ModuleForge is a PowerShell scaffolding and build tool for creating other PowerShell modules. With ModuleForge, you can easily generate the foundational structure, boilerplate code, and github actions build techniques</S>
+      <S N="description">Takes the grunt work out of PowerShell module development. Scaffolds project structure, Pester test stubs, and GitHub Actions or Azure DevOps CI/CD pipelines with semantic versioning, automated changelogs, and PSGallery publishing -&gt; up and running in minutes.</S>
       <Version N="minimumPsVersion">7.2</Version>
       <Obj N="moduleAuthors" RefId="1">
         <TN RefId="1">
@@ -20,19 +20,22 @@
       </Obj>
       <S N="companyName">Adrian.Andersson</S>
       <Obj N="tags" RefId="2">
-        <TNRef RefId="1" />
+        <TN RefId="2">
+          <T>Deserialized.System.Object[]</T>
+          <T>Deserialized.System.Array</T>
+          <T>Deserialized.System.Object</T>
+        </TN>
         <LST>
           <S>Automation</S>
           <S>AzureDevOps</S>
-          <S>Bootstrap</S>
-          <S>BuildAutomation</S>
-          <S>CI/CD</S>
-          <S>CrossPlatform</S>
-          <S>DevOps</S>
-          <S>GIT</S>
-          <S>Github</S>
-          <S>Module</S>
+          <S>GitHub</S>
           <S>Scaffold</S>
+          <S>BuildAutomation</S>
+          <S>SemVer</S>
+          <S>PlatyPS</S>
+          <S>PSGallery</S>
+          <S>CI</S>
+          <S>Pester</S>
         </LST>
       </Obj>
       <S N="projectUri">https://github.com/adrian-andersson/ModuleForge</S>
@@ -42,11 +45,7 @@
       <S N="iconUri"></S>
       <Nil N="requiredModules" />
       <Obj N="ExternalModuleDependencies" RefId="3">
-        <TN RefId="2">
-          <T>System.String[]</T>
-          <T>System.Array</T>
-          <T>System.Object</T>
-        </TN>
+        <TNRef RefId="1" />
         <LST>
           <S>Pester</S>
           <S>Microsoft.PowerShell.PSResourceGet</S>

@@ -3,16 +3,16 @@
 ## v1.3.0
 
 - [x] Add `Resolve-MFModuleCase` to fix NuGet package ID casing for GitHub Packages
-- [ ] Add PSGallery publish YAML — install dependencies, pull module from git, run `Resolve-MFModuleCase`, validate with `Get-Module`, publish to PSGallery
-- [ ] Add a function/method to invoke Pester locally
-- [ ] Clean up function documentation — fill missing parameter descriptions in `Build-MFProject`, `New-MFProject`, `Get-MFLatestSemverFromBuildManifest`, and `Get-MFDependencyTree`; consider stripping `ProgressAction` from generated docs
+- [x] Add PSGallery publish YAML — install dependencies, pull module from git, run `Resolve-MFModuleCase`, validate with `Get-Module`, publish to PSGallery
+- [x] Add a function/method to invoke Pester locally
+- [x] Clean up function documentation — fill missing parameter descriptions in `Build-MFProject`, `New-MFProject`, `Get-MFLatestSemverFromBuildManifest`, and `Get-MFDependencyTree`; consider stripping `ProgressAction` from generated docs
+- [x] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
+- [x] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
 
 ## v1.4.0
 
 - [ ] CLM compatibility check — scan for classes, `Add-Type`, COM objects and other CLM-incompatible constructs, surface as soft-fail advisory in PR pipeline
 - [ ] Add CLM compatibility marker to build output / module tags
-- [ ] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
-- [ ] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
 
 ## v1.5.0
 

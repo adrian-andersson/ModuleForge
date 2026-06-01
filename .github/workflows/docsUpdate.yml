@@ -1,0 +1,311 @@
+name: Docs Update
+
+on:
+  workflow_run:
+    workflows: ["Build and Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      release_selector:
+        description: 'Which release to document'
+        required: true
+        default: 'latest-stable'
+        type: choice
+        options:
+          - latest-release
+          - latest-stable
+          - latest-prerelease
+
+jobs:
+  docsUpdate:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: read
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get release details
+        id: get_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $VerbosePreference = 'Continue'
+
+          # Auto-trigger always targets latest stable; manual trigger respects the selector input
+          $releaseSelector = if('${{ github.event_name }}' -eq 'workflow_dispatch')
+          {
+            '${{ github.event.inputs.release_selector }}'
+          }else{
+            'latest-stable'
+          }
+          write-verbose "Release selector: $releaseSelector"
+
+          write-verbose 'Getting release list'
+          $releases = gh release list --limit 100 --json tagName,name,isPrerelease,createdAt | ConvertFrom-Json -ErrorAction Stop
+
+          if($releaseSelector -eq 'latest-release')
+          {
+            $release = $releases | Select-Object -First 1
+          }
+          elseif($releaseSelector -eq 'latest-stable')
+          {
+            $release = $releases | Where-Object { -not $_.isPrerelease } | Select-Object -First 1
+          }
+          else
+          {
+            $release = $releases | Where-Object { $_.isPrerelease } | Select-Object -First 1
+          }
+
+          if(!$release)
+          {
+            throw "No matching release found for selector: $releaseSelector"
+          }
+
+          # For the auto-trigger: if the most recently created release is a prerelease, the workflow
+          # was triggered by a prerelease build — skip and wait for a stable release.
+          if('${{ github.event_name }}' -eq 'workflow_run')
+          {
+            $latestRelease = $releases | Select-Object -First 1
+            if($latestRelease.isPrerelease)
+            {
+              write-verbose '⚠️  Most recent release is a prerelease — skipping docs update'
+              "skip=true" | Out-File $env:GITHUB_OUTPUT -Append
+              exit 0
+            }
+          }
+
+          write-verbose "Selected release: $($release.tagName) — isPrerelease: $($release.isPrerelease)"
+          "tag_name=$($release.tagName)" | Out-File $env:GITHUB_OUTPUT -Append
+          "skip=false"                   | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Install dependencies
+        if: steps.get_release.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $VerbosePreference = 'Continue'
+          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
+          Install-Module -Name PlatyPS -Force -SkipPublisherCheck
+          Import-Module Microsoft.PowerShell.PSResourceGet, PlatyPS
+          Get-Module Microsoft.PowerShell.PSResourceGet, PlatyPS | Select-Object Name, Version | Format-Table
+
+      - name: Register GitHub Packages repository
+        if: steps.get_release.outputs.skip != 'true'
+        id: repoSetup
+        shell: pwsh
+        run: |
+          $VerbosePreference = 'Continue'
+          $repoUrl = "https://nuget.pkg.github.com/$($env:GITHUB_REPOSITORY_OWNER)/index.json"
+          write-verbose "Got repoUrl: $repoUrl"
+          $repositorySplat = @{
+            Uri     = $repoUrl
+            Trusted = $true
+            Name    = 'myGHPackages'
+          }
+          Register-PSResourceRepository @repositorySplat
+          write-verbose "Repositories:`n$(Get-PSResourceRepository | Select-Object Name,Uri,Trusted | Format-List | Out-String)"
+
+      - name: Install module from GitHub Packages
+        if: steps.get_release.outputs.skip != 'true'
+        id: moduleInstall
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          tagName: ${{ steps.get_release.outputs.tag_name }}
+        run: |
+          #Shortened version of Resolve-MFModuleCase from the ModuleForge source, to attempt to resolve
+          #any case issues with the module folder after installation from GitHub Packages.
+          function Resolve-MFModuleCase
+          {
+              [CmdletBinding()]
+              PARAM(
+                  [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+                  [string]$ModuleName,
+                  [Parameter()]
+                  [string[]]$ModuleFolder
+              )
+              begin{
+                  $folderVersionSelect = @(
+                      'FullName'
+                      'Name'
+                      @{
+                          Name = 'Semver'
+                          Expression = {
+                              try { [semver]"$($_.Name)" }catch { $null }
+                          }
+                      }
+                  )
+              }
+              process{
+                  $moduleCandidates = [System.Collections.Generic.List[string]]::new()
+                  if($ModuleFolder)
+                  {
+                      write-verbose "Checking defined folder: $ModuleFolder"
+                      $foundItems = Get-ChildItem -Path $ModuleFolder -Recurse -Filter $ModuleName -Directory
+                      $foundItems.foreach{ $moduleCandidates.Add($_.FullName) }
+                  }else{
+                      $locations = $env:PSModulePath -split [IO.Path]::PathSeparator
+                      $locations.Foreach{
+                          try{
+                              $foundItems = Get-ChildItem -Path $_ -Recurse -Filter $ModuleName -Directory -ErrorAction Ignore
+                              $foundItems.foreach{ $moduleCandidates.Add($_.FullName) }
+                          }catch{
+                              Write-Warning "Skipping path $_ due to read or permission errors"
+                          }
+                      }
+                  }
+                  $moduleCandidates = $moduleCandidates.ToArray()
+                  Write-Verbose "Found $($moduleCandidates.count) candidate locations"
+                  if(!$moduleCandidates -or $moduleCandidates.Count -lt 1)
+                  {
+                      Write-Warning "No module folders found for module: $ModuleName"
+                  }
+                  $moduleCandidates.forEach{
+                      $moduleFolderBasename = $(Get-Item $_).BaseName
+                      Remove-Variable latestVersion,modManifest,BaseFolderRefresh -ErrorAction Ignore
+                      Write-Verbose "Checking folder $_ for latest module version"
+                      $latestVersion = $(Get-ChildItem -path $_ | Select-Object $folderVersionSelect).where{$_.Semver} | Sort-Object -Property Semver -Descending | Select-Object -First 1
+                      if($latestVersion)
+                      {
+                          $modManifest = $(Get-ChildItem -Path $latestVersion.FullName).where{$_.name -eq "$ModuleName.psd1"} | Select-Object -first 1
+                          if($(Get-Item $_).BaseName -cne $modManifest.basename)
+                          {
+                              Write-Warning "Case mismatch between module folder $moduleFolderBasename and $($modManifest.basename)"
+                              try{
+                                  Rename-Item -path $_ -NewName $modManifest.BaseName -Force -Erroraction Stop
+                                  Start-Sleep -Seconds 4
+                              }catch{
+                                  write-warning 'Error renaming folder'
+                              }
+                              $Parent      = Split-Path $_ -Parent
+                              $NewFullPath = Join-Path $Parent $modManifest.BaseName
+                              try{ $BaseFolderRefresh = Get-Item $NewFullPath }catch{ $BaseFolderRefresh = Get-Item $_ }
+                          }else{
+                              Write-Verbose "Case match for $moduleFolderBasename — OK"
+                          }
+                      }else{
+                          Write-Warning "No module versions found for $ModuleName in folder $_"
+                      }
+                  }
+              }
+          }
+
+          $VerbosePreference = 'Continue'
+          if(!(Test-Path .\moduleForgeConfig.xml))
+          {
+            throw 'Error reading ModuleForge Config'
+          }
+          $config     = Import-Clixml .\moduleForgeConfig.xml
+          $moduleName = $config.moduleName
+          write-verbose "ModuleName: $moduleName"
+
+          $credential = New-Object System.Management.Automation.PSCredential(
+            'githubActions',
+            (ConvertTo-SecureString $env:GH_TOKEN -AsPlainText -Force)
+          )
+
+          $versionString = $env:tagName.Substring(1)
+          $semver        = [semver]::New($versionString)
+          write-verbose "Version: $semver"
+
+          $fetchSplat = @{
+            Repository = 'myGHPackages'
+            Name       = $moduleName
+            Credential = $credential
+            Version    = $semver
+          }
+          $selectedRelease = Find-PSResource @fetchSplat
+          write-verbose "Found release: $($selectedRelease | Format-List | Out-String)"
+          if($selectedRelease)
+          {
+            $selectedRelease | Install-PSResource -Credential $credential
+          }else{
+            throw "Module $moduleName version $semver not found in GitHub Packages"
+          }
+
+          write-verbose 'Resolving module case'
+          Resolve-MFModuleCase -ModuleName $moduleName
+
+          $moduleFound = $(Get-Module -ListAvailable).where{ $_.Name -ieq $moduleName }
+          if($moduleFound)
+          {
+            write-verbose "Module found at: $($moduleFound.moduleBase)"
+            Import-Module $moduleName
+            write-verbose "Imported: $(Get-Module $moduleName | Select-Object Name,Version | Out-String)"
+          }else{
+            throw 'Module not found after install — case resolution may have failed'
+          }
+
+          "module_name=$moduleName" | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Checkout docs branch
+        if: steps.get_release.outputs.skip != 'true'
+        uses: actions/checkout@v3
+        with:
+          ref: docs
+          path: docs-branch
+
+      - name: Generate documentation
+        if: steps.get_release.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          MODULE_NAME: ${{ steps.moduleInstall.outputs.module_name }}
+        run: |
+          $VerbosePreference = 'Continue'
+          $moduleName = $env:MODULE_NAME
+          write-verbose "Generating docs for $moduleName"
+          Write-MFModuleDocs -ModuleName $moduleName -ModulePath ./docs-branch -StampAllDocs -IncludeChangeLog
+
+      - name: Create pull request
+        if: steps.get_release.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.get_release.outputs.tag_name }}
+        run: |
+          $VerbosePreference = 'Continue'
+          $tagName    = $env:TAG_NAME
+          $branchName = "docs-update/$tagName"
+
+          Push-Location ./docs-branch
+          try
+          {
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b $branchName
+
+            $changes = git status --porcelain
+            if(!$changes)
+            {
+              write-verbose 'No documentation changes detected — skipping PR'
+              return
+            }
+
+            git add .
+            git commit -m "docs: update documentation for $tagName"
+            git push origin $branchName
+          }
+          finally
+          {
+            Pop-Location
+          }
+
+          $existingPr = gh pr list --base docs --head $branchName --json number --jq '.[0].number' 2>$null
+          if($existingPr)
+          {
+            write-verbose "Pull request already exists: #$existingPr — branch has been updated in place"
+          }else{
+            gh pr create `
+              --base docs `
+              --head $branchName `
+              --title "docs: update for $tagName" `
+              --body "Automated documentation update for $tagName. `n Generated by Write-MFModuleDocs with -StampAllDocs and -IncludeChangeLog. `n Review and merge when ready — no code changes are included."
+          }
