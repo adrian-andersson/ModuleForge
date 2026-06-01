@@ -199,7 +199,7 @@ function Write-MFModuleDocs
         foreach($link in $funcChildLinks){ $funcIndexLines.Add($link) }
         $funcIndexLines -join "`n" | Out-File (join-path $functionsFullPath 'index.md') -Force
 
-        # Changelog — prepend JTD front matter so it sits at nav_order 2 in the sidebar
+        # Changelog  - prepend JTD front matter so it sits at nav_order 2 in the sidebar
         if($IncludeChangeLog)
         {
             write-verbose 'Creating changelog file'
@@ -216,7 +216,7 @@ function Write-MFModuleDocs
             }
         }
 
-        # StampAllDocs — walk every subdirectory except the functions folder and non-destructively
+        # StampAllDocs  - walk every subdirectory except the functions folder and non-destructively
         # inject JTD front matter + create parent index pages wherever they are missing.
         if($StampAllDocs)
         {
@@ -229,7 +229,7 @@ function Write-MFModuleDocs
                 $allMd = Get-ChildItem $sectionDir.FullName -Filter '*.md' -Recurse -ErrorAction SilentlyContinue
                 if(-not $allMd -or $allMd.Count -eq 0)
                 {
-                    write-verbose "StampAllDocs: skipping '$($sectionDir.Name)' — no markdown files"
+                    write-verbose "StampAllDocs: skipping '$($sectionDir.Name)'  - no markdown files"
                     continue
                 }
 
@@ -250,7 +250,7 @@ function Write-MFModuleDocs
                         Add-MFJtdFrontMatter -FilePath $mdFile.FullName -Title $title -Parent $sectionTitle
                         write-verbose "StampAllDocs: stamped '$($mdFile.Name)'"
                     }else{
-                        write-verbose "StampAllDocs: skipping '$($mdFile.Name)' — already has JTD front matter"
+                        write-verbose "StampAllDocs: skipping '$($mdFile.Name)'  - already has JTD front matter"
                     }
                 }
 
@@ -262,7 +262,7 @@ function Write-MFModuleDocs
                     Write-MFSectionIndex -FilePath $sectionIndexPath -Title $sectionTitle -ChildLinks $childLinks
                     write-verbose "StampAllDocs: wrote index for '$sectionTitle'"
                 }else{
-                    write-verbose "StampAllDocs: skipping index for '$sectionTitle' — already has JTD front matter"
+                    write-verbose "StampAllDocs: skipping index for '$sectionTitle'  - already has JTD front matter"
                 }
 
                 # Process depth-2 subdirectories (grandchildren in JTD terms)
@@ -273,11 +273,11 @@ function Write-MFModuleDocs
 
                     $subMdFiles = Get-ChildItem $subDir.FullName -Filter '*.md' | Where-Object {$_.Name -ne 'index.md'}
 
-                    # Warn about depth-3+ folders — JTD renders at most 3 sidebar levels
+                    # Warn about depth-3+ folders  - JTD renders at most 3 sidebar levels
                     $depth3Dirs = Get-ChildItem $subDir.FullName -Directory -ErrorAction SilentlyContinue
                     if($depth3Dirs)
                     {
-                        write-warning "StampAllDocs: '$($subDir.Name)' has sub-folders beyond depth 2 — JTD renders at most 3 sidebar levels. These will not be auto-stamped."
+                        write-warning "StampAllDocs: '$($subDir.Name)' has sub-folders beyond depth 2  - JTD renders at most 3 sidebar levels. These will not be auto-stamped."
                     }
 
                     # Non-destructively stamp grandchild pages
@@ -290,7 +290,7 @@ function Write-MFModuleDocs
                             Add-MFJtdFrontMatter -FilePath $mdFile.FullName -Title $title -Parent $subSectionTitle -GrandParent $sectionTitle
                             write-verbose "StampAllDocs: stamped '$($mdFile.Name)' (parent: '$subSectionTitle', grand_parent: '$sectionTitle')"
                         }else{
-                            write-verbose "StampAllDocs: skipping '$($mdFile.Name)' — already has JTD front matter"
+                            write-verbose "StampAllDocs: skipping '$($mdFile.Name)'  - already has JTD front matter"
                         }
                     }
 
@@ -302,20 +302,20 @@ function Write-MFModuleDocs
                         Write-MFSectionIndex -FilePath $subIndexPath -Title $subSectionTitle -Parent $sectionTitle -ChildLinks $subChildLinks
                         write-verbose "StampAllDocs: wrote index for '$subSectionTitle'"
                     }else{
-                        write-verbose "StampAllDocs: skipping index for '$subSectionTitle' — already has JTD front matter"
+                        write-verbose "StampAllDocs: skipping index for '$subSectionTitle'  - already has JTD front matter"
                     }
                 }
             }
         }
 
-        # Build the homepage (index.md) — version-stamped intro with auto-discovered sections table
+        # Build the homepage (index.md)  - version-stamped intro with auto-discovered sections table
         if($SkipIndex)
         {
             write-verbose 'Skipping Index File'
         }else{
             write-verbose 'Creating homepage index'
 
-            # Version string — include prerelease label when present
+            # Version string  - include prerelease label when present
             $moduleVersion = $module.Version.ToString()
             if($module.PrivateData.PSData.Prerelease)
             {
