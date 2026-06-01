@@ -34,14 +34,15 @@ function Get-MFProjectRoot
     process{
         try{
             $searchPath = (get-item $ModulePath -ErrorAction Stop).FullName
+            $searchPath = (Resolve-Path $searchPath).ProviderPath
         }catch{
             throw "Path not accessible: $ModulePath"
         }
 
         while($searchPath){
-            $candidate = join-path -path $searchPath -ChildPath $ConfigFile
-            if(test-path $candidate){
-                write-verbose "Found project root at: $searchPath"
+            $match = Get-ChildItem -LiteralPath $searchPath -File | Where-Object { $_.Name -ieq $ConfigFile }
+            if ($match) {
+                Write-Verbose "Found project root at: $searchPath"
                 return $searchPath
             }
             $parent = split-path $searchPath -Parent

@@ -18,7 +18,20 @@ BeforeAll{
         }
     }
 
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    #Load This File
+     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $functionName = 'Invoke-MFBuildPreRelease'
+    . $fileName
+}
+
+Describe 'Check Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
+    }
 }
 
 Describe 'Invoke-MFBuildPreRelease' {
