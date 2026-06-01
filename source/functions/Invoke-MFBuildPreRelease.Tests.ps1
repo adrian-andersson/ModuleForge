@@ -79,6 +79,10 @@ Describe 'Invoke-MFBuildPreRelease' {
 }
 
 Describe 'Invoke-MFBuildPreRelease Error Handling' {
+    BeforeAll{
+        Mock Build-MFProject {}
+    }
+
     It 'should throw when no moduleForgeConfig.xml is found' {
         $emptyDir = join-path ([System.IO.Path]::GetTempPath())"MFEmpty_$([System.IO.Path]::GetRandomFileName())"
         New-Item -ItemType Directory -Path $emptyDir | Out-Null
@@ -87,5 +91,15 @@ Describe 'Invoke-MFBuildPreRelease Error Handling' {
         }finally{
             Remove-Item $emptyDir -Force -Recurse -ErrorAction SilentlyContinue
         }
+    }
+}
+
+Describe 'Check we still have a Clean Environment' {
+    BeforeAll {
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+    }
+    It 'Should have loaded the script directly, not from the module' {
+        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        (get-command $functionName).source |should -BeNullOrEmpty
     }
 }
