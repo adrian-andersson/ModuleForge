@@ -1,13 +1,14 @@
 ---
 layout: default
 title: Classes, Enums and Validators — Scoping Concerns
-parent: Misc
+parent: Concepts
+nav_order: 5
 ---
 # Classes, Enums and Validators — Scoping Concerns
 
 When building PowerShell modules that use classes, enums, and custom validator extensions, scoping becomes a significant concern — both at runtime and during testing. Understanding how PowerShell handles these types determines how they should be structured in your module and how they need to be loaded in your Pester `BeforeAll` blocks.
 
-This page covers the scoping fundamentals. For how to apply this in practice when writing tests, see [Pester Testing](./pester-testing/Pester.md).
+This page covers the scoping fundamentals. For how to apply this in practice when writing tests, see [Writing Pester Tests](./Pester.md).
 
 Throughout this page, classes, enums, and custom validators are referred to collectively as _special types_.
 

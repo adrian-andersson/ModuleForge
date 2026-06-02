@@ -3,6 +3,7 @@ layout: default
 title: Github
 parent: Tutorials
 has_children: true
+nav_order: 1
 ---
 
 # Github

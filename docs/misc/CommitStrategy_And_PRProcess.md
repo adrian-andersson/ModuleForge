@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Commit Strategy and PR Process
-parent: Misc
+parent: Concepts
+nav_order: 2
 ---
 # Commit Strategy and PR Process
 
@@ -62,7 +63,7 @@ Each PR should be categorised by the highest-impact change it contains. This map
 
 When ModuleForge scaffolds a new project, it includes a PR template that surfaces these categories as a checklist directly in the pull request form. Contributors are guided through the classification at PR time — no need to memorise the categories. The template also includes a quick review checklist covering Pester test coverage, PSScriptAnalyzer compliance, commit prefix usage, and release intent, keeping the full process visible at the point of review. When filling out the template, use the highest-impact ticked section as your guide for the overall type of change.
 
-See [SemVer Interpretation](./SemVer_Interpretation.md) for a full breakdown of how version increments are applied.
+See [Module Versioning with SemVer](./ModuleVersioning_With_SemVer.md) for a full breakdown of how version increments are applied.
 
 ### Release Intent
 

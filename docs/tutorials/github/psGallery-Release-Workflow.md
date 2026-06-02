@@ -3,144 +3,103 @@ layout: default
 title: Publishing your private modules to PSGallery
 parent: Github
 grand_parent: Tutorials
+nav_order: 3
 ---
 # Publishing your private modules to PSGallery
 
-If you want to publish your modules to PSGallery, this workflow will get you started. It will push the latest released and packaged module to PSGallery.
+The `psgalleryRelease.yml` workflow publishes a tagged release from your GitHub Packages feed directly to [PSGallery](https://www.powershellgallery.com/). It is included in the ModuleForge GitHub scaffold and is triggered manually — you choose which release to publish and when.
 
-## Step 1 - Add a repository secret for your PSGallery Token
+> **PSGallery is permanent.** Once a version is published it cannot be deleted, only unlisted. Publish intentionally.
 
-> To create a PSGallery API key, visit: https://www.powershellgallery.com/account and log in. You'll find the "API Key" section under your account settings.
+---
 
-1. Open your repository and navigate to the `Settings` tab
-2. Under  _Security_, find the _Secrets and variables_ section, and then select `Actions`
-3. Add a _repository secret_
-   - To match the Workflow below, name the secret `PSGALLERY`
-   - Enter your PSGallery token
+## Step 1 — Get the workflow file
 
-## Step 2 - Create a new Workflow
+The `psgalleryRelease.yml` file is bundled with ModuleForge's GitHub scaffold. If you have already run `Add-MFGithubScaffold`, run it again without `-Force` to pick up any new workflow files while leaving your existing customised workflows untouched:
 
-1. Under the .github\workflows folder, create a new file, call it `psgallery-release.yml`
-2. Paste the below workflow code
-3. Commit and merge to your main
-4. Running this workflow will push the last tagged release to PSgallery
-
-```yaml
-name: PSGallery Latest Release
-
-on:
-  workflow_dispatch:
-
-jobs:
-  psgalleryDeploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 #Ensure we are getting all the tag history
-
-      - name: Get latest release details
-        id: get_release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: pwsh
-        run: |
-          $verbosePreference = 'Continue'
-          $release = gh release view --json tagName,name,body,createdAt,author,assets,isPrerelease
-          write-verbose "Release:`n$($release|out-string)"
-          $releaseFromJson = $release|convertFrom-json -errorAction ignore
-          $tagName = $releaseFromJson.tagName
-          $releaseName = $releaseFromJson.name
-          $isPreRelease = $releaseFromJson.isPrerelease
-          write-verbose "tagName: $($tagName) releaseName: $($releaseName) isPreRelease: $($isPreRelease)"
-          Write-Output "tag_name=$tagName" >> $env:GITHUB_OUTPUT
-          Write-Output "release_name=$releaseName" >> $env:GITHUB_OUTPUT
-          Write-Output "release_isPreRelease=$isPreRelease" >> $env:GITHUB_OUTPUT
-
-      - name: Install dependencies
-        shell: pwsh
-        run: |
-          $VerbosePreference = 'Continue'
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
-          $moduleList = @('Microsoft.PowerShell.PSResourceGet')
-          import-module $moduleList
-          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
-
-      - name: Register Repository
-        shell: pwsh
-        id: repoSetup
-        if: success()  
-        run: |
-          $VerbosePreference = 'Continue'
-          $repoUrl = "https://nuget.pkg.github.com/$($env:GITHUB_REPOSITORY_OWNER)/index.json"
-          write-verbose "Got repoUrl: $repoUrl"
-          $repositorySplat = @{
-            uri = $repoUrl
-            trusted = $true
-            name = 'myGHPackages'
-          }
-          register-psresourcerepository @repositorySplat
-          write-verbose "Repositories:`n $(get-psresourceRepository|select name,uri,trusted|format-list|out-string)"
-
-      - name: Install Latest Module And Publish to Gallery
-        shell: pwsh
-        id: moduleInstall
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PSGalleryToken: ${{ secrets.PSGALLERY }}
-          isPreRelease: ${{ steps.get_release.outputs.release_isPreRelease }}
-          tagName: ${{ steps.get_release.outputs.tag_name }}
-        if: success()  
-        run: |
-          $VerbosePreference = 'Continue'
-          $isPreRelease = $env:isPreRelease
-          if(!(test-path .\moduleForgeConfig.xml)){
-            throw 'Error reading ModuleForge Config'
-          }
-          $config = import-clixml .\moduleForgeConfig.xml
-          $moduleName = $config.moduleName
-          write-verbose "ModuleName: $moduleName"
-          $credential = New-Object System.Management.Automation.PSCredential("githubActions", (ConvertTo-SecureString $env:GH_TOKEN -AsPlainText -Force))
-          $versionString = $env:tagName
-          write-verbose "Version from Tag: $versionString"
-          $version = $versionString.substring(1)
-          $semver = [semver]::New($version)
-          write-verbose "VersionConvert : $semver"
-          $fetchSplat = @{
-            Repository = 'myGHPackages'
-            name = $moduleName
-            credential = $credential
-            version = $semver
-          }
-          $latestRelease = find-psresource @fetchSplat
-          write-verbose "latestRelease: $($latestRelease|format-list|out-string)"
-          if($latestRelease)
-          {
-            $latestRelease|install-psresource -credential $credential
-          }else{
-            write-warning 'No module found'
-          }
-          $moduleFound = get-module $moduleName -listAvailable
-          if($moduleFound)
-          {
-            write-verbose "ModuleFound:`n$($moduleFound|out-string)"
-          }else{
-            throw 'Module failed install'
-          }
-          write-verbose 'Push Package to PSGallery'
-          $publishSplat = @{
-            repository = 'PSGallery'
-            APIKey = $env:PSGalleryToken
-            Path = $moduleFound.moduleBase
-          }
-          publish-psResource @publishSplat
+```powershell
+Add-MFGithubScaffold
 ```
 
-## Hints and Extras
+Files that already exist in your `.github/` folder are skipped. Only missing files — including `psgalleryRelease.yml` if it wasn't there before — are copied.
 
-- If you wish to verify your workflow is set up correctly without publishing, you can temporarily comment out the `publish-psResource` line and inspect the verbose logs from the install step
+Commit the new file to `main` before continuing:
+
+```text
+chore: add PSGallery release workflow
+```
+
+---
+
+## Step 2 — Add a PSGallery API key secret
+
+The workflow reads your PSGallery API key from a repository secret named `PSGALLERY`.
+
+**To get your API key:**
+
+1. Log in at [powershellgallery.com](https://www.powershellgallery.com/)
+2. Go to your account settings — the **API Keys** section is on the right side of the page
+3. Create a key scoped to **Push new packages and package versions** for your module (or all packages)
+
+**To add it to your repository:**
+
+1. Go to your repository → **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+3. Name: `PSGALLERY`
+4. Value: your API key
+5. Save
+
+---
+
+## Step 3 — Run the workflow
+
+Navigate to **Actions → PSGallery Release → Run workflow**.
+
+### Inputs
+
+#### `release_selector` (required)
+
+Controls which tagged release is published. The workflow fetches your full release list and filters it accordingly.
+
+| Option | What it selects |
+| --- | --- |
+| `latest-release` *(default)* | The most recently created release, regardless of stable or prerelease status |
+| `latest-stable` | The most recent release that is **not** marked as a prerelease |
+| `latest-prerelease` | The most recent release that **is** marked as a prerelease |
+
+> If you publish a prerelease version to PSGallery, it will appear there as a prerelease — hidden from `Find-PSResource` / `Find-Module` unless `-AllowPrerelease` is passed. Use `latest-stable` unless you specifically intend to publish a prerelease to PSGallery.
+
+#### `moduleforge_release_toggle` (optional)
+
+Controls which version of ModuleForge is used internally by the workflow itself. Leave this at the default (`moduleforge-latest-stable-only`) unless you are testing a ModuleForge prerelease build.
+
+---
+
+## What the workflow does
+
+1. **Reads the release list** — uses the `gh` CLI to list releases and selects one based on your `release_selector` choice
+2. **Installs ModuleForge and PSResourceGet**
+3. **Registers your GitHub Packages feed** as a PSResource repository using the built-in `GITHUB_TOKEN`
+4. **Finds the specific version** in GitHub Packages by matching the release tag
+5. **Installs the module** from GitHub Packages locally on the runner
+6. **Resolves module case** — calls `Resolve-MFModuleCase` to handle NuGet's case-insensitive install behaviour, ensuring the module folder name matches the manifest exactly for PSGallery compatibility
+7. **Checks for duplicates** — queries PSGallery to confirm the version does not already exist; throws if it does, preventing accidental republishing
+8. **Publishes to PSGallery** using `Publish-PSResource` with your `PSGALLERY` API key
+
+---
+
+## Troubleshooting
+
+**"No matching release found"** — No release exists that matches the selector. Check that at least one release has been created via the Build and Release workflow.
+
+**"Version X already exists on PSGallery"** — The version tag you selected has already been published. You cannot republish the same version. Increment the version with a new Build and Release run before publishing again.
+
+**"Module not found after install"** — The case resolution step failed. Check that `moduleForgeConfig.xml` is present and `moduleName` matches the module's manifest name exactly.
+
+**Workflow passes but module doesn't appear on PSGallery** — PSGallery indexing can take several minutes. Wait a few minutes and search again. If the module is a prerelease, use `Find-PSResource -Name YourModule -AllowPrerelease` to find it.
+
+---
+
+## Verifying without publishing
+
+To do a dry run — install and inspect the module without pushing to PSGallery — comment out the `Publish-PSResource` call in `psgalleryRelease.yml` temporarily and inspect the verbose output from the install step. Revert the comment before merging.

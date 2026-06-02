@@ -3,6 +3,7 @@ layout: default
 title: Getting Started with ModuleForge and GitHub
 parent: Github
 grand_parent: Tutorials
+nav_order: 1
 ---
 # Getting Started with ModuleForge and GitHub
 
@@ -41,7 +42,7 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
    - Repository Name should be 'psGetHelloWorld'
    - Repository Description should be 'Another Hello World Module'
    - Repository should be private
-    ![New Repository](./img/newRepo.png)
+    ![GitHub new repository form](./img/newRepo.png)
 4. Clone your repository to your local environment
 
 > hint: If you are unsure of how to clone a repository, copy the URI from the browser address bar and use it with the `git clone` command, e.g. `git clone https://github.com/adrian-andersson/ModuleForge`
@@ -174,7 +175,7 @@ Describe "Get-HelloWorld Custom Name" {
 Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 ```
 
-![New Repository](./img/invokePester.png)
+![Pester test results showing 4 passed tests](./img/invokePester.png)
 
 ## Part 4 - Pull Request and BuildAndRelease
 
@@ -191,15 +192,15 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 ### Create Pull Request
 
 1. In your browser, navigate to your new repository. You should see a notification banner in the top of github advising that a new branch can be used to create a PR.
-   - ![New Repository](./img/prbanner.png)
+   - ![GitHub banner prompting to create a pull request from the new branch](./img/prbanner.png)
 2. Click the option to create a Pull Request
 3. Fill in the Pull Request template
    - Type in a decent description
    - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
-   - ![New Repository](./img/prForm.png)
+   - ![Pull request template showing change type and release intent checkboxes](./img/prForm.png)
 4. Once you have completed the PR template, create the Pull Request
 5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
-   - ![New Repository](./img/prComments.png)
+   - ![Automated Pester and PSScriptAnalyzer results posted as pull request comments](./img/prComments.png)
 6. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
 
 > If you want to explore your pester results in more details before a merge, you can click on `Actions`, find the `pesterTest` workflow, and expand the `Run pester tests` step from our latest run to view things such as code coverage, or get more details on failures etc.
@@ -213,16 +214,16 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - Branch should be main
    - Since this is our first release, lets leave the type to increment as `none`
    - Type of release should be `prerelease`
-   - ![New Repository](./img/workflowMenu.png)
+   - ![GitHub Actions Run Workflow form for Build and Release](./img/workflowMenu.png)
 5. Wait for our workload to finish.
 6. Navigate back to the `code` tab after the workflow completes. You should now see:
    - A new Release with a version tag and a `latest` badge
    - Packages set at 1
-   - ![New Repository](./img/codeTab.png)
+   - ![GitHub Code tab showing the new release with version tag and Latest badge](./img/codeTab.png)
 7. Click on the release to see more details
    - The release should have created a changelog based on our commit messages
    - There should also be some artifacts, or assets, with the important one being the nupkg file. This file contains our module. 
-   - ![New Repository](./img/release.png) 
+   - ![GitHub release details with generated changelog and nupkg asset](./img/release.png)
 
 > Don't forget to checkout the Main branch on your local working directory before adding any more code.
 

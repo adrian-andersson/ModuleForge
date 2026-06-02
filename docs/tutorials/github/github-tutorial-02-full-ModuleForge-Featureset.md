@@ -1,8 +1,9 @@
 ---
 layout: default
-title: AstroCmdlets: An Advanced ModuleForge Tutorial
+title: "AstroCmdlets: An Advanced ModuleForge Tutorial"
 parent: Github
 grand_parent: Tutorials
+nav_order: 2
 ---
 # AstroCmdlets: An Advanced ModuleForge Tutorial
 

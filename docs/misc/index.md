@@ -1,13 +1,16 @@
 ---
 layout: default
-title: Misc
+title: Concepts
 has_children: true
+nav_order: 6
 ---
 
-# Misc
+# Concepts
 
-- [Classes, Enums and Validators — Scoping Concerns](./Classes_Enums_And_Validators.md)
+- [ModuleForge vs Alternatives](./ModuleForgeVsAlternatives.md)
 - [Commit Strategy and PR Process](./CommitStrategy_And_PRProcess.md)
 - [Module Versioning with SemVer](./ModuleVersioning_With_SemVer.md)
+- [Writing Pester Tests](./Pester.md)
+- [Classes, Enums and Validators — Scoping Concerns](./Classes_Enums_And_Validators.md)
 - [Required Modules vs External Module Dependencies](./RequiredModules_vs_ExternalModuleDependencies.md)
-- [Pester Testing](./pester-testing/)
+- [From Bartender to ModuleForge](./Origin.md)

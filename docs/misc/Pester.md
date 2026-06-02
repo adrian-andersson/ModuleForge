@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Pester Testing
-parent: Pester Testing
-grand_parent: Misc
+title: Writing Pester Tests
+parent: Concepts
+nav_order: 4
 ---
-# Pester Testing
+# Writing Pester Tests
 
 [Pester](https://pester.dev) is the standard testing framework for PowerShell. ModuleForge is built around Pester 5+ and expects tests to live alongside their functions in the source folder — each `FunctionName.ps1` has a corresponding `FunctionName.Tests.ps1` in the same directory. This convention keeps tests close to the code they cover and makes the dependency between them explicit.
 
@@ -34,7 +34,7 @@ The better approach is to test directly against the source `.ps1` files, but thi
 
 ## Solving the Dependency Problem
 
-ModuleForge includes [`Get-MFDependencyTree`](../../functions/Get-MFDependencyTree.md) to map function dependencies. Run it against your source folder to see exactly what each function depends on:
+ModuleForge includes [`Get-MFDependencyTree`](../functions/Get-MFDependencyTree.md) to map function dependencies. Run it against your source folder to see exactly what each function depends on:
 
 ```powershell
 $folderItemDetails = Get-MFFolderItemDetails -path $sourcePath
@@ -118,6 +118,5 @@ The first assertion confirms the resolved path matches what was loaded. The seco
 
 ## Further Reading
 
-- [Classes, Enums and Validators — Scoping Concerns](../Classes_Enums_And_Validators.md) — why load order in your `BeforeAll` matters, and how PowerShell scopes special types
+- [Classes, Enums and Validators — Scoping Concerns](./Classes_Enums_And_Validators.md) — why load order in your `BeforeAll` matters, and how PowerShell scopes special types
 - [Pester documentation](https://pester.dev/docs/quick-start) — official Pester 5 quick start
-
