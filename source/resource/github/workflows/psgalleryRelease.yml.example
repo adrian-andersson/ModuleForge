@@ -1,3 +1,22 @@
+# =============================================================================
+# OPTIONAL WORKFLOW — requires manual setup before enabling
+# =============================================================================
+#
+# This workflow publishes a tagged release from your GitHub Packages feed
+# to the PowerShell Gallery (PSGallery).
+#
+# BEFORE ENABLING:
+#   1. Create a PSGallery API key at https://www.powershellgallery.com/account
+#      (scroll to the API Keys section on your account page)
+#   2. Add the key as a repository secret named PSGALLERY:
+#      Settings > Secrets and variables > Actions > New repository secret
+#   3. Rename this file to psgalleryRelease.yml (remove the .example extension)
+#
+# IMPORTANT: PSGallery is a public registry. Once a version is published it
+#   cannot be deleted — only unlisted. Only enable this workflow if you intend
+#   to make your module publicly available on PSGallery.
+# =============================================================================
+
 name: PSGallery Release
 
 on:
