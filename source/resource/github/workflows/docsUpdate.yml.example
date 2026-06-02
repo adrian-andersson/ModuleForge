@@ -54,7 +54,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -198,7 +198,7 @@ jobs:
 
       - name: Checkout docs branch
         if: steps.get_release.outputs.skip != 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: docs
           path: docs-branch
