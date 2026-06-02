@@ -26,7 +26,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -246,7 +246,7 @@ jobs:
 
       - name: Checkout docs branch
         if: steps.get_release.outputs.skip != 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: docs
           path: docs-branch
@@ -294,7 +294,10 @@ jobs:
             git add .
             git commit -m "docs: update documentation for $tagName"
 
-            # Reconfigure remote with PAT — the PAT is scoped to this step only
+            # actions/checkout registers GITHUB_TOKEN as an HTTP extraheader which takes
+            # priority over credentials embedded in the remote URL. Unset it first so the
+            # PAT in the remote URL is actually used for the push.
+            git config --local --unset-all http.https://github.com/.extraheader
             $repoUrl = "https://x-access-token:$($env:DOCS_PAT)@github.com/$env:GITHUB_REPOSITORY.git"
             git remote set-url origin $repoUrl
             git push origin $branchName
