@@ -8,6 +8,7 @@
 - [x] Clean up function documentation — fill missing parameter descriptions in `Build-MFProject`, `New-MFProject`, `Get-MFLatestSemverFromBuildManifest`, and `Get-MFDependencyTree`; consider stripping `ProgressAction` from generated docs
 - [x] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
 - [x] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
+- [ ] Automated PR to update docs
 
 ## v1.4.0
 
@@ -27,14 +28,13 @@
 
 ## Docs Site
 
-- [ ] Write "Why ModuleForge" background page — origin story, cross-pollination from Terraform/React patterns, pure PowerShell decision
+- [x] Write "Why ModuleForge" background page — origin story, cross-pollination from Terraform/React patterns, pure PowerShell decision
 - [x] Add commit prefix reference page — covered in `CommitStrategy_And_PRProcess.md`
 - [ ] Add document signing tutorial — working YAML example showing how to bolt signing onto the existing pipeline
 - [x] Add note on test-alongside-function convention and why it works — covered in `Pester.md`
-- [ ] Add `Get-MFDependencyTree` Mermaid output example to function page
-- [ ] Document `-ExportClasses` and `-ExportEnums` properly — explain the PowerShell scoping problem they solve
+- [x] Add `Get-MFDependencyTree` Mermaid output example to function page
 - [x] Investigate GH Pages light/dark mode — implemented Just The Docs theme with dark colour scheme
-- [ ] Add a list of bugs, quirks, and behaviours that were worked around in the making of this project, including:
+- [x] Add a list of bugs, quirks, and behaviours that were worked around in the making of this project, including:
   - Upper-Case Azure-DevOps Packages + Nuget + PreRelease Tags
   - Unpacking the NUPKG to inject the source repository URL to ensure compatibility with NUGET v3 and GHPackages
   - Load order of non-exported items (Classes, Enums)
