@@ -3,7 +3,6 @@ layout: default
 title: Functions
 has_children: true
 permalink: /functions/
-nav_order: 5
 ---
 
 # Functions
