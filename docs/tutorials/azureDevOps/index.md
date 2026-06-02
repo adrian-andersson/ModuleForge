@@ -3,6 +3,7 @@ layout: default
 title: Azure Dev Ops
 parent: Tutorials
 has_children: true
+nav_order: 2
 ---
 
 # Azure Dev Ops

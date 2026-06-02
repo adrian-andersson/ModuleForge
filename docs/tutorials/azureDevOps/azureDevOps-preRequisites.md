@@ -3,6 +3,7 @@ layout: default
 title: Prerequisites for Azure DevOps with ModuleForge
 parent: Azure Dev Ops
 grand_parent: Tutorials
+nav_order: 1
 ---
 # Prerequisites for Azure DevOps with ModuleForge
 
@@ -22,7 +23,7 @@ If you have an existing feed, you can skip this process
     - You can disable _Upstream sources_
     - Set the scope to the project level
 
-![New Repository](./img/pre_newFeed.png)
+![Azure DevOps Artifacts new feed creation form](./img/pre_newFeed.png)
 
 ## Part 2 - Grant Build Service Feed Permissions
 
@@ -35,7 +36,7 @@ This step is important to allow the Build and Release step to successfully publi
 5. Select _Edit_ and add the `Feed Publisher (Contributor)` permissions
 6. Save the changes
 
-![New Repository](./img/pre_feedPerms2.png)
+![Azure DevOps Artifacts feed permissions showing Build Service contributor role](./img/pre_feedPerms2.png)
 
 ## Part 3 - Grant Build Service PR Permissions
 
@@ -57,5 +58,5 @@ This step allows the Build Service agent to post comments to PRs within workflow
    - _Create Tag_ 
      - (Required for the BuildAndRelease process to correctly tag)
 
-![New Repository](./img/pre_repoPerms.png)
+![Azure DevOps repository security settings for Build Service account](./img/pre_repoPerms.png)
 

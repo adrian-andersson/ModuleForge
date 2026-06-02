@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Module Versioning with SemVer
-parent: Misc
+parent: Concepts
+nav_order: 3
 ---
 # Module Versioning with SemVer
 

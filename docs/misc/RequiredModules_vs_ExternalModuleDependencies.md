@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Required Modules vs External Module Dependencies
-parent: Misc
+parent: Concepts
+nav_order: 6
 ---
 # Required Modules vs External Module Dependencies
 

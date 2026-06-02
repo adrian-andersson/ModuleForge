@@ -3,6 +3,7 @@ layout: default
 title: Getting Started with ModuleForge and Azure DevOps
 parent: Azure Dev Ops
 grand_parent: Tutorials
+nav_order: 2
 ---
 # Getting Started with ModuleForge and Azure DevOps
 
@@ -38,7 +39,7 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 
 1. Login to your Azure DevOps project
 2. Select _Repos_ from the left menu, then use the small down arrow at the top to select `New Repo`
-    - ![New Repository](./img/tut_newRepo.png)
+    - ![Azure DevOps new repository creation dialog](./img/tut_newRepo.png)
 3. Fill in the Create a Repository menu
    - Your new repository should be called `PSHelloWorld`
    - You can leave the option for a readme selected
@@ -70,22 +71,22 @@ Add-MFAzureDevOpsScaffold
 1. Open Azure Devops in your browser and select _Pipelines_
 2. Select `New Pipeline` in the top right of the Pipelines window.
 3. In the _connect_ tab, select `Azure Repos Git` as the option for _where is your code_
-    - ![Where is your code](./img/tut_whereIsCode.png)
+    - ![Pipeline setup — selecting Azure Repos Git as code source](./img/tut_whereIsCode.png)
 4. Select the correct repository `PSHelloWorld`
 5. In the _Configure your Pipeline_ screen, select `Existing Azure Pipeline YAML file`
-    - ![Configure Pipeline](./img/tut_configurePipeline.png)
+    - ![Pipeline configuration — selecting existing Azure Pipeline YAML file](./img/tut_configurePipeline.png)
 6. Select the `psScriptAnalyzerLintReport.yml` file
-    - ![Select YAML](./img/tut_selectYaml.png)
+    - ![Azure DevOps YAML file selection dialog](./img/tut_selectYaml.png)
 7. In the _Review your Pipeline_ screen, use the small arrow next to _RUN_ and select `SAVE`
 8. In the next screen, select the small _three dot_ menu in the top-right, and select `Rename/Move`
-    - ![Rename1](./img/tut_renMove.png)
+    - ![Azure DevOps pipeline three-dot menu with Rename/Move option](./img/tut_renMove.png)
 9. Change the name and folder of the pipeline
     - The Name of the pipeline should be renamed to `psScriptAnalyzerLintReport` to better identify it later
     - The `Select Folder` should be named after the repository - `PSGetHelloWorld`
     - This organisational step is critical to ensure that your Pipelines are well organised and identifiable later
-    - ![Rename2](./img/tut_renMove2.png)
+    - ![Azure DevOps pipeline rename dialog with name and folder fields](./img/tut_renMove2.png)
 10. Repeat steps 2 through to 9 for `buildAndRelease` and `pesterTesting`
-    - ![Pipelines](./img/tut_pipelineOrganisation.png)
+    - ![All three pipelines organised into repository folder](./img/tut_pipelineOrganisation.png)
 
 ### Adding Branch Build Policies
 
@@ -105,7 +106,7 @@ Add-MFAzureDevOpsScaffold
     - Change the displayname to `Pester` for easier visualisation
 5. You should now have 2 Build Validation steps, 1 _Optional_ Script Analyzer step, and 1 _Required_ Pester step
 
-- ![Pipelines](./img/tut_buildPols.png)
+- ![Azure DevOps branch build policies showing Required Pester and Optional Script Analyzer](./img/tut_buildPols.png)
 
 ## Part 4 - Create a Function and a Test
 
@@ -225,7 +226,7 @@ Describe "Get-HelloWorld Custom Name" {
 Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 ```
 
-![invoke-pester](./img/invokePester.png)
+![Pester test results showing 4 passed tests](./img/invokePester.png)
 
 ## Part 5 - Pull Request and BuildAndRelease
 
@@ -245,15 +246,15 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 ### Create a Pull request
 
 1. In your browser, navigate to your Azure DevOps project workspace and then repository and select the _files_ Item. You should see a notification banner at the top advising that a new branch can be used to create a PR.
-   - ![New PR](./img/tut_newPr.png)
+   - ![Azure DevOps banner prompting to create a pull request from the new branch](./img/tut_newPr.png)
 2. Click the option to create a Pull Request
 3. Fill in the Pull Request template
    - Type in a decent description
    - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
-   - ![PR Form](./img/tut_newPrForm.png)
+   - ![Pull request template showing change type and release intent checkboxes](./img/tut_newPrForm.png)
 4. Once you have completed the PR template, create the Pull Request
 5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
-   - ![New Repository](./img/tut_prComments.png)
+   - ![Automated Pester and PSScriptAnalyzer results posted as pull request comments](./img/tut_prComments.png)
 6. If everything is tracking well, our tests passed, there are no merge conflicts, and we should be ok to proceed to `Merge Pull Request`
 
 > If you want to explore your pester results in more details before a merge, you can click on `checks` and review the pipeline results in details. You can also check out the Code-Coverage results that get added as part of the Pester Test step.
@@ -269,7 +270,7 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - The `ModuleForge` version should be stable
    - The feedname should match what you set in the PreRequisits
         - If you changed the feedname, recommend you also update this form to reflect that change by editing the _buildAndRelease.yml_ file
-   - ![run pipeline](./img/tut_runPipeline.png)
+   - ![Azure DevOps Run Pipeline form for Build and Release](./img/tut_runPipeline.png)
 4. Wait for our pipeline to finish.
 5. Browse to _Artifacts_ and your Package Feed, where you can 
 
