@@ -35,7 +35,7 @@ Common reasons to do this: forked repositories without an existing tag history, 
 
 > Make sure the tag is on the correct commit before pushing. Once pushed to a public repository, deleting and re-creating tags is disruptive to anyone who has already fetched them.
 
-See [Module Versioning with SemVer](./misc/ModuleVersioning_With_SemVer.md) for the full version format rules and the zero-padded counter requirement.
+See [Module Versioning with SemVer](./Concepts/ModuleVersioning_With_SemVer.md) for the full version format rules and the zero-padded counter requirement.
 
 ---
 
@@ -197,6 +197,25 @@ Resolve-MFModuleCase -ModuleName 'MyModule'
 This detects the mismatch and renames the installed folder to match the manifest name exactly. The PSGallery publish workflow calls this automatically before publishing; for local installs you may need to call it manually.
 
 See [`Resolve-MFModuleCase`](./functions/Resolve-MFModuleCase.md) for full details. The underlying PSResourceGet issue is tracked at [PSResourceGet #305](https://github.com/PowerShell/PSResourceGet/issues/305).
+
+---
+
+### I cannot update a prerelease using Install-PSResource — it skips the install
+
+This is a known constraint of how PSResourceGet handles prerelease versioning. Prerelease versions share the same installation folder as their base version — `1.0.0-prev001` and `1.0.0-prev002` both install into a folder named `1.0.0`. When you attempt to install a newer prerelease of the same base version, PSResourceGet sees that folder already exists and skips the install entirely.
+
+The fix is to unload the module from the current session first, then reinstall using the `-Reinstall` switch:
+
+```powershell
+Remove-Module <ModuleName> -Force -ErrorAction SilentlyContinue
+Install-PSResource -Name <ModuleName> -Prerelease -Reinstall
+```
+
+The `Remove-Module` step is important — omitting it can make the install appear to succeed while the session continues running the old version from memory.
+
+If you cannot use `-Reinstall` (older PSResourceGet versions), manually deleting the `1.0.0` folder from the module install path and reinstalling achieves the same result.
+
+This is a consequence of the NuGet versioning model, not a PSResourceGet bug — prerelease qualifiers are part of the version identifier but are not reflected in the on-disk folder name.
 
 ---
 
