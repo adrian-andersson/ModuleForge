@@ -3,7 +3,6 @@ layout: default
 title: Functions
 has_children: true
 permalink: /functions/
-nav_order: 5
 ---
 
 # Functions
@@ -12,6 +11,7 @@ Reference documentation for all exported ModuleForge functions.
 
 - [Add-MFAzureDevOpsScaffold](./Add-MFAzureDevOpsScaffold.md)
 - [Add-MFGithubScaffold](./Add-MFGithubScaffold.md)
+- [Add-MFProjectScripts](./Add-MFProjectScripts.md)
 - [Add-MFRepositoryXmlData](./Add-MFRepositoryXmlData.md)
 - [Build-MFProject](./Build-MFProject.md)
 - [Get-MFDependencyTree](./Get-MFDependencyTree.md)
@@ -23,7 +23,6 @@ Reference documentation for all exported ModuleForge functions.
 - [Get-MFNextSemver](./Get-MFNextSemver.md)
 - [Get-MFScriptAnalyzerSummary](./Get-MFScriptAnalyzerSummary.md)
 - [Invoke-MFBuildPreRelease](./Invoke-MFBuildPreRelease.md)
-- [Invoke-MFPester](./Invoke-MFPester.md)
 - [New-MFProject](./New-MFProject.md)
 - [Register-MFLocalPsResourceRepository](./Register-MFLocalPsResourceRepository.md)
 - [Remove-MFLocalPsResourceRepository](./Remove-MFLocalPsResourceRepository.md)
