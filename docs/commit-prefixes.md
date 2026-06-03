@@ -126,7 +126,7 @@ At release time, the build pipeline asks for a **version increment type** (`majo
 - Only `docs:`, `chore:`, or `test:` commits → **none**
 - Any breaking change → **major** (add a `BREAKING CHANGE:` note in the commit body)
 
-See [Commit Strategy and PR Process](./misc/CommitStrategy_And_PRProcess.md) for how this fits into the full PR workflow.
+See [Commit Strategy and PR Process](./Concepts/CommitStrategy_And_PRProcess.md) for how this fits into the full PR workflow.
 
 ---
 
