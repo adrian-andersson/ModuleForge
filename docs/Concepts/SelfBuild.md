@@ -39,6 +39,8 @@ This is commonly known as dogfooding -> every function in the build chain is exe
 
 Because the builder is always the *previous* release, changes to the build functions themselves are not self-tested (outside of Pester) until after they ship. During active development on core pipeline functions, the running version of ModuleForge may not yet have the capability being tested.
 
-This is a known trade-off, not a gap in the design -> it is the same constraint any self-hosting tool faces. To try and reduce the risks, ModuleForge has ~150 Pester tests and 90% Code Coverage, this provides a baseline quality assurance.
+This is a known trade-off, not a gap in the design -> it is the same constraint any self-hosting tool faces. To try and reduce the risks, ModuleForge has ~150 Pester tests and 90% code coverage of exported functions.
+
+See [Writing Pester Tests](./Pester.md) for what that scope includes and excludes.
 
 See [From Bartender to ModuleForge](./Origin.md) for more background on why self-building was a deliberate design goal from the start.
