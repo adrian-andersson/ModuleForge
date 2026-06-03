@@ -7,6 +7,7 @@ BeforeAll{
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
+    $mockPsScriptRoot = $sourcePath
 
     $dependencies = [ordered]@{
         functions = @('Get-MFFolderItems.ps1','Get-MFFolderItemDetails.ps1')

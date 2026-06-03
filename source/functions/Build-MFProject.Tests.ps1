@@ -7,6 +7,8 @@ BeforeAll{
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
+    # Captured before $sourcePath is reassigned to the temp build folder below
+    $mockPsScriptRoot = $sourcePath
 
     $dependencies = [ordered]@{
         functions = @('Get-MFFolderItems.ps1','Get-MFDependencyTree.ps1','Get-MFFolderItemDetails.ps1','New-MFProject.ps1','Register-MFLocalPsResourceRepository.ps1','Remove-MFLocalPsResourceRepository.ps1','Add-MFRepositoryXmlData.ps1','Add-MFProjectScripts.ps1')
