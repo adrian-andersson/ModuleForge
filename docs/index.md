@@ -18,6 +18,6 @@ Takes the grunt work out of PowerShell module development. Scaffolds project str
 | [Tutorials](./tutorials/) | Step-by-step guides for GitHub and Azure DevOps setups. |
 | [Build and Release Guide](./build-and-release.md) | Choose the right version and release options when shipping. |
 | [Functions](./functions/) | Reference documentation for all exported ModuleForge functions. |
-| [Concepts](./misc/) | Design decisions, patterns, workflow guides, and the project backstory. |
+| [Concepts](./Concepts/) | Design decisions, patterns, workflow guides, and the project backstory. |
 | [Commit Prefixes](./commit-prefixes.md) | Quick reference for all recognised commit message prefixes. |
 | [FAQ and Troubleshooting](./faq.md) | Common questions and fixes. |

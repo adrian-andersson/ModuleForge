@@ -171,12 +171,12 @@ ModuleForge uses zero-padded three-digit counters to ensure correct lexicographi
 
 The label `prev` is lowercase by design — there is a known PSResourceGet bug where uppercase prerelease labels cause incorrect behaviour on some feeds.
 
-See [Module Versioning with SemVer](./misc/ModuleVersioning_With_SemVer.md) for the full explanation of the versioning rules and PSGallery constraints.
+See [Module Versioning with SemVer](./Concepts/ModuleVersioning_With_SemVer.md) for the full explanation of the versioning rules and PSGallery constraints.
 
 ---
 
 ## Related
 
 - [Commit Prefixes](./commit-prefixes.md) — which prefixes map to which changelog sections and version types
-- [Commit Strategy and PR Process](./misc/CommitStrategy_And_PRProcess.md) — how the PR template connects to version decisions
-- [Module Versioning with SemVer](./misc/ModuleVersioning_With_SemVer.md) — detailed SemVer rules and PSGallery constraints
+- [Commit Strategy and PR Process](./Concepts/CommitStrategy_And_PRProcess.md) — how the PR template connects to version decisions
+- [Module Versioning with SemVer](./Concepts/ModuleVersioning_With_SemVer.md) — detailed SemVer rules and PSGallery constraints

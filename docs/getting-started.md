@@ -173,10 +173,10 @@ Invoke-Pester .\source\functions\Get-Greeting.Tests.ps1
 Or run the full test suite with code coverage — mirrors exactly what the CI pipeline does:
 
 ```powershell
-Invoke-MFPester
+.\scripts\Invoke-MFPester.ps1
 ```
 
-`Invoke-MFPester` discovers all `*.Tests.ps1` files under `source/functions/`, runs them with code coverage enabled, and reports the results. Use this before opening a PR to confirm you're in the same state the automated pipeline will see.
+`Invoke-MFPester.ps1` is a standalone script (added to your project by `Add-MFProjectScripts`) that discovers all `*.Tests.ps1` files under `source/functions/`, runs them with code coverage enabled, and reports the results. Use this before opening a PR to confirm you're in the same state the automated pipeline will see.
 
 Commit with the right prefix so your changelog generates correctly:
 
