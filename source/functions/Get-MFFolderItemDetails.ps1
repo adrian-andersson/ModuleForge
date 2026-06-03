@@ -74,7 +74,7 @@ function Get-MFFolderItemDetails
             $resourceFolder = Join-Path $PSScriptRoot 'resource'
         }
 
-        $scriptBlockPath = Join-Path $resourceFolder 'scriptBlocks' 'Get-MFFolderItemDetails.scriptblock.ps1'
+        $scriptBlockPath = Join-Path -Path $resourceFolder -ChildPath 'scriptBlocks' -AdditionalChildPath 'Get-MFFolderItemDetails.scriptblock.ps1'
         if(!(Test-Path $scriptBlockPath))
         {
             throw "Unable to find scriptblock resource at: $scriptBlockPath"
