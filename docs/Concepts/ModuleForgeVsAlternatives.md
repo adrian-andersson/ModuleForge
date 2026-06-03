@@ -36,7 +36,7 @@ ModuleForge replaces Plaster's scaffolding function and adds module compilation,
 
 These are task runners. You define tasks (test, build, publish) and wire them together. They are extremely flexible — and require you to write everything yourself.
 
-ModuleForge and PSake/Invoke-Build are not mutually exclusive. You can call ModuleForge functions (`Invoke-MFPester`, `Build-MFProject`, `Resolve-MFModuleCase`) from within a PSake task file or Invoke-Build script, using ModuleForge as a library rather than as the orchestrator. This is a natural pattern if you already have an established build toolchain.
+ModuleForge and PSake/Invoke-Build are not mutually exclusive. You can call ModuleForge functions (`Build-MFProject`, `Resolve-MFModuleCase`) from within a PSake task file or Invoke-Build script, or invoke the standalone `.\scripts\Invoke-MFPester.ps1` script for test runs, using ModuleForge as a library rather than as the orchestrator. This is a natural pattern if you already have an established build toolchain.
 
 ### Sampler
 
@@ -75,7 +75,7 @@ The status quo for many teams. It works until it doesn't — workflow drift betw
 
 **It won't suit deeply customised pipelines.** If your CI/CD has ten stages, matrix builds across three operating systems, and custom deployment gates, the scaffolded workflows will feel too simple to build on. They are a starting point, not an enterprise pipeline framework.
 
-**It makes the test scope decision for you.** Pester runs against exported functions only. Private functions are implicitly tested through their callers. If you need true unit tests at the private function level, you can write them — but `Invoke-MFPester` won't pick them up automatically.
+**It makes the test scope decision for you.** Pester runs against exported functions only. Private functions are implicitly tested through their callers. If you need true unit tests at the private function level, you can write them — but the `Invoke-MFPester.ps1` script won't pick them up automatically.
 
 ---
 

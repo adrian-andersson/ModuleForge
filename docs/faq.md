@@ -157,9 +157,9 @@ See [`Invoke-MFBuildPreRelease`](./functions/Invoke-MFBuildPreRelease.md) and [`
 
 There is no conflict. ModuleForge is designed to be composable — use it as a dependency within your existing build toolchain and call its functions directly:
 
-| Task | ModuleForge function |
+| Task | Command |
 | --- | --- |
-| Run Pester with coverage | `Invoke-MFPester` |
+| Run Pester with coverage | `.\scripts\Invoke-MFPester.ps1` |
 | Compile the module | `Build-MFProject` |
 | Register a local or private NuGet feed | `Register-MFLocalPsResourceRepository` |
 | Add NuGet v3 feed data to the config | `Add-MFRepositoryXmlData` |
@@ -213,7 +213,7 @@ Install-PSResource -Name <ModuleName> -Prerelease -Reinstall
 
 The `Remove-Module` step is important — omitting it can make the install appear to succeed while the session continues running the old version from memory.
 
-If you cannot use `-Reinstall` (older PSResourceGet versions), manually deleting the `1.0.0` folder from the module install path and reinstalling achieves the same result.
+If you cannot use `-Reinstall` (older PSResourceGet versions), manually deleting or renaming the `1.0.0` (example) folder from the module install path and reinstalling achieves the same result.
 
 This is a consequence of the NuGet versioning model, not a PSResourceGet bug — prerelease qualifiers are part of the version identifier but are not reflected in the on-disk folder name.
 
