@@ -295,6 +295,51 @@ Describe 'write-mfModuleDocs' {
         ($content |Where-Object {$_ -match '\[Functions\]'}) |Should -Not -BeNullOrEmpty
     }
 
+    # --- Front matter preservation on re-run ---
+
+    Describe 'write-mfModuleDocs - front matter preserved on re-run' {
+        BeforeAll {
+            # Inject a custom nav_order into the functions index to simulate hand-crafting
+            $funcIndexPath = join-path $newFuncsPath 'index.md'
+            (Get-Content $funcIndexPath -Raw) -replace 'has_children: true', "has_children: true`nnav_order: 5" |
+                Out-File $funcIndexPath -Force -NoNewline
+
+            # Inject a custom nav_order into the changelog
+            $changeLogPath = join-path $newDocsPath 'changeLog.md'
+            (Get-Content $changeLogPath -Raw) -replace 'nav_order: 2', 'nav_order: 9' |
+                Out-File $changeLogPath -Force -NoNewline
+
+            # Capture a line from the homepage body that the generator would not reproduce
+            # on its own (the module description paragraph)
+            $homepageLineBefore = (Get-Content (join-path $newDocsPath 'index.md') |
+                Where-Object { $_ -match 'A test module for PlatyPS' } |
+                Select-Object -First 1)
+
+            # Second run — the docs folder already has content
+            write-mfModuleDocs -modulename platyPsTest -path $docsPath -includeChangeLog
+        }
+
+        It 'Should preserve a custom nav_order in functions/index.md on re-run' {
+            $content = get-content (join-path $newFuncsPath 'index.md')
+            $content | Should -contain 'nav_order: 5'
+        }
+
+        It 'Should preserve a custom nav_order in changeLog.md on re-run' {
+            $content = get-content (join-path $newDocsPath 'changeLog.md')
+            $content | Should -contain 'nav_order: 9'
+        }
+
+        It 'Should update the version line in the homepage on re-run' {
+            $content = get-content (join-path $newDocsPath 'index.md')
+            ($content | Where-Object { $_ -match 'Module version:' }) | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Should preserve the homepage body content on re-run' {
+            $content = get-content (join-path $newDocsPath 'index.md')
+            ($content | Where-Object { $_ -match 'A test module for PlatyPS' }) | Should -Not -BeNullOrEmpty
+        }
+    }
+
     # --- SkipIndex ---
 
     Describe 'write-mfModuleDocs with SkipIndex' {
