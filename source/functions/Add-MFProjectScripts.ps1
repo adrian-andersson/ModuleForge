@@ -9,7 +9,7 @@ function Add-MFProjectScripts
             Copies script templates from ModuleForge's resource\scripts folder into a scripts
             subfolder at the project root. Skips existing files by default.
 
-            Includes Invoke-MFPester.ps1 — a standalone Pester runner that does not depend on
+            Includes Invoke-MFPester.ps1  - a standalone Pester runner that does not depend on
             the ModuleForge module, safe for use in clean CI environments.
 
             This function is also called automatically by add-mfFilesAndFolders during project
@@ -65,7 +65,7 @@ function Add-MFProjectScripts
 
         if(!(Test-Path $resourceFolder))
         {
-            Write-Warning 'Add-MFProjectScripts: resource folder not found in ModuleForge module — skipping script scaffold'
+            Write-Warning 'Add-MFProjectScripts: resource folder not found in ModuleForge module  - skipping script scaffold'
             $skipProcess = $true
         }
 
@@ -74,7 +74,7 @@ function Add-MFProjectScripts
             $resourceFolderScripts = Join-Path $resourceFolder 'scripts'
             if(!(Test-Path $resourceFolderScripts))
             {
-                Write-Warning 'Add-MFProjectScripts: scripts folder not found in ModuleForge resource — skipping script scaffold'
+                Write-Warning 'Add-MFProjectScripts: scripts folder not found in ModuleForge resource  - skipping script scaffold'
                 $skipProcess = $true
             }
         }

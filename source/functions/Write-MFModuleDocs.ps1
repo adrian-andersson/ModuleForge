@@ -44,7 +44,7 @@ function Write-MFModuleDocs
     #>
 
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Docs' reflects a short form of documentation")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification='Plural Docs reflects a short form of documentation')]
     PARAM(
         #The root path where documentation should be stored. Defaults to the current directory.
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
