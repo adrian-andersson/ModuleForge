@@ -3,6 +3,7 @@ param()
 
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath  = join-path -path $currentPath -childPath 'source'
@@ -450,6 +451,6 @@ Custom content.
     AfterAll{
         remove-alias git
         remove-module platyPsTest,platyPs -ErrorAction Ignore
-        remove-item -Path $testPath -Force -recurse
+        remove-item -Path $testPath -Force -recurse -ProgressAction SilentlyContinue
     }
 }

@@ -3,6 +3,7 @@ param()
 
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
@@ -292,7 +293,7 @@ describe 'Build-MFProject with ReleaseNotes' {
 afterAll {
 
     Set-Location $currentPath
-    Remove-Item $testPath -Force -Recurse -ErrorAction Ignore
+    Remove-Item $testPath -Force -Recurse -ErrorAction Ignore -ProgressAction SilentlyContinue
     #Remove-Item $repoTestPath -Recurse -Force -ErrorAction Ignore
     start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
 }

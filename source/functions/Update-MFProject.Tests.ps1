@@ -1,5 +1,9 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
@@ -47,7 +51,7 @@ Describe 'Update-MFProject' {
 
     AfterAll{
         Set-Location $currentPath
-        Remove-Item $testPath -Force -Recurse
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
     }
 
 }
@@ -102,7 +106,7 @@ Describe 'Update-MFProject' {
     AfterAll{
 
         Set-Location $currentPath
-        Remove-Item $testPath -Force -Recurse
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
         start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
     }
 

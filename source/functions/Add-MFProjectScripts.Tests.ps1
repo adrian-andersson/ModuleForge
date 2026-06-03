@@ -3,6 +3,7 @@ param()
 
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     $currentPath = $(Get-Location).path
     $sourcePath = Join-Path $currentPath 'source'
 
@@ -77,5 +78,5 @@ Describe 'Add-MFProjectScripts should copy if files exist and -Force is used' {
 AfterAll{
     Remove-Variable mockPsScriptRoot -ErrorAction Ignore
     Set-Location $currentPath
-    Remove-Item $testPath -Force -Recurse
+    Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
 }

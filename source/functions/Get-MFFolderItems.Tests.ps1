@@ -3,6 +3,7 @@ param()
 
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
@@ -82,7 +83,7 @@ Describe 'Get-MFFolderItems throws on invalid destination' {
         { Get-MFFolderItems -Path $privatePath -Destination $trailingDest } | Should -Not -Throw
     }
     AfterAll {
-        Remove-Item $tempCopyLocation -Recurse -Force -ErrorAction Ignore
+        Remove-Item $tempCopyLocation -Recurse -Force -ErrorAction Ignore -ProgressAction SilentlyContinue
     }
 }
 
@@ -102,10 +103,10 @@ Describe 'Get-MFFolderItems respects .mfignore' {
         $ignoreItems.Name | Should -Contain 'include-me.ps1'
     }
     AfterAll {
-        Remove-Item $ignorePath -Recurse -Force -ErrorAction Ignore
+        Remove-Item $ignorePath -Recurse -Force -ErrorAction Ignore -ProgressAction SilentlyContinue
     }
 }
 
 AfterAll {
-    remove-item -Recurse -Path $tempCopyLocation -Force -ErrorAction Ignore
+    remove-item -Recurse -Path $tempCopyLocation -Force -ErrorAction Ignore -ProgressAction SilentlyContinue
 }

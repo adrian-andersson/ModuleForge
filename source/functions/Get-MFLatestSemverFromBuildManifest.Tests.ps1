@@ -1,4 +1,8 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
 
@@ -84,5 +88,5 @@ describe 'Get-MFLatestSemverFromBuildManifest without prerelease' {
 
 AfterAll{
     set-location $currentPath
-    remove-item -Path $testPath -Force -recurse
+    remove-item -Path $testPath -Force -recurse -ProgressAction SilentlyContinue
 }
