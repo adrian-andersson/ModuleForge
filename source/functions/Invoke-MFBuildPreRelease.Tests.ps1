@@ -2,6 +2,7 @@
 param()
 
 BeforeAll{
+    $WarningPreference = 'SilentlyContinue'
     $functionsDir = Split-Path $PSCommandPath -Parent
     $sourceDir    = Split-Path $functionsDir -Parent
 
@@ -13,7 +14,7 @@ BeforeAll{
         $dirRef = join-path $sourceDir $_.Key
         $_.Value.ForEach{
             $itemPath = join-path $dirRef $_
-            $item = get-item $itemPath -ErrorAction SilentlyContinue
+            $item = get-item $itemPath -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
             if($item){. $item.FullName}else{write-warning "Dependency not found: $itemPath"}
         }
     }
@@ -64,7 +65,7 @@ Describe 'Invoke-MFBuildPreRelease' {
     }
 
     AfterAll{
-        Remove-Item $testRoot -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $testRoot -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
     }
 
     It 'should call Build-MFProject once' {
@@ -100,7 +101,7 @@ Describe 'Invoke-MFBuildPreRelease Error Handling' {
         try{
             {Invoke-MFBuildPreRelease -ModulePath $emptyDir} | Should -Throw
         }finally{
-            Remove-Item $emptyDir -Force -Recurse -ErrorAction SilentlyContinue
+            Remove-Item $emptyDir -Force -Recurse -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
         }
     }
 }

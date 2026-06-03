@@ -94,7 +94,9 @@ function add-mfFilesAndFolders
 
             }
         }
-        
+
+        Add-MFProjectScripts -ModulePath $moduleRoot -WarningAction SilentlyContinue
+
     }
-    
+
 }

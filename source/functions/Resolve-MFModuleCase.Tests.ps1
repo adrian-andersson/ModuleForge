@@ -2,6 +2,7 @@
 param()
 
 BeforeAll{
+    $WarningPreference = 'SilentlyContinue'
     #Load This File
     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
     $functionName = 'Resolve-MFModuleCase'

@@ -1,5 +1,9 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
-    
+
+    $WarningPreference = 'SilentlyContinue'
     #Load This File
     . $PSCommandPath.Replace('.Tests.ps1','.ps1')
 
@@ -52,7 +56,7 @@ Describe 'Get-MFGitLatestVersion' {
             }
             
             process{
-                Write-Verbose "Command provided: $commandLine"
+                #Write-Verbose "Command provided: $commandLine"
                 switch -Wildcard ($commandLine) {
                     '--version' { return 'git version 2.30.0.mock' }
                     'tag *' {$global:LASTEXITCODE = 0 ;return $tags } #Need to make sure we are setting the exitcode to 0 for this, else the get-mfGitlatestVersion may trap incorrectly
@@ -63,7 +67,7 @@ Describe 'Get-MFGitLatestVersion' {
 
         Set-Alias -name 'git' -Value invoke-GitCommand
 
-        $latestVer = get-mfGitLatestVersion -Verbose
+        $latestVer = get-mfGitLatestVersion 
     }
 
     It 'should Mock Git Version Correctly' {

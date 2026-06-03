@@ -1,5 +1,9 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
+param()
+
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
@@ -105,5 +109,5 @@ Describe 'Add-MFGithubScaffold should copy if files exist and -force is used' {
 AfterAll{
     Remove-Variable mockPsScriptRoot -ErrorAction Ignore
     Set-Location $currentPath
-    remove-Item $testPath -Force -Recurse
+    remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
 }

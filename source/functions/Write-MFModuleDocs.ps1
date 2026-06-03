@@ -108,6 +108,31 @@ function Write-MFModuleDocs
             New-Item -ItemType Directory -Path $DocsFullPath
         }
 
+        # Phase 0 — snapshot all existing front matter before any writes.
+        # Stores a flat key→value dictionary per page so that hand-crafted fields
+        # (nav_order, custom titles, etc.) survive regeneration. Keys are
+        # forward-slash relative paths from DocsFullPath (e.g. 'functions/index.md').
+        $frontMatterCache = @{}
+        $existingMdFiles  = Get-ChildItem $DocsFullPath -Filter '*.md' -Recurse -ErrorAction SilentlyContinue
+        foreach($existingFile in $existingMdFiles)
+        {
+            $existingContent = Get-Content $existingFile.FullName -Raw -ErrorAction SilentlyContinue
+            if($existingContent -and $existingContent -match '(?s)^---\r?\n(.*?)\r?\n---')
+            {
+                $fmDict = [ordered]@{}
+                foreach($fmLine in ($Matches[1] -split '\r?\n'))
+                {
+                    if($fmLine -match '^([\w][\w_ -]*):\s*(.+)$')
+                    {
+                        $fmDict[$Matches[1].Trim()] = $Matches[2].Trim()
+                    }
+                }
+                $relPath = $existingFile.FullName.Substring($DocsFullPath.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar).Replace('\','/')
+                $frontMatterCache[$relPath] = $fmDict
+            }
+        }
+        write-verbose "Front matter snapshot: $($frontMatterCache.Count) pages cached"
+
         $functionsFullPath = join-path -Path $DocsFullPath -ChildPath $FunctionsFolder
         if(!(test-path $functionsFullPath))
         {
@@ -184,12 +209,17 @@ function Write-MFModuleDocs
         $funcMdFiles    = Get-ChildItem $functionsFullPath -Filter '*.md' | Where-Object {$_.Name -ne 'index.md'}
         $funcChildLinks = Get-MFChildLinkList -MdFiles $funcMdFiles -SubDirs @()
 
+        # Restore any hand-crafted front matter fields from the snapshot
+        $funcIndexCacheKey = "$FunctionsFolder/index.md"
+        $savedFuncFm = if($frontMatterCache.Contains($funcIndexCacheKey)){ $frontMatterCache[$funcIndexCacheKey] }else{ @{} }
+
         $funcIndexLines = [System.Collections.Generic.List[string]]::new()
         $funcIndexLines.Add('---')
         $funcIndexLines.Add('layout: default')
         $funcIndexLines.Add("title: $functionsNavTitle")
         $funcIndexLines.Add('has_children: true')
         $funcIndexLines.Add("permalink: /$FunctionsFolder/")
+        if($savedFuncFm.Contains('nav_order')){ $funcIndexLines.Add("nav_order: $($savedFuncFm['nav_order'])") }
         $funcIndexLines.Add('---')
         $funcIndexLines.Add('')
         $funcIndexLines.Add("# $functionsNavTitle")
@@ -199,7 +229,7 @@ function Write-MFModuleDocs
         foreach($link in $funcChildLinks){ $funcIndexLines.Add($link) }
         $funcIndexLines -join "`n" | Out-File (join-path $functionsFullPath 'index.md') -Force
 
-        # Changelog  - prepend JTD front matter so it sits at nav_order 2 in the sidebar
+        # Changelog — prepend JTD front matter, restoring nav_order from the snapshot if present
         if($IncludeChangeLog)
         {
             write-verbose 'Creating changelog file'
@@ -207,9 +237,11 @@ function Write-MFModuleDocs
             write-verbose "ChangeLog: `n$($changeLog)"
             if($changeLog)
             {
-                $changeLogPath = join-path $DocsFullPath -ChildPath 'changeLog.md'
-                $changeLogFm   = "---`nlayout: default`ntitle: Change Log`nnav_order: 2`n---`n`n"
-                $changeLogBody = if($changeLog -is [array]){ $changeLog -join "`n" }else{ $changeLog.ToString() }
+                $changeLogPath    = join-path $DocsFullPath -ChildPath 'changeLog.md'
+                $savedClFm        = if($frontMatterCache.Contains('changeLog.md')){ $frontMatterCache['changeLog.md'] }else{ @{} }
+                $changeLogNavOrder = if($savedClFm.Contains('nav_order')){ $savedClFm['nav_order'] }else{ 2 }
+                $changeLogFm      = "---`nlayout: default`ntitle: Change Log`nnav_order: $changeLogNavOrder`n---`n`n"
+                $changeLogBody    = if($changeLog -is [array]){ $changeLog -join "`n" }else{ $changeLog.ToString() }
                 $changeLogFm + $changeLogBody | Out-File $changeLogPath -Force
             }else{
                 write-warning 'changeLog notes were not captured as none existed, or something went wrong'
@@ -392,7 +424,19 @@ function Write-MFModuleDocs
             }
 
             $indexPath = join-path $DocsFullPath 'index.md'
-            $indexLines -join "`n" | Out-File $indexPath -Force
+            if(Test-Path $indexPath)
+            {
+                # Homepage already exists — only update the version line to preserve the
+                # hand-crafted sections table, root-level page links, and section names.
+                $existingIndexContent = Get-Content $indexPath -Raw
+                $updatedIndexContent  = $existingIndexContent -replace '(?m)^> Module version:.*$', "> Module version: $moduleVersion"
+                $updatedIndexContent | Out-File $indexPath -Force -NoNewline
+                write-verbose 'Homepage already exists — updated version line only'
+            }else{
+                # First run — generate the homepage from scratch
+                $indexLines -join "`n" | Out-File $indexPath -Force
+                write-verbose 'Generated new homepage'
+            }
         }
     }
 

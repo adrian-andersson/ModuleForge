@@ -3,12 +3,13 @@ param()
 
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('Update-MFProject.ps1')
+        functions = @('Update-MFProject.ps1','Add-MFProjectScripts.ps1')
         private = @('add-mfFilesAndFolders.ps1')
     }
 
@@ -55,7 +56,7 @@ Describe 'New-MFProject' {
     AfterAll{
 
         Set-Location $currentPath
-        Remove-Item $testPath -Force -Recurse
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
         start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
     }
 
@@ -72,7 +73,7 @@ Describe 'New-MFProject should throw if config already exists' {
     }
     AfterAll{
         Set-Location $currentPath
-        Remove-Item $testPath -Force -Recurse
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
         Start-Sleep -Seconds 2
     }
 }
@@ -115,7 +116,7 @@ Describe 'New-MFProject' {
     AfterAll{
 
         Set-Location $currentPath
-        Remove-Item $testPath -Force -Recurse
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
         start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
     }
 

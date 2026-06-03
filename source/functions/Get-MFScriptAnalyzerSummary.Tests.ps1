@@ -3,6 +3,7 @@ param()
 
 BeforeAll{
 
+    $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
     
@@ -85,6 +86,6 @@ describe 'Get-MFScriptAnalyzerSummary with SuppressOutput' {
 afterAll {
 
     Set-Location $currentPath
-    Remove-Item $testPath -Force -Recurse -ErrorAction Ignore
+    Remove-Item $testPath -Force -Recurse -ErrorAction Ignore -ProgressAction SilentlyContinue
     start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
 }
