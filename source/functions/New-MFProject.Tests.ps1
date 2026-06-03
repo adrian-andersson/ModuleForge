@@ -8,7 +8,7 @@ BeforeAll{
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
     $dependencies = [ordered]@{
-        functions = @('Update-MFProject.ps1')
+        functions = @('Update-MFProject.ps1','Add-MFProjectScripts.ps1')
         private = @('add-mfFilesAndFolders.ps1')
     }
 
