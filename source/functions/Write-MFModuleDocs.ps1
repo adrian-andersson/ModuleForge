@@ -44,7 +44,7 @@ function Write-MFModuleDocs
     #>
 
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Docs' reflects a short form of documentation")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification='Plural Docs reflects a short form of documentation')]
     PARAM(
         #The root path where documentation should be stored. Defaults to the current directory.
         [Parameter(ValueFromPipeline,ValueFromPipelineByPropertyName)]
@@ -108,8 +108,8 @@ function Write-MFModuleDocs
             New-Item -ItemType Directory -Path $DocsFullPath
         }
 
-        # Phase 0 — snapshot all existing front matter before any writes.
-        # Stores a flat key→value dictionary per page so that hand-crafted fields
+        # Phase 0 - snapshot all existing front matter before any writes.
+        # Stores a flat key->value dictionary per page so that hand-crafted fields
         # (nav_order, custom titles, etc.) survive regeneration. Keys are
         # forward-slash relative paths from DocsFullPath (e.g. 'functions/index.md').
         $frontMatterCache = @{}
@@ -229,7 +229,7 @@ function Write-MFModuleDocs
         foreach($link in $funcChildLinks){ $funcIndexLines.Add($link) }
         $funcIndexLines -join "`n" | Out-File (join-path $functionsFullPath 'index.md') -Force
 
-        # Changelog — prepend JTD front matter, restoring nav_order from the snapshot if present
+        # Changelog - prepend JTD front matter, restoring nav_order from the snapshot if present
         if($IncludeChangeLog)
         {
             write-verbose 'Creating changelog file'
@@ -426,14 +426,14 @@ function Write-MFModuleDocs
             $indexPath = join-path $DocsFullPath 'index.md'
             if(Test-Path $indexPath)
             {
-                # Homepage already exists — only update the version line to preserve the
+                # Homepage already exists - only update the version line to preserve the
                 # hand-crafted sections table, root-level page links, and section names.
                 $existingIndexContent = Get-Content $indexPath -Raw
                 $updatedIndexContent  = $existingIndexContent -replace '(?m)^> Module version:.*$', "> Module version: $moduleVersion"
                 $updatedIndexContent | Out-File $indexPath -Force -NoNewline
-                write-verbose 'Homepage already exists — updated version line only'
+                write-verbose 'Homepage already exists - updated version line only'
             }else{
-                # First run — generate the homepage from scratch
+                # First run - generate the homepage from scratch
                 $indexLines -join "`n" | Out-File $indexPath -Force
                 write-verbose 'Generated new homepage'
             }
