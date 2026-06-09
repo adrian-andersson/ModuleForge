@@ -8,7 +8,7 @@
 - [x] Clean up function documentation — fill missing parameter descriptions in `Build-MFProject`, `New-MFProject`, `Get-MFLatestSemverFromBuildManifest`, and `Get-MFDependencyTree`; consider stripping `ProgressAction` from generated docs
 - [x] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
 - [x] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
-- [ ] Automated PR to update docs
+- [x] Automated PR to update docs
 
 ## v1.4.0
 
@@ -24,7 +24,7 @@
 
 ## README
 
-- [ ] Add something to showcase the DependencyTree function
+- [x] Add something to showcase the DependencyTree function
 
 ## Docs Site
 
