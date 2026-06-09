@@ -66,21 +66,22 @@ Built for modern PowerShell, including enumerators, classes, and advanced langua
 ## Workflow Overview
 
 ```mermaid
-
 graph TD
-  A[🚀 Start A New Pwsh Module Project] --> B[💻 Code your functions]
+  A[🚀 Start a New PowerShell Module] --> B[💻 Code Your Functions]
   B --> C[🔍 Test Locally]
-  C --> D[📦 Commit Changes & Open a PR]
+  C --> D[💾 Commit & Open a PR]
+  D --> E
   subgraph "CI ⚙️"
-  D --> E[🧪 Automated Pester and PSInvoke Tests]
-  E --> F[👀 Review and Merge]
+    E[🧪 Pester Tests & PSScriptAnalyzer]
   end
+  E -->|Fail| B
+  E -->|Pass| F[👀 Review & Merge]
+  F --> G
   subgraph "CD 🚚"
-  F --> G[🏷️ Build & Release Version]
-  G --> H[⏬ Deploy & Use]
+    G[🏷️ Build & Release Version]
+    G --> H[📤 Deploy & Publish]
   end
   H --> B
-
 ```
 
 ## Design Goals

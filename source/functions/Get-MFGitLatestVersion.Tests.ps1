@@ -85,3 +85,101 @@ Describe 'Get-MFGitLatestVersion' {
         remove-alias git
     }
 }
+
+Describe 'Get-MFGitLatestVersion - Mixed semver and non-semver tags' {
+    BeforeAll{
+        function invoke-GitCommand{
+            [CmdletBinding()]
+            PARAM(
+                [Parameter(Position = 0)][Alias("p0")][string]$Param0,
+                [Parameter(Position = 1)][Alias("p1")][string]$Param1,
+                [Parameter(Position = 2)][Alias("p2")][string]$Param2,
+                [Parameter(Position = 3)][Alias("p3")][string]$Param3,
+                [Parameter(Position = 4)][Alias("p4")][string]$Param4,
+                [Parameter(Position = 5)][Alias("p5")][string]$Param5,
+                [Parameter(Position = 6)][Alias("p6")][string]$Param6
+            )
+            begin{
+                $commandLine = "$Param0 $Param1 $Param2 $Param3 $Param4 $Param5 $Param6".trim()
+                $tags = @(
+                    'latest'
+                    'release-candidate'
+                    'v1.1.0-prev004'
+                    'not-a-version'
+                    'v1.0.0'
+                    'v1.1.0'
+                    'something'
+                    'v1.2.3'
+                )
+            }
+            process{
+                switch -Wildcard ($commandLine) {
+                    '--version' { return 'git version 2.30.0.mock' }
+                    'tag *' {$global:LASTEXITCODE = 0; return $tags}
+                    default { throw "Unexpected git command: $commandLine" }
+                }
+            }
+        }
+
+        Set-Alias -name 'git' -Value invoke-GitCommand
+
+        $latestVer = Get-MFGitLatestVersion
+    }
+
+    It 'Should ignore non-semver tags and return the highest valid version' {
+        $latestVer.GetType().name | should -be 'SemanticVersion'
+        $latestVer.ToString() | should -be '1.2.3'
+        $latestVer.prereleaselabel | should -BeNullOrEmpty
+    }
+
+    AfterAll{
+        remove-alias git
+    }
+}
+
+Describe 'Get-MFGitLatestVersion - Only non-semver tags' {
+    BeforeAll{
+        function invoke-GitCommand{
+            [CmdletBinding()]
+            PARAM(
+                [Parameter(Position = 0)][Alias("p0")][string]$Param0,
+                [Parameter(Position = 1)][Alias("p1")][string]$Param1,
+                [Parameter(Position = 2)][Alias("p2")][string]$Param2,
+                [Parameter(Position = 3)][Alias("p3")][string]$Param3,
+                [Parameter(Position = 4)][Alias("p4")][string]$Param4,
+                [Parameter(Position = 5)][Alias("p5")][string]$Param5,
+                [Parameter(Position = 6)][Alias("p6")][string]$Param6
+            )
+            begin{
+                $commandLine = "$Param0 $Param1 $Param2 $Param3 $Param4 $Param5 $Param6".trim()
+                $tags = @(
+                    'latest'
+                    'release-candidate'
+                    'not-a-version'
+                    'initial-commit'
+                )
+            }
+            process{
+                switch -Wildcard ($commandLine) {
+                    '--version' { return 'git version 2.30.0.mock' }
+                    'tag *' {$global:LASTEXITCODE = 0; return $tags}
+                    default { throw "Unexpected git command: $commandLine" }
+                }
+            }
+        }
+
+        Set-Alias -name 'git' -Value invoke-GitCommand
+
+        $latestVer = Get-MFGitLatestVersion
+    }
+
+    It 'Should fall back to 1.0.0 when no semver tags are present' {
+        $latestVer.GetType().name | should -be 'SemanticVersion'
+        $latestVer.ToString() | should -be '1.0.0'
+        $latestVer.prereleaselabel | should -BeNullOrEmpty
+    }
+
+    AfterAll{
+        remove-alias git
+    }
+}

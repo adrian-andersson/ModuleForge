@@ -7,10 +7,9 @@ function Get-MFGitLatestVersion
             
         .DESCRIPTION
             This function queries Git for available tags and processes them as semantic versions.
-            If no tags are found, it initializes a new version starting from `1.0.0`.
+            If no tags are found, or if no tags match semver format, it initializes a new version starting from `1.0.0`.
             If Git is unavailable or returns an error, a warning is displayed, and processing continues gracefully.
             
-        ------------
         .EXAMPLE
             Get-MFGitLatestVersion
 
@@ -36,7 +35,7 @@ function Get-MFGitLatestVersion
             Latest Tag Version: 1.2.3
             ```
         .OUTPUTS
-            [semver] - Returns a Semantec Version object
+            [semver] - Returns a Semantic Version object
             
         .NOTES
             Author: Adrian Andersson
@@ -50,7 +49,7 @@ function Get-MFGitLatestVersion
     )
     begin{
         #Return the script name when running verbose, makes it tidier
-        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        Write-Verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
         
@@ -67,13 +66,17 @@ function Get-MFGitLatestVersion
             $versionTags = $null
         }
         
-        write-verbose "Got VersionTags: $versionTags"
+        Write-Verbose "Got VersionTags: $versionTags"
         if($versionTags) {
-        $versions = $versionTags.ForEach{[semver]::new($_.TrimStart("v"))}
-            $latest = ($versions | Sort-Object -Descending | Select-Object -First 1)
-        Write-Verbose "Latest Tag Version: $($latest.tostring())"
-        } else {
-        Write-Verbose 'Generating new version from scratch at 1'
+            $versions = $versionTags | Where-Object { $_ -match '^v?\d+\.\d+\.\d+' } | ForEach-Object { [semver]::new($_.TrimStart('v')) }
+            if($versions) {
+                $latest = ($versions | Sort-Object -Descending | Select-Object -First 1)
+                Write-Verbose "Latest Tag Version: $($latest.tostring())"
+            }
+        }
+
+        if(-not $latest) {
+            Write-Verbose 'Generating new version from scratch at 1'
             $latest = [semver]::new(1,0,0)
         }
         return $latest
