@@ -104,6 +104,7 @@ For guidance on writing cross-platform PowerShell, see the [PowerShell cross-pla
 ### The Build and Release workflow is blocked — Pester tests failed or SHA mismatch
 
 The workflow validates that:
+
 1. The most recent Pester workflow run has a `success` conclusion
 2. The commit SHA of that run matches the current HEAD (or the HEAD of the last PR merge)
 
@@ -244,6 +245,14 @@ Update-MFProject -RequiredModules @('Pester', 'PSScriptAnalyzer')
 Any parameter you don't pass is left unchanged. If you need to make a change that `Update-MFProject` doesn't cover, you can edit `moduleForgeConfig.xml` directly — it is a standard PowerShell CLIXML file.
 
 See [`Update-MFProject`](./functions/Update-MFProject.md) for the full parameter list.
+
+---
+
+### Should I use the manifest's `DefaultCommandPrefix` or add the prefix to function names manually?
+
+Add the prefix directly to your function names (e.g. `Get-MFSomething`) rather than relying on `DefaultCommandPrefix` in the manifest.
+
+Two reasons: Pester tests call functions by their exact name -> if the prefix is only applied at import time by the manifest, your tests have to account for that, adding friction and a potential source of confusion. `DefaultCommandPrefix` can also produce surprises when files are dot-sourced directly (as ModuleForge does during builds and tests) or when a caller imports the module with a different `-Prefix`. Putting the prefix in the name makes it explicit everywhere, keeps tests straightforward, and removes a class of import-time ambiguity.
 
 ---
 
