@@ -21,10 +21,8 @@ Get-MFGitLatestVersion [-ProgressAction <ActionPreference>] [<CommonParameters>]
 
 ## DESCRIPTION
 This function queries Git for available tags and processes them as semantic versions.
-If no tags are found, it initializes a new version starting from \`1.0.0\`.
+If no tags are found, or if no tags match semver format, it initializes a new version starting from \`1.0.0\`.
 If Git is unavailable or returns an error, a warning is displayed, and processing continues gracefully.
-
-------------
 
 ## EXAMPLES
 
@@ -66,7 +64,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### [semver] - Returns a Semantec Version object
+### [semver] - Returns a Semantic Version object
 ## NOTES
 Author: Adrian Andersson
 
