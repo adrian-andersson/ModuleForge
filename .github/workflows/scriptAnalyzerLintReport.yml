@@ -186,7 +186,6 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v3
         if: always() && github.event_name == 'pull_request'
         with:
-          recreate: true
           path: psInvokeResult.md
           header: psInvokeResult
     
