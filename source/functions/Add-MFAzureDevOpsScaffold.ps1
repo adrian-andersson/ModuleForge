@@ -129,7 +129,7 @@ function Add-MFAzureDevOpsScaffold
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
-        $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/tutorials/azureDevOps/tutorial.html for guidance"
+        $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/ for guidance, examples and tutorials"
         Write-Warning $warning 
 
     }

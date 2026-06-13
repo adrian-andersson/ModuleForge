@@ -129,6 +129,9 @@ function Add-MFGithubScaffold
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
+        $warning = "We've added the GitHub Actions workflows and PR template to your repo. GitHub will pick these up automatically once you push to GitHub.`n`nYou may need to enable workflow permissions (read/write) and configure any required secrets for the build and release workflow to run.`n`nSee https://docs.github.com/actions or `nhttps://adrian-andersson.github.io/ModuleForge/ for guidance, examples and tutorials"
+        Write-Warning $warning
+
     }
-    
+
 }
