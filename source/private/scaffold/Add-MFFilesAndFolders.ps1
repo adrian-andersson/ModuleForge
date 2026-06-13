@@ -6,10 +6,12 @@ function Add-MFFilesAndFolders
             Add the file and folder structure required by moduleForge
             
         .DESCRIPTION
-            Create the folder structure as a scaffold,
-            If a folder does not exist, create it.
+            Creates the ModuleForge source folder structure (source\functions, enums, classes,
+            validationClasses, private, bin, resource) and seeds .gitignore and .mfignore placeholder
+            files in each source subfolder. Existing folders and files are left untouched. Finally calls
+            Add-MFProjectScripts to copy the script templates into the project.
 
-            
+
         .NOTES
             Author: Adrian Andersson
             
@@ -18,9 +20,9 @@ function Add-MFFilesAndFolders
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'FilesAndFolders' reflects that the function creates multiple files and folders.")]
     PARAM(
-        #Root Path for module folder. Assume current working directory
+        #Root path for the new module. Defaults to the current working directory
         [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]
-        [string]$moduleRoot = (Get-Item .).FullName #Use the fullname so that we don't have problems with PSDrive, symlinks, confusing bits etc
+        [string]$ModuleRoot = (Get-Item .).FullName #Use the fullname so that we don't have problems with PSDrive, symlinks, confusing bits etc
     )
     begin{
         #Return the script name when running verbose, makes it tidier

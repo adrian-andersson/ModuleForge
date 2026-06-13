@@ -66,12 +66,12 @@ function Update-MFProject
         #Modules that must be imported into the global environment prior to importing this module
         [Parameter()]
         [Object[]]$RequiredModules,
-        #Modules that must be imported into the global environment prior to importing this module
+        #Modules that this module depends on but does not bundle - the consumer is expected to supply them
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
         #If you are specifying a Default Command Prefix via your manifest, this will update that prefix
         [Parameter()]
-        [String[]]$DefaultCommandPrefix,
+        [String]$DefaultCommandPrefix,
         #If you have any additional Private Data you want to add to your module manifest, add it here
         [Parameter()]
         [object[]]$PrivateData,

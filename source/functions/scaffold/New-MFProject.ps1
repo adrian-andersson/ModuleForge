@@ -11,7 +11,7 @@ function New-MFProject
             
         ------------
         .EXAMPLE
-            New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -RconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
+            New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -IconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 
             #### DESCRIPTION
             This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 
@@ -34,38 +34,38 @@ function New-MFProject
         [string]$ModuleName,
         #A description of your module. Is used as the descriptor in the module repository
         [Parameter(Mandatory)]
-        [string]$description,
+        [string]$Description,
         #Minimum PowerShell version. Defaults to 7.2 as this is the current LTS version
         [Parameter()]
-        [version]$minimumPsVersion = [version]::new('7.2.0'),
-        #Who are the primary module authors. Can expand later with add-mfmoduleAuthors command
+        [version]$MinimumPsVersion = [version]::new('7.2.0'),
+        #Who are the primary module authors. Can be updated later with Update-MFProject
         [Parameter()]
-        [string[]]$moduleAuthors,
+        [string[]]$ModuleAuthors,
         #Company Name. If you are building this module for your organisation, this is where it goes
         [Parameter()]
-        [string]$companyName,
+        [string]$CompanyName,
         #Module Tags. Used to help discoverability and compatibility in package repositories
         [Parameter()]
-        [String[]]$moduleTags,
+        [String[]]$ModuleTags,
         #Root path of the module. Uses the current working directory by default
         [alias('Path')]
         [string]$ModulePath = $(get-location).path,
-        #Project URI. Will try and read from Git if your using a git repository.
+        #Project URI. Will try and read from Git if you are using a git repository
         [Parameter()]
-        [string]$projectUri = $(try{git config remote.origin.url}catch{$null}),
-        # A URL to an icon representing this module.
+        [string]$ProjectUri = $(try{git config remote.origin.url}catch{$null}),
+        #A URL to an icon representing this module
         [Parameter()]
-        [string]$iconUri,
-        #URI to use for your projects license. Will try and use the license file if a projectUri is found
+        [string]$IconUri,
+        #URI to use for your project's license. Will try and use the license file if a projectUri is found
         [Parameter()]
-        [string]$licenseUri,
+        [string]$LicenseUri,
         #Name of the ModuleForge config file. Defaults to 'moduleForgeConfig.xml'
         [Parameter(DontShow)]
-        [string]$configFile = 'moduleForgeConfig.xml',
+        [string]$ConfigFile = 'moduleForgeConfig.xml',
         #Modules that must be imported into the global environment prior to importing this module
         [Parameter()]
         [Object[]]$RequiredModules,
-        #Modules that must be imported into the global environment prior to importing this module
+        #Modules that this module depends on but does not bundle - the consumer is expected to supply them
         [Parameter()]
         [String[]]$ExternalModuleDependencies,
         #Default command prefix applied to all exported function names in the module manifest

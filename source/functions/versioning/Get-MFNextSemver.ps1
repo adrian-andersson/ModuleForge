@@ -15,10 +15,10 @@ function Get-MFNextSemver
         Get-MFNextSemver -Version $Version -Increment 'Minor' -PreRelease
 
         #### DESCRIPTION
-        This example takes a SemVer object with version '1.0.0', increments the minor version, and adds a pre-release tag. The output will be '1.1.0-prerelease.1'.
+        This example takes a SemVer object with version '1.0.0', increments the minor version, and adds a pre-release tag. With no -PreReleaseLabel supplied it uses the default 'pre' label and a zero-padded counter, so the output will be '1.1.0-prev001'.
 
         #### OUTPUT
-        '1.1.0-prerelease.1'
+        '1.1.0-prev001'
 
     .EXAMPLE
         $Version = [SemVer]::new('2.0.0-prerelease.1')
@@ -34,7 +34,7 @@ function Get-MFNextSemver
         [semver] - Will accept a Semver from pipeline or via direct assignment
 
     .OUTPUTS
-        [semver] - Returns a Semantec Version object that should increment, based on the other parameters, the input semver
+        [semver] - Returns a Semantic Version object incremented from the input semver, based on the other parameters
 
     .NOTES
         Author: Adrian Andersson

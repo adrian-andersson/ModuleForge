@@ -42,7 +42,7 @@ function Add-MFGithubScaffold
 
     [CmdletBinding()]
     PARAM(
-        #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
+        #Root path of the module. Uses the current working directory by default
         [Parameter()]
         [alias('Path')]
         [string]$ModulePath = $(get-location).path,

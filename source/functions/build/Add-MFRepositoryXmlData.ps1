@@ -15,7 +15,7 @@ function Add-MFRepositoryXmlData
             
         ------------
         .EXAMPLE
-            Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/gituser/example' -NugetPackagePath = 'c:\example\module.1.2.3-beta.4.nupkg -branch 'main' -commit '1234123412341234Y'
+            Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/gituser/example' -NugetPackagePath 'c:\example\module.1.2.3-beta.4.nupkg' -Branch 'main' -Commit '1234123412341234'
             
             #### DESCRIPTION
             Unpack module.1.2.3-beta.4.nupkg to a temp location, open the NUSPEC xml and append a repository element with URL, Type, Branch and Commit attributes, repack the nupkg
@@ -35,9 +35,9 @@ function Add-MFRepositoryXmlData
         #Path to the actual file in the repository, should be something like C:\Users\{UserName}\AppData\Local\Temp\LocalTestRepository\{ModuleName}.{ModuleVersion}.nupkg
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
         [string]$NugetPackagePath,
-        #TempExtractionPath
+        #Temporary path the nupkg is unpacked to before repacking. Defaults to a 'tempUnzip' folder in the system temp path
         [Parameter()]
-        $ExtractionPath = $(join-path -path ([System.IO.Path]::GetTempPath()) -childpath 'tempUnzip'),
+        [string]$ExtractionPath = $(join-path -path ([System.IO.Path]::GetTempPath()) -childpath 'tempUnzip'),
         #Use force to ignore remove prompt
         [Parameter()]
         [switch]$Force,

@@ -33,7 +33,7 @@ function Add-MFAzureDevOpsScaffold
             Copies the `.azuredevops` scaffold and overwrites existing files in `.azuredevops` directory
 
             #### OUTPUT
-            Should have a .azuredevops folder, with workflows and a PR template
+            Should have a .azuredevops folder, with pipelines and a PR template
             
         .NOTES
             Author: Adrian Andersson
@@ -42,7 +42,7 @@ function Add-MFAzureDevOpsScaffold
 
     [CmdletBinding()]
     PARAM(
-        #Root path of the module. Uses the current working directory by default. Aliased path, but use modulePath as paramname to avoid confusion
+        #Root path of the module. Uses the current working directory by default
         [Parameter()]
         [alias('Path')]
         [string]$ModulePath = $(get-location).path,

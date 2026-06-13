@@ -11,9 +11,11 @@ function Remove-MFLocalPsResourceRepository
 
         .EXAMPLE
             Remove-MFLocalPsResourceRepository
-            
-            
-            
+
+            #### DESCRIPTION
+            Unregister the default 'LocalTestRepository' PSResource repository and delete its backing
+            directory from the temp path. Uses the same default name and location as Register-MFLocalPsResourceRepository.
+
         .NOTES
             Author: Adrian Andersson
     #>
