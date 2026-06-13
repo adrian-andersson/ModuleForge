@@ -27,6 +27,7 @@ function New-MFProject
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingWriteHost', '', Justification='Welcome banner is intentional decorative console output, not pipeline data')]
     PARAM(
         #The name of your module
         [Parameter(Mandatory)]
@@ -110,7 +111,7 @@ function New-MFProject
 
 
         write-verbose 'Create Folder Scaffold'
-        add-mfFilesAndFolders -moduleRoot $ModulePath
+        Add-MFFilesAndFolders -moduleRoot $ModulePath
 
 
         #Should we use JSON for this, or CLIXML.
@@ -153,6 +154,17 @@ function New-MFProject
             }catch{
                 throw 'Error exporting config'
             }
+
+            #Welcome banner - intentional decorative console output for a freshly scaffolded project
+            $mfVersion = if($moduleForgeReference){ $moduleForgeReference.Version.ToString() }else{ 'unknown' }
+            $docsUri = 'https://adrian-andersson.github.io/ModuleForge/'
+            Write-Host ''
+            Write-Host '  ModuleForge' -ForegroundColor Cyan -NoNewline
+            Write-Host " v$mfVersion" -ForegroundColor DarkCyan
+            Write-Host "  Project '$ModuleName' scaffolded." -ForegroundColor Green
+            Write-Host "  Docs: $docsUri" -ForegroundColor Gray
+            Write-Host '  Happy forging PowerShell.' -ForegroundColor Yellow
+            Write-Host ''
         }
     }
 }
