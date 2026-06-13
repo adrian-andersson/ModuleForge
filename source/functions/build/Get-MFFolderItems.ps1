@@ -136,7 +136,7 @@ function Get-MFFolderItems
             if($Destination[-1] -eq '\' -or $Destination[-1] -eq '/')
             {
                 write-verbose 'Removing extra \ or / from destination'
-                $Path = $Path.Substring(0,$($Destination.length-1))
+                $Destination = $Destination.Substring(0,$($Destination.length-1))
                 write-verbose "New destination $Destination"
             }
 

@@ -259,7 +259,7 @@ jobs:
           $existingPr = gh pr list --base docs --head $branchName --json number --jq '.[0].number' 2>$null
           if($existingPr)
           {
-            write-verbose "Pull request already exists: #$existingPr — branch has been updated in place"
+            write-verbose "Pull request already exists: #$existingPr - branch has been updated in place"
           }else{
             gh pr create `
               --base docs `

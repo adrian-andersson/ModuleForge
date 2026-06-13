@@ -42,7 +42,7 @@ function Build-MFProject
         #Use this flag to put any enums in ScriptsToProcess
         [Parameter()]
         [switch]$ExportEnums,
-        #Use this to not put anything in nestedmodules, making everything a single file. By default validators are put in a separate nestedmodule script to ensure they are loaded properly
+        #Use this to keep everything in a single module file. By default validators (and exported classes/enums) are written to separate scripts loaded via ScriptsToProcess so they resolve correctly; this switch inlines them into the module file instead
         [Parameter()]
         [switch]$NoExternalFiles,
         #Release notes to include in the module manifest and GitHub release output
@@ -120,7 +120,13 @@ function Build-MFProject
             write-verbose "Module folder found at: $($moduleOutputFolder), need to replace"
             try{
                 remove-item $moduleOutputFolder -force -Recurse
-                start-sleep -Seconds 2
+                #Windows can hold a brief lock on the folder after remove-item returns. Poll until it
+                #clears (usually near-instant) rather than blindly sleeping a fixed couple of seconds.
+                $waitUntil = (get-date).AddSeconds(5)
+                while((test-path $moduleOutputFolder) -and (get-date) -lt $waitUntil)
+                {
+                    start-sleep -Milliseconds 100
+                }
                 #Save to var to loose the output. More efficient than |out-null
                 $null = new-item -ItemType Directory -Path $moduleOutputFolder -ErrorAction Stop
             }catch{
@@ -144,10 +150,7 @@ function Build-MFProject
 
         $scriptsToProcess = New-Object System.Collections.Generic.List[string]
         $functionsToExport = New-Object System.Collections.Generic.List[string]
-        $nestedModules = New-Object System.Collections.Generic.List[string]
         #$DscResourcesToExport = New-Object System.Collections.Generic.List[string] #No Dsc Support presently
-
-        $fileList = New-Object System.Collections.Generic.List[string]
 
     }
     
@@ -158,10 +161,8 @@ function Build-MFProject
         #References for our manifest and module root
         $moduleFileShortname = "$($config.moduleName).psm1"
         $moduleFile = join-path $moduleOutputFolder -ChildPath $moduleFileShortname
-        $fileList.Add($moduleFileShortname)
         $manifestFileShortname = "$($config.moduleName).psd1"
         $manifestFile = join-path $moduleOutputFolder -ChildPath $manifestFileShortname
-        $fileList.Add($manifestFileShortname)
 
         write-verbose "Will create module in:`n`t`t$moduleOutputFolder;`n`t`tModule Filename: $moduleFileShortname ;`n`t`tManifest Filename: $manifestFileShortname "
 
@@ -249,11 +250,6 @@ function Build-MFProject
                         {
                             $scriptsToProcess.Add($enumsFileShortname)
                         }
-
-                        if($enumsFileShortname -notIn $fileList)
-                        {
-                            $fileList.Add($enumsFileShortname)
-                        }
                     }else{
                         write-verbose 'Exporting enum content to module file'
                         $item.content|out-file $moduleFile -Append
@@ -280,11 +276,6 @@ function Build-MFProject
                             $scriptsToProcess.Add($validatorsFileShortname)
                         }
 
-                        if($validatorsFileShortname -notIn $fileList)
-                        {
-                            $fileList.Add($validatorsFileShortname)
-                        }
-
                     }
                 }
 
@@ -300,12 +291,6 @@ function Build-MFProject
                         {
                             $scriptsToProcess.Add($classesFileShortname)
                         }
-
-                        if($classesFileShortname -notIn $fileList)
-                        {
-                            $fileList.Add($classesFileShortname)
-                        }
-
 
                     }else{
                         write-verbose 'Exporting classes content to external module file'
@@ -353,14 +338,11 @@ function Build-MFProject
                     }catch{
                         throw "Unable to make directory for: $destinationFolder"
                     }
-
-                    Write-Information "Copied $folder, containing $($folderItems.Count) items, to the module" -tags 'FoldersCopied'
-                    
                 }
                 #Make null = to suppress the object output
                 $null = get-mfFolderItems -path $fullFolderPath -destination $destinationFolder -copy
 
-                
+                Write-Information "Copied $folder, containing $($folderItems.Count) items, to the module" -tags 'FoldersCopied'
             }
         }
 
@@ -436,16 +418,6 @@ function Build-MFProject
             $splatManifest.ScriptsToProcess = [array]$scriptsToProcess.ToArray()
         }else{
             write-verbose 'No scripts to process on module load'
-        }
-
-        #See my comment in on validators in the switch statement
-        if($nestedModules.count -ge 1)
-        {
-            write-verbose "Included in modulesToProcess: $($nestedModules.ToArray() -join ',')"
-            [array]$splatManifest.NestedModules = [array]$nestedModules.ToArray()
-
-        }else{
-            write-verbose 'Nothing to include in modulesToProcess'
         }
 
         #This block should not trigger right now. Maybe we can add it in if we revisit DSC

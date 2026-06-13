@@ -83,7 +83,7 @@ function New-MFProject
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
 
-        #I'm not sure why I had this in here. Cannot remember.
+        #Strip a trailing slash or backslash so later join-path calls build clean paths
         if($ModulePath -like '*\' -or $ModulePath -like '*/' )
         {
             Write-Verbose 'Superfluous \ or / character found at end of modulePath, removing'
