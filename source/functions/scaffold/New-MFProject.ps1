@@ -71,9 +71,9 @@ function New-MFProject
         #Default command prefix applied to all exported function names in the module manifest
         [Parameter()]
         [String]$DefaultCommandPrefix,
-        #Additional private data to include in the module manifest PrivateData section
+        #Additional private data to include in the module manifest PrivateData section. Must be a hashtable - it is forwarded directly to New-ModuleManifest, which requires a hashtable
         [Parameter()]
-        [object[]]$PrivateData
+        [hashtable]$PrivateData
 
     )
     begin{

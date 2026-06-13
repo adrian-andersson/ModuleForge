@@ -161,6 +161,7 @@ describe 'Build-MFProject' {
             DefaultCommandPrefix = 'te'
             moduleTags = @('pester','testing')
             ExternalModuleDependencies = @('Microsoft.PowerShell.PSResourceGet')
+            PrivateData = @{ TestKey = 'TestValue' }
         }
         write-verbose 'Creating ModuleForge Test Project'
         new-mfProject @mfProjSplat
@@ -199,6 +200,27 @@ describe 'Build-MFProject' {
     It 'Should have written the module tags to the manifest' {
         $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
         (Import-PowerShellDataFile -Path $psd).PrivateData.PSData.Tags | Should -Contain 'pester'
+    }
+
+    It 'Should have written the custom private data to the manifest' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        (Import-PowerShellDataFile -Path $psd).PrivateData.TestKey | Should -Be 'TestValue'
+    }
+
+    It 'Should keep the custom private data and the auto-generated PSData metadata side by side' {
+        #Guards against a regression where merging custom PrivateData clobbers PSData (or vice versa)
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $privateData = (Import-PowerShellDataFile -Path $psd).PrivateData
+        #Custom user data survives
+        $privateData.TestKey | Should -Be 'TestValue'
+        #The PSData block New-ModuleManifest generates from Tags/ProjectUri/LicenseUri/IconUri is intact
+        $privateData.PSData | Should -Not -BeNullOrEmpty
+        $privateData.PSData.Tags | Should -Contain 'pester'
+        $privateData.PSData.Tags | Should -Contain 'testing'
+        #New-ModuleManifest normalises a bare host URI by appending a trailing slash
+        $privateData.PSData.ProjectUri | Should -BeLike 'https://example.com*'
+        $privateData.PSData.LicenseUri | Should -Be 'https://example.com/license.md'
+        $privateData.PSData.IconUri | Should -Be 'https://example.com/logo.png'
     }
 
 

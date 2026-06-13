@@ -72,9 +72,9 @@ function Update-MFProject
         #If you are specifying a Default Command Prefix via your manifest, this will update that prefix
         [Parameter()]
         [String]$DefaultCommandPrefix,
-        #If you have any additional Private Data you want to add to your module manifest, add it here
+        #If you have any additional Private Data you want to add to your module manifest, add it here. Must be a hashtable - it is forwarded directly to New-ModuleManifest, which requires a hashtable
         [Parameter()]
-        [object[]]$PrivateData,
+        [hashtable]$PrivateData,
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
         [Alias('path')]

@@ -395,7 +395,9 @@ function Build-MFProject
             $splatManifest.DefaultCommandPrefix = $config.DefaultCommandPrefix
         }
         if($config.PrivateData){
-            $splatManifest.PrivateData = $config.PrivateData
+            #Recast to a clean hashtable. The value comes back from Import-Clixml as a deserialized hashtable
+            #which New-ModuleManifest rejects with 'PrivateData ... must be a hash table' when Tags/ProjectUri/etc are also set
+            $splatManifest.PrivateData = [hashtable]$config.PrivateData
         }
 
         #FunctionsToExport
