@@ -34,6 +34,7 @@ function Add-MFProjectScripts
     #>
 
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'Scripts' reflects that the function copies multiple script templates into the project.")]
     PARAM(
         #Root path of the module. Uses the current working directory by default
         [Parameter()]
