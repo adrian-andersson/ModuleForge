@@ -9,6 +9,12 @@
 - [x] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
 - [x] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
 - [x] Automated PR to update docs
+- [x] Remove unnecessary scaffold folders
+  - filters
+- [x] Change any documentation links to point to the docs site root, so that links don't break between versions.
+- [x] Add a welcome message on New-MFProject, something that prints the ModuleForge version, a link to the docs site, and a comment like "Make something Great"
+- [x] The Pester invocation should check for a Tests folder, and if it exists, use that, otherwise stick to the existing behaviour
+- [ ] Re-organise the source files into appropriate subfolders
 
 ## v1.4.0
 
