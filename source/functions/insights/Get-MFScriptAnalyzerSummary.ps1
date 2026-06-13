@@ -57,7 +57,7 @@ function Get-MFScriptAnalyzerSummary
         [Parameter()]
         #Set this for what rules to exclude.
         [string[]]$ExcludeRules = @(
-            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
+            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
         )
     )
     begin{

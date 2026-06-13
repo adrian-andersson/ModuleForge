@@ -30,7 +30,7 @@ jobs:
             Information = 1
         }
         $excludeRules = @(
-            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
+            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
         )
         $psScriptAnalyzerSplat = @{
             severity = $severity

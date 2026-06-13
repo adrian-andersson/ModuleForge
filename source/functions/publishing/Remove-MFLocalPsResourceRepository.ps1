@@ -46,7 +46,7 @@ function Remove-MFLocalPsResourceRepository
         
         if(!$psResourceGetRef -or $psResourceGetRef.Version -lt $psResourceGet.version)
         {
-            throw "Module dependancy Name: $($psResourceGet.Name) minver:$($psResourceGet.version) Not found. Please install from the PSGallery"
+            throw "Module dependency Name: $($psResourceGet.Name) minver:$($psResourceGet.version) Not found. Please install from the PSGallery"
         }
 
         $repositoryLocation = join-path $Path -ChildPath $RepositoryName

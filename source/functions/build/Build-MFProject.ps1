@@ -99,7 +99,7 @@ function Build-MFProject
         {
             write-verbose "Build folder not found at: $($buildFolder), creating"
             try{
-                #Save to var to loose the output
+                #Save to var to lose the output
                 $null = new-item -ItemType Directory -Path $buildFolder -ErrorAction Stop
             }catch{
                 throw 'Unable to create build folder'
@@ -127,7 +127,7 @@ function Build-MFProject
                 {
                     start-sleep -Milliseconds 100
                 }
-                #Save to var to loose the output. More efficient than |out-null
+                #Save to var to lose the output. More efficient than |out-null
                 $null = new-item -ItemType Directory -Path $moduleOutputFolder -ErrorAction Stop
             }catch{
                 throw 'Unable to recreate Module folder'
