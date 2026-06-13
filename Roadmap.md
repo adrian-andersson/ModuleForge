@@ -14,7 +14,11 @@
 - [x] Change any documentation links to point to the docs site root, so that links don't break between versions.
 - [x] Add a welcome message on New-MFProject, something that prints the ModuleForge version, a link to the docs site, and a comment like "Make something Great"
 - [x] The Pester invocation should check for a Tests folder, and if it exists, use that, otherwise stick to the existing behaviour
-- [ ] Re-organise the source files into appropriate subfolders
+- [x] Re-organise the source files into appropriate subfolders
+- [ ] `Build-MFProject`: remove the dead `$nestedModules` variable and its always-`else` manifest block, and correct the `-NoExternalFiles` param help (it says validators go to a "nestedmodule" script, but the code routes them to `ScriptsToProcess`)
+- [ ] `Build-MFProject`: decide on `$fileList` — it accumulates every output filename but is never applied to the manifest. Either wire it into the manifest `FileList` key (manifest hygiene) or remove the unused accumulation
+- [ ] Quality-pass cosmetics: replace the "I'm not sure why I had this in here. Cannot remember." comment in `New-MFProject` (the trailing-slash trim) with an accurate description; replace the em-dash (non-ASCII) in `docsUpdate.yml.example` with ASCII
+- [ ] Review and update all exported function examples (the `.EXAMPLE` blocks) — ensure they are accurate, current, and reflect the latest parameters/behaviour
 
 ## v1.4.0
 

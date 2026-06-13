@@ -95,7 +95,7 @@ function Add-MFGithubScaffold
     process{
         if(!(test-path $moduleGitFolder)){
             write-verbose "$moduleGitFolder does not exist, creating"
-            new-item -ItemType Directory -Path $moduleGitFolder
+            $null = new-item -ItemType Directory -Path $moduleGitFolder
         }else{
             write-verbose "$moduleGitFolder already exists"
         }

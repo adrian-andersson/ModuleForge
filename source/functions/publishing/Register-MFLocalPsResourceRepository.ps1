@@ -67,7 +67,7 @@ function Register-MFLocalPsResourceRepository
             if(!(test-path $repositoryLocation))
             {
                 try{
-                    New-Item -ItemType Directory -Path $repositoryLocation
+                    $null = New-Item -ItemType Directory -Path $repositoryLocation
                     write-verbose 'Directory Created'
                 }Catch{
                     Throw 'Error creating directory'

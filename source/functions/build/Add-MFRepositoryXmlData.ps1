@@ -75,7 +75,7 @@ function Add-MFRepositoryXmlData
         if(!(test-path $ExtractionPath))
         {
             write-verbose 'Creating Extraction Path'
-            New-Item -Path $ExtractionPath -ItemType Directory
+            $null = New-Item -Path $ExtractionPath -ItemType Directory
         }else{
             Write-warning "Extraction Path will be removed and recreated`nPath: $($ExtractionPath)"
             if(!$Force)
@@ -92,7 +92,7 @@ function Add-MFRepositoryXmlData
             {
                 #Probably dont need this IF statement, just a sanity check we have permission to destroy folder
                 get-item -Path $ExtractionPath |remove-item -recurse -force
-                New-Item -Path $ExtractionPath -ItemType Directory
+                $null = New-Item -Path $ExtractionPath -ItemType Directory
             }
             
         }
@@ -131,7 +131,7 @@ function Add-MFRepositoryXmlData
             }
 
             write-verbose 'Appending Element to XML'
-            $nuSpecXml.package.metadata.AppendChild($newElement)
+            $null = $nuSpecXml.package.metadata.AppendChild($newElement)
 
             
             #Save, close XML and repackage

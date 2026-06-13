@@ -117,7 +117,7 @@ function Build-MFProject
                 throw 'Unable to create Module folder'
             }
         }else{
-            write-verbose "Module folder not found at: $($moduleOutputFolder), need to replace"
+            write-verbose "Module folder found at: $($moduleOutputFolder), need to replace"
             try{
                 remove-item $moduleOutputFolder -force -Recurse
                 start-sleep -Seconds 2
@@ -168,9 +168,6 @@ function Build-MFProject
         #References for external files, if needed
         $classesFileShortname = "$($config.moduleName).Classes.ps1"
         $classesFile = join-path -path $moduleOutputFolder -ChildPath $classesFileShortname
-
-        $validatorsFileShortname = "$($config.moduleName).Validators.ps1"
-        $validatorsFile = join-path -path $moduleOutputFolder -ChildPath $validatorsFileShortname
 
         $validatorsFileShortname = "$($config.moduleName).Validators.ps1"
         $validatorsFile = join-path -path $moduleOutputFolder -ChildPath $validatorsFileShortname

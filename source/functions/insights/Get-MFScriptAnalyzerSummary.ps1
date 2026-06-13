@@ -76,7 +76,6 @@ function Get-MFScriptAnalyzerSummary
         $functionFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $SourcePath 
         #Use a GenList to avoid iterative arrays
         $capture = [System.Collections.Generic.List[object]]::new()
-        write-verbose 'Try w a ArrayList'
         $functionFiles.foreach{
             remove-variable invokeResult -errorAction ignore
             if($SuppressOutput)

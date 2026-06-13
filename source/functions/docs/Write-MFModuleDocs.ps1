@@ -105,7 +105,7 @@ function Write-MFModuleDocs
         if(!(test-path $DocsFullPath))
         {
             write-verbose 'Need to make docs folder as it does not exist'
-            New-Item -ItemType Directory -Path $DocsFullPath
+            $null = New-Item -ItemType Directory -Path $DocsFullPath
         }
 
         # Phase 0 - snapshot all existing front matter before any writes.
@@ -137,7 +137,7 @@ function Write-MFModuleDocs
         if(!(test-path $functionsFullPath))
         {
             write-verbose 'Need to make functions folder as it does not exist'
-            New-Item -ItemType Directory -Path $functionsFullPath
+            $null = New-Item -ItemType Directory -Path $functionsFullPath
         }else{
             write-verbose 'Recreating Functions Folder'
             try{
@@ -145,7 +145,7 @@ function Write-MFModuleDocs
             }catch{
                 throw 'Error cleaning up existing functions folder'
             }
-            New-Item -ItemType Directory -Path $functionsFullPath
+            $null = New-Item -ItemType Directory -Path $functionsFullPath
         }
 
         # Generate raw function docs via PlatyPS

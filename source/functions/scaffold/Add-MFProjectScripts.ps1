@@ -95,7 +95,7 @@ function Add-MFProjectScripts
         if($skipProcess){ return }
         if(!(Test-Path $moduleScriptsFolder)){
             write-verbose "$moduleScriptsFolder does not exist, creating"
-            New-Item -ItemType Directory -Path $moduleScriptsFolder
+            $null = New-Item -ItemType Directory -Path $moduleScriptsFolder
         }else{
             write-verbose "$moduleScriptsFolder already exists"
         }

@@ -58,7 +58,7 @@ function Get-MFNextSemver
         [Parameter(ParameterSetName='preRelease')]
         [switch]$PreRelease,
 
-        #Is this a prerelease
+        #Is this a stable release - drops the prerelease tag from a prerelease version
         [Parameter(ParameterSetName='default')]
         [switch]$StableRelease,
 
@@ -89,8 +89,7 @@ function Get-MFNextSemver
     process{
         # Increment the version based on the 'increment' parameter
         switch ($Increment) {
-            'Major' { 
-                #$nextVersion = $Version.IncrementMajor()
+            'Major' {
                 $nextVersion = [semver]::new($Version.Major+1,0,0)
                 write-verbose "Incrementing Major Version to: $($nextVersion.tostring())"
              }
