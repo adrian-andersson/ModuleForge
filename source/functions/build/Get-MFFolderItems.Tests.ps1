@@ -34,16 +34,15 @@ Describe 'Get-MFFolderItems' {
 
     BeforeAll {
         $folderItems = Get-MFFolderItems -path $sourcePath -psScriptsOnly
-        $relativePath = join-path $(join-path '.' -ChildPath 'functions') -ChildPath 'build-mfProject.ps1'
     }
 
     It 'Should have returned more than 10 of items' {
         $folderItems.Count | Should -BeGreaterThan 10
     }
-    It 'Should have a build-mfProject.ps1 item' {
-        $folderItems.Name | Should -Contain 'build-mfProject.ps1'
-        $folderItems.RelativePath | Should -Contain $relativePath
-        $folderItems.Folder
+    It 'Should have a Build-MFProject.ps1 item with a functions-relative path' {
+        $folderItems.Name | Should -Contain 'Build-MFProject.ps1'
+        # Layout-agnostic: a relative path ending in the filename should exist, regardless of which subfolder it lives in
+        ($folderItems.RelativePath | Where-Object { $_ -like '*Build-MFProject.ps1' }) | Should -Not -BeNullOrEmpty
     }
 
 }

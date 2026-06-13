@@ -2,8 +2,8 @@
 # function in source/private. Its sibling private tests were moved to source/private (co-located).
 # This one is kept here on purpose: it exercises the optional root 'tests' folder discovery path
 # (so we have a working test OF that feature) and serves as a worked example for anyone who prefers
-# the separate-tests-folder convention. Because it is not co-located, it loads the function under
-# test directly from source/private instead of using the $PSCommandPath co-location trick.
+# the separate-tests-folder convention. Because it is not co-located, it resolves the function under
+# test by filename anywhere under source/ (layout-independent) instead of the $PSCommandPath trick.
 
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
 param()
@@ -14,11 +14,12 @@ BeforeAll{
     #Reference Current Path. Invoke-MFPester sets the working directory to the project root before running
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
-    $privatePath = join-path -path $sourcePath -childPath 'private'
 
     #This test lives in the dedicated /tests folder, not alongside the function, so we cannot use the
-    #$PSCommandPath co-location trick. Load the function under test directly from source/private instead.
-    $fileName = join-path -path $privatePath -childPath 'ConvertTo-MFNavTitle.ps1'
+    #$PSCommandPath co-location trick. Resolve the function by filename anywhere under source/ instead.
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
+    $fileName = $sourceMap['ConvertTo-MFNavTitle.ps1']
     $functionName = 'ConvertTo-MFNavTitle'
     . $fileName
 

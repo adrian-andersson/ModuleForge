@@ -8,22 +8,16 @@ BeforeAll{
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
-    #Get-MFChildLinkList depends on two other private functions. Load them first, mirroring the
-    #dependency-loading convention used by the alongside function tests.
-    $dependencies = [ordered]@{
-        private = @('Get-MFH1FromFile.ps1','ConvertTo-MFNavTitle.ps1')
-    }
-    $dependencies.GetEnumerator().ForEach{
-        $DirectoryRef = join-path -path $sourcePath -childPath $_.Key
-        $_.Value.ForEach{
-            $ItemPath = join-path -path $DirectoryRef -childpath $_
-            $ItemRef = get-item $ItemPath -ErrorAction SilentlyContinue
-            if($ItemRef){
-                . $ItemRef.Fullname
-            }else{
-                write-warning "Dependency not found at: $ItemPath"
-            }
-        }
+    #Get-MFChildLinkList depends on two other private functions. Resolve them by filename anywhere
+    #under source/, so tests stay independent of the folder layout. List order is load order.
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
+    $dependencies = @(
+        'Get-MFH1FromFile.ps1'
+        'ConvertTo-MFNavTitle.ps1'
+    )
+    $dependencies.ForEach{
+        if($sourceMap.ContainsKey($_)){ . $sourceMap[$_] }else{ write-warning "Dependency not found under source: $_" }
     }
 
     #Load This File (the function lives alongside this test in source/private)

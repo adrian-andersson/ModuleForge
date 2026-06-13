@@ -3,20 +3,19 @@ param()
 
 BeforeAll{
     $WarningPreference = 'SilentlyContinue'
-    $functionsDir = Split-Path $PSCommandPath -Parent
-    $sourceDir    = Split-Path $functionsDir -Parent
+    $currentPath = $(get-location).path
+    $sourcePath = join-path -path $currentPath -childPath 'source'
 
-    $dependencies = [ordered]@{
-        functions = @('Get-MFLatestSemverFromBuildManifest.ps1','Get-MFNextSemver.ps1')
-        private   = @('Get-MFProjectRoot.ps1')
-    }
-    $dependencies.GetEnumerator().ForEach{
-        $dirRef = join-path $sourceDir $_.Key
-        $_.Value.ForEach{
-            $itemPath = join-path $dirRef $_
-            $item = get-item $itemPath -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-            if($item){. $item.FullName}else{write-warning "Dependency not found: $itemPath"}
-        }
+    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
+    $dependencies = @(
+        'Get-MFLatestSemverFromBuildManifest.ps1'
+        'Get-MFNextSemver.ps1'
+        'Get-MFProjectRoot.ps1'
+    )
+    $dependencies.ForEach{
+        if($sourceMap.ContainsKey($_)){ . $sourceMap[$_] }else{ write-warning "Dependency not found under source: $_" }
     }
     #Stub BuildMFProject so we can check the parameters sent to it without actually running a build
     function Build-MFProject {

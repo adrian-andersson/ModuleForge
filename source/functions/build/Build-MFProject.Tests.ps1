@@ -10,22 +10,26 @@ BeforeAll{
     # Captured before $sourcePath is reassigned to the temp build folder below
     $mockPsScriptRoot = $sourcePath
 
-    $dependencies = [ordered]@{
-        functions = @('Get-MFFolderItems.ps1','Get-MFDependencyTree.ps1','Get-MFFolderItemDetails.ps1','New-MFProject.ps1','Register-MFLocalPsResourceRepository.ps1','Remove-MFLocalPsResourceRepository.ps1','Add-MFRepositoryXmlData.ps1','Add-MFProjectScripts.ps1')
-        private = @('Add-MFFilesAndFolders.ps1')
-    }
-
-    $dependencies.GetEnumerator().ForEach{
-        $DirectoryRef = join-path -path $sourcePath -childPath $_.Key
-        $_.Value.ForEach{
-            $ItemPath = join-path -path $DirectoryRef -childpath $_
-            $ItemRef = get-item $ItemPath -ErrorAction SilentlyContinue
-            if($ItemRef){
-                write-verbose "Dependency identified at: $($ItemRef.fullname)"
-                . $ItemRef.Fullname
-            }else{
-                write-warning "Dependency not found at: $ItemPath"
-            }
+    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
+    $dependencies = @(
+        'Get-MFFolderItems.ps1'
+        'Get-MFDependencyTree.ps1'
+        'Get-MFFolderItemDetails.ps1'
+        'New-MFProject.ps1'
+        'Register-MFLocalPsResourceRepository.ps1'
+        'Remove-MFLocalPsResourceRepository.ps1'
+        'Add-MFRepositoryXmlData.ps1'
+        'Add-MFProjectScripts.ps1'
+        'Add-MFFilesAndFolders.ps1'
+    )
+    $dependencies.ForEach{
+        if($sourceMap.ContainsKey($_)){
+            write-verbose "Dependency identified at: $($sourceMap[$_])"
+            . $sourceMap[$_]
+        }else{
+            write-warning "Dependency not found under source: $_"
         }
     }
     

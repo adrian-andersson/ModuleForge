@@ -8,11 +8,16 @@ BeforeAll{
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
-    #Add-MFFilesAndFolders calls Add-MFProjectScripts, so load it for the call to resolve. In this
+    #Add-MFFilesAndFolders calls Add-MFProjectScripts, so load it for the call to resolve. Resolve it
+    #by filename anywhere under source/, so the test stays independent of the folder layout. In this
     #dot-sourced context Add-MFProjectScripts cannot find the module resource folder, so it safely
     #no-ops with a suppressed warning - the same behaviour relied on by the New-MFProject tests.
-    $dependency = join-path -path $sourcePath -childPath 'functions' -AdditionalChildPath 'Add-MFProjectScripts.ps1'
-    if(test-path $dependency){ . $dependency }else{ write-warning "Dependency not found at: $dependency" }
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
+    $dependencies = @('Add-MFProjectScripts.ps1')
+    $dependencies.ForEach{
+        if($sourceMap.ContainsKey($_)){ . $sourceMap[$_] }else{ write-warning "Dependency not found under source: $_" }
+    }
 
     #Load This File (the function lives alongside this test in source/private)
     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')

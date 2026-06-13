@@ -8,21 +8,18 @@ BeforeAll{
     $currentPath = $(get-location).path
     $sourcePath = join-path -path $currentPath -childPath 'source'
 
-    $dependencies = [ordered]@{
-        functions = @('Register-MFLocalPsResourceRepository.ps1')
-    }
-
-    $dependencies.GetEnumerator().ForEach{
-        $DirectoryRef = join-path -path $sourcePath -childPath $_.Key
-        $_.Value.ForEach{
-            $ItemPath = join-path -path $DirectoryRef -childpath $_
-            $ItemRef = get-item $ItemPath -ErrorAction SilentlyContinue
-            if($ItemRef){
-                write-verbose "Dependency identified at: $($ItemRef.fullname)"
-                . $ItemRef.Fullname
-            }else{
-                write-warning "Dependency not found at: $ItemPath"
-            }
+    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
+    $dependencies = @(
+        'Register-MFLocalPsResourceRepository.ps1'
+    )
+    $dependencies.ForEach{
+        if($sourceMap.ContainsKey($_)){
+            write-verbose "Dependency identified at: $($sourceMap[$_])"
+            . $sourceMap[$_]
+        }else{
+            write-warning "Dependency not found under source: $_"
         }
     }
     
