@@ -7,7 +7,7 @@ function Add-MFJtdFrontMatter
 
         .DESCRIPTION
             Builds a YAML front matter block from the supplied fields and writes it to the top of
-            the file. Any existing front matter block is stripped and replaced — the body content
+            the file. Any existing front matter block is stripped and replaced - the body content
             is preserved. Only call this on files that Test-MFHasJtdFrontMatter returns false for,
             to avoid overwriting intentional manual front matter.
 

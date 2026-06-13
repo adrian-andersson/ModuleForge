@@ -16,6 +16,7 @@ function Add-MFFilesAndFolders
     #>
 
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage("PSUseSingularNouns", "", Justification = "Plural 'FilesAndFolders' reflects that the function creates multiple files and folders.")]
     PARAM(
         #Root Path for module folder. Assume current working directory
         [Parameter(ValueFromPipelineByPropertyName,ValueFromPipeline)]

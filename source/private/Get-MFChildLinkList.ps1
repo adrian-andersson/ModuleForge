@@ -16,7 +16,7 @@ function Get-MFChildLinkList
     #>
 
     [CmdletBinding()]
-    [OutputType([System.Collections.Generic.List[string]])]
+    [OutputType([object[]])]
     PARAM(
         #Markdown files to link to. Typically the direct .md children of the section folder.
         [Parameter()]
