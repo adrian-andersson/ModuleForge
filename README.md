@@ -134,7 +134,7 @@ flowchart TD
 '.\source\functions\Get-MFFolderItemDetails.ps1' --> '.\source\functions\Get-MFFolderItems.ps1'
 '.\source\functions\Write-MFModuleDocs.ps1' --> '.\source\private\ConvertTo-MFNavTitle.ps1'
 '.\source\functions\Write-MFModuleDocs.ps1' --> '.\source\private\Get-MFH1FromFile.ps1'
-'.\source\functions\New-MFProject.ps1' --> '.\source\private\add-mfFilesAndFolders.ps1'
+'.\source\functions\New-MFProject.ps1' --> '.\source\private\Add-MFFilesAndFolders.ps1'
 ```
 
 ## Getting Started
