@@ -10,7 +10,7 @@ BeforeAll{
 
     $dependencies = [ordered]@{
         functions = @('New-MFProject.ps1','Add-MFProjectScripts.ps1')
-        private = @('add-mfFilesAndFolders.ps1')
+        private = @('Add-MFFilesAndFolders.ps1')
     }
 
     $dependencies.GetEnumerator().ForEach{
