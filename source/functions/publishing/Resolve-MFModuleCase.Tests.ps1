@@ -63,6 +63,22 @@ Describe 'Check Resolve-MFModuleCase with good case folder' {
     }
 }
 
+Describe 'Resolve-MFModuleCase with an explicit ModuleFolder' {
+    BeforeAll {
+        # By this point the earlier describes have corrected the folder casing, so -Filter matches
+        # the now-PascalCase folder on both case-sensitive and case-insensitive filesystems.
+        $ModulesRoot = Split-Path (Split-Path (Get-Module $TestModuleName -ListAvailable | Select-Object -First 1).ModuleBase -Parent) -Parent
+        $Result3 = Resolve-MFModuleCase -ModuleName $TestModuleName -ModuleFolder $ModulesRoot
+    }
+
+    It 'Should resolve the module using the supplied ModuleFolder path' {
+        $Result3 | Should -Not -BeNullOrEmpty
+    }
+    It 'Should report case matching Manifest and FolderBase names' {
+        $Result3.ManifestAndFolderMatch | Should -Be $true
+    }
+}
+
 Describe 'Resolve-MFModuleCase with a module that does not exist' {
     It 'Should warn and return nothing when the module is not installed' {
         $result = Resolve-MFModuleCase -ModuleName 'ThisModuleDefinitelyDoesNotExist99999'

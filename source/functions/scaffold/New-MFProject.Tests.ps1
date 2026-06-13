@@ -119,3 +119,22 @@ Describe 'New-MFProject' {
     }
 
 }
+
+Describe 'New-MFProject trims a trailing path separator' {
+    BeforeAll{
+        new-item -ItemType Directory -path $testPath -force
+        #Run from elsewhere and pass an explicit ModulePath so we exercise the trailing-separator trim branch
+        Set-Location $currentPath
+    }
+    It 'Should handle a ModulePath that ends with a separator' {
+        $trailingPath = "$testPath$([IO.Path]::DirectorySeparatorChar)"
+        New-MFProject -ModuleName 'TrailingModule' -description 'Trailing separator test' -ModulePath $trailingPath
+        #Config should land at the trimmed path, not a double-separator path
+        Test-Path -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml') | Should -Be $true
+    }
+    AfterAll{
+        Set-Location $currentPath
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
+        start-sleep -Seconds 2
+    }
+}

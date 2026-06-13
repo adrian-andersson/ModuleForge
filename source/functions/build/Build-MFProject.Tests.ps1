@@ -159,7 +159,7 @@ describe 'Build-MFProject' {
             iconUri = 'https://example.com/logo.png'
             licenseUri = 'https://example.com/license.md'
             DefaultCommandPrefix = 'te'
-            #RequiredModules = @('Pester')
+            moduleTags = @('pester','testing')
             ExternalModuleDependencies = @('Microsoft.PowerShell.PSResourceGet')
         }
         write-verbose 'Creating ModuleForge Test Project'
@@ -196,8 +196,13 @@ describe 'Build-MFProject' {
         (get-childItem -path 'build' -recurse -filter '*.Validators.ps1').count |Should -be 1
     }
 
-    
-    
+    It 'Should have written the module tags to the manifest' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        (Import-PowerShellDataFile -Path $psd).PrivateData.PSData.Tags | Should -Contain 'pester'
+    }
+
+
+
 }
 
 
@@ -255,6 +260,25 @@ describe 'Remove-MFLocalPsResourceRepository'  {
         (get-psResourceRepository).Name |Should -Not -Contain $repoName
     }
 
+}
+
+
+describe 'Build-MFProject writes RequiredModules to the manifest' {
+    beforeAll {
+        Set-Location $testPath
+        #Edit the config directly to add a RequiredModule (avoids an Update-MFProject dependency here).
+        #It must include the existing ExternalModuleDependencies entry to satisfy the manifest subset rule.
+        #This build is not published, so the dependency does not need to resolve from the local repo.
+        $cfgPath = join-path $testPath 'moduleForgeConfig.xml'
+        $cfg = Import-Clixml $cfgPath
+        $cfg.RequiredModules = @('Microsoft.PowerShell.PSResourceGet')
+        $cfg | Export-Clixml $cfgPath
+        Build-MFProject -version '1.0.0-PREv009'
+    }
+    it 'Should write the RequiredModules into the module manifest' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        (Import-PowerShellDataFile -Path $psd).RequiredModules | Should -Contain 'Microsoft.PowerShell.PSResourceGet'
+    }
 }
 
 

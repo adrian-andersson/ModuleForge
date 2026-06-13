@@ -86,6 +86,7 @@ Describe 'Update-MFProject' {
             DefaultCommandPrefix = 'tst'
             RequiredModules = @('Microsoft.PowerShell.PSResourceGet','Pester')
             ExternalModuleDependencies = 'PSReadLine'
+            PrivateData = @{ TestKey = 'TestValue' }
         }
         Update-MFProject @update
         $config = Import-Clixml -Path $moduleConfig
@@ -99,6 +100,9 @@ Describe 'Update-MFProject' {
         $config.iconUri | Should -Be $update.iconUri
         $config.licenseUri | Should -Be $update.licenseUri
         $config.DefaultCommandPrefix | Should -Be $update.DefaultCommandPrefix
+        $config.RequiredModules | Should -Contain 'Pester'
+        $config.ExternalModuleDependencies | Should -Contain 'PSReadLine'
+        $config.PrivateData.TestKey | Should -Be 'TestValue'
     }
 
     AfterAll{
