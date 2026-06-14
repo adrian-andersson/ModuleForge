@@ -28,6 +28,14 @@ Stay inside the left column and your module builds. The right column is where th
 
 ---
 
+## Pester and Code Coverage
+
+You should aim for a high level of Code Coverage for your exported and private functions. It will save you from regression problems and from accidentally adding bugs to existing code. If you have a good habit of writing defensible code (Errors and Warnings that are unlikely to ever surface but exist for those edge cases), you may struggle to achieve perfect code-coverage, which is why Code Coverage itself is a soft-fail advisory, vs the tests being a hard-fail gate.
+
+See [Writing Pester Tests](./Pester.md) for more details.
+
+---
+
 ## Everyday conventions
 
 These are the small, high-frequency choices that give a codebase a consistent feel.
@@ -37,7 +45,7 @@ These are the small, high-frequency choices that give a codebase a consistent fe
 | **Single quotes by default**; double quotes only when you are expanding a variable or expression | Makes it obvious at a glance which strings are interpolated |
 | **Avoid aliases** in committed code (`Get-ChildItem`, not `gci`) | Readability and discoverability for the next person |
 | **Avoid `return`** unless you genuinely need an early exit; let objects flow to the pipeline | `return` in PowerShell is often misunderstood and rarely needed |
-| **Avoid `Write-Host`**; emit pipeline objects, or use `Write-Verbose` / `Write-Information` | `Write-Host` output cannot be captured, redirected, or suppressed by the caller |
+| **Avoid `Write-Host` for data**; return objects to the pipeline, or use `Write-Verbose` / `Write-Information` for status | Since PowerShell 5 it writes to the information stream, so it is display output, not pipeline data a caller can consume |
 | **`Write-Verbose`** for narration on meaningful steps and variable assignments | Doubles as living documentation that can be switched on with `-Verbose` |
 | **`Write-Warning`** for non-terminating problems; **`throw`** for terminating ones | Clear, conventional severity signalling |
 | **Splat** when calling a command with two or more parameters | Keeps long calls readable and diff-friendly |
@@ -47,6 +55,7 @@ A couple of these warrant a note:
 
 - **Iteration:** the `.ForEach{}` and `.Where{}` methods read cleanly and are the default preference here. Be aware they buffer the whole collection in memory rather than streaming, so for very large or genuinely pipelined input the `ForEach-Object` / `Where-Object` cmdlets can be the better tool. Use judgement.
 - **Inline comments:** prefer `Write-Verbose` over comments for *what is happening*. Reserve actual comments for *why* a non-obvious approach was taken over an obvious-but-flawed one. Bitwise operations are a good example of something that always deserves an explanatory comment.
+- **`Write-Host` has a legitimate exception:** deliberate, human-facing console output, a welcome banner or coloured interactive status, is a fine use because it genuinely is not data. When you make that call, suppress the `PSAvoidUsingWriteHost` rule with a `Justification` so the intent is on the record, the same "document your deviations" principle this page closes on.
 
 ---
 
@@ -80,15 +89,24 @@ A couple of these warrant a note:
   }
   ```
 
-- **Prefer a reusable select array over a long inline `Select-Object`.** Define it once and reuse it:
+- **Prefer a reusable select array over a long inline `Select-Object`.** Define it once and reuse it. It makes the code significantly tidier and more readable, and only gets better the larger the select:
 
   ```powershell
-  $selectArr = @(
-      'Name'
-      'Id'
-      @{ Name = 'Computed'; Expression = { $_.Value * 2 } }
+  #The Select Array way
+  $CustomSelect = @(
+        'Name'
+        'Id'
+        @{
+            Name = 'Computed'
+            Expression = {
+                $_.Value * 2
+                }
+        }
   )
-  $objects | Select-Object $selectArr
+  $objects | Select-Object $CustomSelect
+  #==================================
+  #Vs the more traditional inline way
+  $objects | Select-Object 'Name','Id',@{Name = 'Computed';Expression = {$_.Value * 2}}
   ```
 
 > **Where to define reusable select arrays:** put them in the **`begin` block**, alongside your other constants and configuration. They do not change between pipeline items, so building them once in `begin` avoids rebuilding the same array on every object that passes through `process`, and it keeps `process` focused on the actual work. See [Function shape](#function-shape) below.
@@ -167,6 +185,8 @@ Recommended habits within that shape:
 - Keep primary logic in `process`.
 - `end` and `clean` are optional. Prefer `clean` over `end` where both would apply, but note that **`clean` requires PowerShell 7.3+**, so call it out in `.NOTES` if you use it.
 - **Avoid nested functions** inside `begin` / `process` / `end` / `clean`. If you need a helper, make it a standalone private function under `source/private/` (it follows these same conventions and is not exported).
+- Write good Descriptions and Examples, and review them after function changes. The inline-help gets translated to Markdown if you have enabled the DocSite and good documentation stands out for all the right reasons.
+- If you have a PSScriptAnalyzer rule that you want to accept, you can add the appropriate bypass rule just under the meta-data section and suppress it properly. E.g: `[Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingWriteHost', '', Justification='Write-Host makes sense in this function')]`
 - When reusing a variable name inside a `.ForEach{}` loop, clear it at the top of each iteration rather than trusting it to be empty:
 
   ```powershell
@@ -175,6 +195,12 @@ Recommended habits within that shape:
       $result = Do-Something -Input $_
   }
   ```
+
+---
+
+## Code Examples and Pester Test Samples
+
+If you want examples that follow the styles in this guide, you are welcome to inspect the source code and pester tests of ModuleForge itself.
 
 ---
 

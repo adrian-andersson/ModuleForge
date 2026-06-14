@@ -63,7 +63,7 @@ Use the output to populate the `BeforeAll` block of each test with only what it 
 
 ## BeforeAll Pattern
 
-The following pattern loads dependencies by type in the correct order (enums and classes before functions) before dot-sourcing the file under test:
+The pattern below builds a one-time map of every `.ps1` file under `source/` (filename to full path), then loads each dependency by **filename**, in declared order, before dot-sourcing the file under test:
 
 ```powershell
 BeforeAll {
@@ -71,25 +71,26 @@ BeforeAll {
     $currentPath = $(Get-Location).path
     $sourcePath = Join-Path -path $currentPath -childPath 'source'
 
-    # Declare dependencies in load order - replace with actual file names
-    $dependencies = [ordered]@{
-        enums      = @('MyEnum.ps1')
-        classes    = @('MyClass.ps1')
-        functions  = @('HelperFunction.ps1')
-        private    = @('PrivateHelper.ps1')
+    # Map every source file by name, so dependencies resolve no matter which subfolder they live in. List order is load order.
+    $sourceMap = @{}
+    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object {
+        if (-not $sourceMap.ContainsKey($_.Name)) { $sourceMap[$_.Name] = $_.FullName }
     }
 
-    $dependencies.GetEnumerator().ForEach{
-        $directoryRef = Join-Path -path $sourcePath -childPath $_.Key
-        $_.Value.ForEach{
-            $itemPath = Join-Path -path $directoryRef -childPath $_
-            $itemRef = Get-Item $itemPath -ErrorAction SilentlyContinue
-            if ($itemRef) {
-                write-verbose "Dependency identified at: $($itemRef.fullname)"
-                . $itemRef.FullName
-            } else {
-                Write-Warning "Dependency not found at: $itemPath"
-            }
+    # Declare dependencies in load order - types (enums, classes, validators) before the functions that use them
+    $dependencies = @(
+        'MyEnum.ps1'
+        'MyClass.ps1'
+        'HelperFunction.ps1'
+        'PrivateHelper.ps1'
+    )
+
+    $dependencies.ForEach{
+        if ($sourceMap.ContainsKey($_)) {
+            write-verbose "Dependency identified at: $($sourceMap[$_])"
+            . $sourceMap[$_]
+        } else {
+            Write-Warning "Dependency not found under source: $_"
         }
     }
 
@@ -100,7 +101,9 @@ BeforeAll {
 }
 ```
 
-The `[ordered]` hashtable ensures enums and classes are loaded before functions that depend on them - load order matters in PowerShell when types are involved. Note that the final two lines replace the simple dot-source at the end - storing `$fileName` and `$functionName` explicitly enables the clean environment check described below.
+Resolving by filename keeps the test independent of the folder layout: because ModuleForge organises `source/functions` and `source/private` into scope-based subfolders, a dependency can move between subfolders (or sit in a different scope to the function under test) without breaking the test. You only list the filenames you need.
+
+Order still matters: list dependencies so that types (enums, classes, validation classes) load before the functions that reference them - PowerShell needs those types defined at parse time. The final three lines replace a simple dot-source at the end; storing `$fileName` and `$functionName` explicitly enables the clean environment check described below.
 
 ## Check Clean Environment
 
