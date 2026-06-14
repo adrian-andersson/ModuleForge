@@ -38,7 +38,7 @@ Source commit
   → User can verify installed files match release hashes
 ```
 
-This provides non-repudiation — if the hash of an installed file matches the hash in the release notes, the file is provably the one that was built from that release. If it does not match, something changed between the release and the install, or more likely, after the install from the feed.
+This provides non-repudiation - if the hash of an installed file matches the hash in the release notes, the file is provably the one that was built from that release. If it does not match, something changed between the release and the install, or more likely, after the install from the feed.
 
 ---
 

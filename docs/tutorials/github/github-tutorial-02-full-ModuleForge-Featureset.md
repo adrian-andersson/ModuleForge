@@ -9,7 +9,7 @@ nav_order: 2
 
 This tutorial builds on the [GitHub Getting Started tutorial](./github-tutorial-01-getting-started.md) and demonstrates the full range of ModuleForge source folder types by building a space-themed PowerShell module called **AstroCmdlets**.
 
-By the end you will have a module that uses enums, custom validation attributes, classes with inheritance, private functions, resource files, and scope-based subfolder organisation — and you will understand how ModuleForge compiles all of those pieces together.
+By the end you will have a module that uses enums, custom validation attributes, classes with inheritance, private functions, resource files, and scope-based subfolder organisation - and you will understand how ModuleForge compiles all of those pieces together.
 
 ---
 
@@ -33,7 +33,9 @@ Install-PSResource -Name 'ModuleForge'                        -Version '[1.2.0,)
 
 ## Part 1: New Repository
 
-Log in to GitHub and create a new **private** repository named **AstroCmdlets**. Using a private repository is recommended for tutorial work — the built module will be published to GitHub Packages, which will also be private and only accessible to you.
+Log in to GitHub and create a new **private** repository named **AstroCmdlets**. Using a private repository is recommended for tutorial work - the built module will be published to GitHub Packages, which will also be private and only accessible to you.
+
+> **Tick "Add a README file" when creating the repository.** This gives the repo an initial commit on `main` so it is not empty. An empty repository (no commits on the default branch) can behave unexpectedly - for example, if you forget to push to `main` before creating a branch, there is no base for `main` to point at, and branch and pull-request behaviour gets confusing. Starting with a README sidesteps the whole class of problem.
 
 Clone the repository locally, then initialise the ModuleForge project and add GitHub scaffolding:
 
@@ -42,11 +44,13 @@ New-MFProject -ModuleName 'AstroCmdlets' -description 'A space-themed demonstrat
 Add-MFGithubScaffold
 ```
 
-Commit and push:
+Commit and **push this directly to `main`**:
 
 ```
 chore: Initialised ModuleForge project with scaffolding & workflows
 ```
+
+> **This is the one time you should push straight to `main`.** Get the scaffolding established on the default branch first, *then* create your feature branch from it. From here on, all work happens on branches and lands via pull requests - that is what the Pester and PSScriptAnalyzer workflows gate on. Seeding `main` with the scaffold before you branch ensures every branch and PR has a sensible base to diff against and merge into.
 
 ---
 
@@ -59,7 +63,7 @@ The basic tutorial only uses `source/functions/`. ModuleForge supports several f
 | `enums/` | PowerShell enums | Inlined into psm1 (or `Enums.ps1` with `-ExportEnums`) |
 | `validationClasses/` | Custom `ValidateArgumentsAttribute` subclasses | Separate `Validators.ps1` via `ScriptsToProcess` |
 | `classes/` | PowerShell classes | Inlined into psm1 |
-| `private/` | Internal helpers — not exported | Inlined into psm1 |
+| `private/` | Internal helpers - not exported | Inlined into psm1 |
 | `functions/` | Public exported functions | Inlined into psm1, names added to `FunctionsToExport` |
 | `resource/` | Data files, templates, bundled assets | Copied as-is to module output |
 | `bin/` | Binary dependencies | Copied as-is to module output |
@@ -68,14 +72,14 @@ The compilation order is the dependency order. A function can reference a class,
 
 ### Scope-based subfolders
 
-All source folders support one level of subfolders. ModuleForge discovers files recursively and the subfolder name is ignored by the compiler — it exists purely for your organisation.
+All source folders support one level of subfolders. ModuleForge discovers files recursively and the subfolder name is ignored by the compiler - it exists purely for your organisation.
 
-The temptation is to organise by verb (`Get/`, `New/`, `Set/`), but this just duplicates information already in every PowerShell function name. Organise by scope instead — what domain or concern does this code belong to?
+The temptation is to organise by verb (`Get/`, `New/`, `Set/`), but this just duplicates information already in every PowerShell function name. Organise by scope instead - what domain or concern does this code belong to?
 
 For AstroCmdlets we use two scopes:
 
-- `Visitors/` — everything related to alien visitors and diplomacy
-- `Launch/` — everything related to rockets and launches
+- `Visitors/` - everything related to alien visitors and diplomacy
+- `Launch/` - everything related to rockets and launches
 
 A real-world networking module might use `DNS/`, `Firewall/`, `Routing/`. A module wrapping a REST API might use `Auth/`, `Users/`, `Reporting/`. The right scope names are the ones that make your module's structure readable at a glance. This is to help you organise your module.
 
@@ -127,7 +131,7 @@ class ValidateAlienFoodAttribute : System.Management.Automation.ValidateArgument
 >
 > Reach for a custom `ValidateArgumentsAttribute` when your validation logic cannot be expressed as a fixed set: reading valid values from a database or config file at runtime, cross-parameter conditions, complex regex with custom error messages, or any case requiring arbitrary code.
 >
-> The trade-off is that the PowerShell completion engine cannot introspect a custom `Validate()` method, so **tab completion is lost**. You can restore it by stacking `[ArgumentCompletions()]` (PS 7.0+) above your custom validator — the completions are offered by the shell, and the validation runs when the value is bound:
+> The trade-off is that the PowerShell completion engine cannot introspect a custom `Validate()` method, so **tab completion is lost**. You can restore it by stacking `[ArgumentCompletions()]` (PS 7.0+) above your custom validator - the completions are offered by the shell, and the validation runs when the value is bound:
 >
 > ```powershell
 > [ArgumentCompletions('pizza','chocolate','tacos','Quantum Quinoa','Stellar Sushi')]
@@ -202,7 +206,7 @@ class GalacticAmbassador : AlienVisitor {
 >
 > `Get-MFDependencyTree` (covered in Part 10) detects dependencies by scanning for explicit type references like `[AlienVisitor]`. The inheritance declaration `class GalacticAmbassador : AlienVisitor` uses different syntax that the scanner does not recognise, so `GalacticAmbassador` will not appear as depending on `AlienVisitor` in the tree.
 >
-> This is a known limitation. Within a source folder, ModuleForge processes files alphabetically — `AlienVisitor.ps1` before `GalacticAmbassador.ps1` — which is why this works in practice. Naming base classes so they sort before derived classes is a good defensive convention.
+> This is a known limitation. Within a source folder, ModuleForge processes files alphabetically - `AlienVisitor.ps1` before `GalacticAmbassador.ps1` - which is why this works in practice. Naming base classes so they sort before derived classes is a good defensive convention.
 
 Commit:
 
@@ -265,7 +269,7 @@ function Get-AlienVisitorWelcome
 }
 ```
 
-Functions in `source/private/` are compiled into the psm1 but their names are **not** added to `FunctionsToExport`. They are available within the module but invisible to module consumers — this is how you write helpers that support your public API without cluttering it.
+Functions in `source/private/` are compiled into the psm1 but their names are **not** added to `FunctionsToExport`. They are available within the module but invisible to module consumers - this is how you write helpers that support your public API without cluttering it.
 
 Commit:
 
@@ -285,7 +289,7 @@ All visitors must declare a favourite food from the approved list.
 Unauthorised food preferences will result in immediate deportation.
 ```
 
-The `resource/` and `bin/` folders are not compiled — ModuleForge copies them as-is to the module output directory alongside the psm1. This is the right place for anything your module needs to ship with its code: lookup tables, configuration templates, embedded assets, static data files.
+The `resource/` and `bin/` folders are not compiled - ModuleForge copies them as-is to the module output directory alongside the psm1. This is the right place for anything your module needs to ship with its code: lookup tables, configuration templates, embedded assets, static data files.
 
 Commit:
 
@@ -299,7 +303,7 @@ feat: Added resource file
 
 ### Start-Blastoff
 
-Create `source/functions/Launch/Start-Blastoff.ps1`. Note the `[SpaceSuitType]` typed parameter and the `Set-Alias` call at the bottom — `Set-Alias` at module scope is compiled into the psm1 verbatim and runs at module load time:
+Create `source/functions/Launch/Start-Blastoff.ps1`. Note the `[SpaceSuitType]` typed parameter and the `Set-Alias` call at the bottom - `Set-Alias` at module scope is compiled into the psm1 verbatim and runs at module load time:
 
 ```powershell
 function Start-Blastoff
@@ -675,11 +679,11 @@ function Get-WelcomeMessage
 >
 > In the compiled module, `$PSScriptRoot` in a function's `begin{}` block resolves to the module directory, which sits directly alongside `resource/`. This is correct.
 >
-> The problem is testing. When Pester dot-sources a function file, `$PSScriptRoot` resolves to the *source function's own directory* — nowhere near the source root where `resource/` actually lives.
+> The problem is testing. When Pester dot-sources a function file, `$PSScriptRoot` resolves to the *source function's own directory* - nowhere near the source root where `resource/` actually lives.
 >
 > The fix is to check for a local variable named `$mockPsScriptRoot` before falling back to `$PSScriptRoot`. Because PowerShell functions resolve variables by walking up the call stack, setting `$mockPsScriptRoot` in a Pester `BeforeAll` block makes it visible to the function's `begin{}` when the function is called within that scope.
 >
-> Set it in the test's outer `BeforeAll` — before dot-sourcing the function — and remove it in `AfterAll`:
+> Set it in the test's outer `BeforeAll` - before dot-sourcing the function - and remove it in `AfterAll`:
 >
 > ```powershell
 > BeforeAll{
@@ -705,11 +709,11 @@ feat: Added Get-WelcomeMessage function
 
 Create a `.Tests.ps1` file alongside each function in its subfolder. The key pattern across all test files is the **ordered dependency-loading `BeforeAll`** block.
 
-Pester runs individual source files in isolation — unlike the built module where everything is compiled in order into a single psm1, a test must manually load every type and function the subject depends on before dot-sourcing the function under test. The order must mirror the ModuleForge compilation order.
+Pester runs individual source files in isolation - unlike the built module where everything is compiled in order into a single psm1, a test must manually load every type and function the subject depends on before dot-sourcing the function under test. The order must mirror the ModuleForge compilation order.
 
 > **PSScriptAnalyzer in the CI workflow**
 >
-> The PSScriptAnalyzer GitHub Actions workflow runs only against function source files and excludes the `PSAvoidTrailingWhitespace` rule. Test files are not analysed by CI. The `PSUseDeclaredVarsMoreThanAssignments` false positive discussed below will not appear in your pull request analysis.
+> The PSScriptAnalyzer GitHub Actions workflow runs against both your function and private source files (`source/functions` and `source/private`) and excludes the `PSAvoidTrailingWhitespace` rule. Test files are not analysed by CI. The `PSUseDeclaredVarsMoreThanAssignments` false positive discussed below will not appear in your pull request analysis.
 >
 > Adding the suppression attribute is still good practice for a clean IDE experience.
 
@@ -944,7 +948,7 @@ test: Added Pester tests for Get-GalacticAmbassador
 
 ### Get-GalacticReception.Tests.ps1
 
-Create `source/functions/Visitors/Get-GalacticReception.Tests.ps1`. This test loads the most dependencies — the full Visitors chain — to mirror what the compiled module provides automatically:
+Create `source/functions/Visitors/Get-GalacticReception.Tests.ps1`. This test loads the most dependencies - the full Visitors chain - to mirror what the compiled module provides automatically:
 
 ```powershell
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
@@ -1013,7 +1017,7 @@ test: Added Pester tests for Get-GalacticReception
 
 ### Get-WelcomeMessage.Tests.ps1
 
-Create `source/functions/Visitors/Get-WelcomeMessage.Tests.ps1`. This is the only test that uses `$mockPsScriptRoot` — note it is set before dot-sourcing the function and cleaned up in `AfterAll`. Also note that Pester's `$TestDrive` provides a clean empty temporary directory, used here to exercise the missing-file error path:
+Create `source/functions/Visitors/Get-WelcomeMessage.Tests.ps1`. This is the only test that uses `$mockPsScriptRoot` - note it is set before dot-sourcing the function and cleaned up in `AfterAll`. Also note that Pester's `$TestDrive` provides a clean empty temporary directory, used here to exercise the missing-file error path:
 
 ```powershell
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
@@ -1102,7 +1106,7 @@ Get-MFDependencyTree
      >--DEPENDS-ON--> .\source\classes\Visitors\AlienVisitor.ps1
 ```
 
-`Get-GalacticReception` is the most connected function — it chains through a private function, another public function, and the base class directly. The tree makes the full chain visible at a glance and is useful when deciding which dependencies to load in a test's `BeforeAll`.
+`Get-GalacticReception` is the most connected function - it chains through a private function, another public function, and the base class directly. The tree makes the full chain visible at a glance and is useful when deciding which dependencies to load in a test's `BeforeAll`.
 
 Note that `GalacticAmbassador.ps1` does not appear as depending on `AlienVisitor.ps1` even though it inherits from it. This is the scanner limitation described in Part 5.
 
@@ -1126,8 +1130,8 @@ feature/astro-cmdlets
 
 Open a pull request. Two GitHub Actions workflows run automatically as PR checks:
 
-- **PSScriptAnalyzer** — analyses your function source files and posts a lint report as a PR comment
-- **Pester** — runs your test suite and posts results as a PR comment
+- **PSScriptAnalyzer** - analyses your function source files and posts a lint report as a PR comment
+- **Pester** - runs your test suite and posts results as a PR comment
 
 After merging to `main`, dispatch the **Build and Release** workflow from the Actions tab. Choose your version increment type and whether this is a stable or prerelease build.
 

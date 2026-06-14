@@ -8,7 +8,7 @@ nav_order: 6
 
 Commit messages in ModuleForge follow a prefix convention that drives two things automatically: changelog generation via `Get-MFGitChangeLog` and the choice of semantic version increment at release time.
 
-A well-prefixed commit history produces accurate, zero-effort release notes on every tag — no manual changelog writing required.
+A well-prefixed commit history produces accurate, zero-effort release notes on every tag - no manual changelog writing required.
 
 ---
 
@@ -24,7 +24,7 @@ A well-prefixed commit history produces accurate, zero-effort release notes on e
 | `chore:` | *(excluded)* | No | None |
 | `test:` | *(excluded)* | No | None |
 
-`chore` and `test` are excluded from the default changelog output. This keeps release notes focused on user-facing changes. They can be included by passing a custom `ChangeLogTypes` hashtable to `Get-MFGitChangeLog` — see [Including chore and test](#including-chore-and-test) below.
+`chore` and `test` are excluded from the default changelog output. This keeps release notes focused on user-facing changes. They can be included by passing a custom `ChangeLogTypes` hashtable to `Get-MFGitChangeLog` - see [Including chore and test](#including-chore-and-test) below.
 
 ---
 
@@ -40,7 +40,7 @@ The description should complete the sentence "If applied, this commit will…". 
 
 ## Examples
 
-### `feat:` — New function or capability
+### `feat:` - New function or capability
 
 ```
 feat: add Get-MFDependencyTree to map function call chains
@@ -51,7 +51,7 @@ Appears under **New Features** in the changelog. Signals a minor version bump.
 
 ---
 
-### `fix:` — Bug fix
+### `fix:` - Bug fix
 
 ```
 fix: resolve incorrect version bump when patch increment is selected
@@ -62,18 +62,18 @@ Appears under **Bug Fixes** in the changelog. Signals a patch version bump.
 
 ---
 
-### `docs:` — Documentation only
+### `docs:` - Documentation only
 
 ```
 docs: update tutorial to use PSResourceGet syntax
 docs: add BeforeAll pattern to Pester testing guide
 ```
 
-Appears under **Documentation Changes** in the changelog. No version bump — documentation changes do not trigger a release on their own.
+Appears under **Documentation Changes** in the changelog. No version bump - documentation changes do not trigger a release on their own.
 
 ---
 
-### `refactor:` — Code change with no behaviour change
+### `refactor:` - Code change with no behaviour change
 
 ```
 refactor: extract version parsing into private function
@@ -84,7 +84,7 @@ Appears under **Code Rewrite/Refactor** in the changelog. Signals a patch versio
 
 ---
 
-### `perf:` — Performance improvement
+### `perf:` - Performance improvement
 
 ```
 perf: cache dependency tree results for large source folders
@@ -95,7 +95,7 @@ Appears under **Performance Improvements** in the changelog. Signals a patch ver
 
 ---
 
-### `chore:` — Pipeline, tooling, or housekeeping
+### `chore:` - Pipeline, tooling, or housekeeping
 
 ```
 chore: update GitHub Actions runner to ubuntu-24.04
@@ -106,7 +106,7 @@ Excluded from the default changelog. No version bump.
 
 ---
 
-### `test:` — Adding or updating tests only
+### `test:` - Adding or updating tests only
 
 ```
 test: add coverage for empty parameter set in New-MFProject

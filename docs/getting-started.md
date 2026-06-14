@@ -6,7 +6,7 @@ nav_order: 2
 
 # Getting Started with ModuleForge
 
-ModuleForge scaffolds a production-ready PowerShell module structure — including CI/CD pipelines, Pester test stubs, and semantic versioning — so you can focus on writing functions rather than plumbing.
+ModuleForge scaffolds a production-ready PowerShell module structure - including CI/CD pipelines, Pester test stubs, and semantic versioning - so you can focus on writing functions rather than plumbing.
 
 ---
 
@@ -29,13 +29,13 @@ A terminal and any text editor will do, but VSCode is assumed in the step-by-ste
 | Platform | What you need |
 | --- | --- |
 | **GitHub** | A GitHub account and a repository (public or private) |
-| **Azure DevOps** | An Azure DevOps organisation and project, with an Artifacts feed and build service permissions configured — see [Azure DevOps Prerequisites](./tutorials/azureDevOps/azureDevOps-preRequisites.md) |
+| **Azure DevOps** | An Azure DevOps organisation and project, with an Artifacts feed and build service permissions configured - see [Azure DevOps Prerequisites](./tutorials/azureDevOps/azureDevOps-preRequisites.md) |
 
 > **Runner / agent setup**
 >
-> **GitHub Actions** — the scaffolded workflows use `ubuntu-latest` (GitHub-hosted runners). No setup is required for most cases. If you need Windows-specific behaviour or a private network, configure a [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners) and update the `runs-on:` value in the generated workflow files.
+> **GitHub Actions** - the scaffolded workflows use `ubuntu-latest` (GitHub-hosted runners). No setup is required for most cases. If you need Windows-specific behaviour or a private network, configure a [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners) and update the `runs-on:` value in the generated workflow files.
 >
-> **Azure DevOps** — the scaffolded pipelines also target `ubuntu-latest`. If your organisation does not have Microsoft-hosted agents enabled, or you need a specific environment, you will need to provision a [self-hosted agent](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/agents) and update the `pool:` in the generated pipeline YAML.
+> **Azure DevOps** - the scaffolded pipelines also target `ubuntu-latest`. If your organisation does not have Microsoft-hosted agents enabled, or you need a specific environment, you will need to provision a [self-hosted agent](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/agents) and update the `pool:` in the generated pipeline YAML.
 
 ---
 
@@ -72,7 +72,7 @@ Add-MFGithubScaffold
 Add-MFAzureDevOpsScaffold
 ```
 
-Commit the scaffolding back to `main` before doing anything else — the CI workflows need to exist on the default branch before they can run.
+Commit the scaffolding back to `main` before doing anything else - the CI workflows need to exist on the default branch before they can run.
 
 ```
 chore: initialise ModuleForge project with scaffolding and workflows
@@ -95,7 +95,7 @@ MyModule/
 └── .github/workflows/      ← CI/CD pipelines (GitHub) or azure-pipelines.yml
 ```
 
-Each function gets its own file. Each function file gets its own `FunctionName.Tests.ps1` alongside it — Pester picks these up automatically.
+Each function gets its own file. Each function file gets its own `FunctionName.Tests.ps1` alongside it - Pester picks these up automatically.
 
 ---
 
@@ -117,9 +117,9 @@ flowchart TD
     H --> B
 ```
 
-The CI pipelines run automatically on every PR. The **Build and Release** step is triggered manually — you decide when a version is ready to ship and what kind of version bump it gets.
+The CI pipelines run automatically on every PR. The **Build and Release** step is triggered manually - you decide when a version is ready to ship and what kind of version bump it gets.
 
-**PSScriptAnalyzer** runs on every PR as a soft gate — it reports findings but does not block a merge. The results are posted as a PR comment, grouped by severity: `Error`, `Warning`, and `Information`. Errors represent genuine problems (undefined variables, syntax issues); Warnings are style and best-practice concerns worth addressing; Information is advisory. The weighting is intentional — not everything flagged demands action, but the highest-severity items are surfaced first so you can prioritise. Treat the report as a code review prompt rather than a hard stop.
+**PSScriptAnalyzer** runs on every PR as a soft gate - it reports findings but does not block a merge. The results are posted as a PR comment, grouped by severity: `Error`, `Warning`, and `Information`. Errors represent genuine problems (undefined variables, syntax issues); Warnings are style and best-practice concerns worth addressing; Information is advisory. The weighting is intentional - not everything flagged demands action, but the highest-severity items are surfaced first so you can prioritise. Treat the report as a code review prompt rather than a hard stop.
 
 ---
 
@@ -170,13 +170,15 @@ Run a specific test file directly with Pester:
 Invoke-Pester .\source\functions\Get-Greeting.Tests.ps1
 ```
 
-Or run the full test suite with code coverage — mirrors exactly what the CI pipeline does:
+Or run the full test suite with code coverage - mirrors exactly what the CI pipeline does:
 
 ```powershell
 .\scripts\Invoke-MFPester.ps1
 ```
 
-`Invoke-MFPester.ps1` is a standalone script (added to your project by `Add-MFProjectScripts`) that discovers all `*.Tests.ps1` files under `source/functions/`, runs them with code coverage enabled, and reports the results. Use this before opening a PR to confirm you're in the same state the automated pipeline will see.
+`Invoke-MFPester.ps1` is a standalone script (added to your project by `Add-MFProjectScripts`) that discovers all `*.Tests.ps1` files under `source/functions/` and `source/private/` (plus a root `tests/` folder if you have one), runs them with code coverage enabled, and reports the results. Use this before opening a PR to confirm you're in the same state the automated pipeline will see. On Constrained Language Mode systems, add `-SkipCodeCoverage` - coverage instrumentation cannot run there.
+
+> Looking for a house style for the code inside your functions? The [PowerShell Style Recommendations](./Concepts/PowerShellStyle.md) page collects a set of optional, non-binding conventions (quoting, collections, function shape, cross-platform habits) you can adopt as a starting point.
 
 Commit with the right prefix so your changelog generates correctly:
 
@@ -191,9 +193,10 @@ test: add Pester tests for Get-Greeting
 
 | Goal | Where to go |
 | --- | --- |
-| Full walkthrough — GitHub setup | [GitHub Getting Started Tutorial](./tutorials/github/github-tutorial-01-getting-started.md) |
-| Advanced features — enums, classes, private functions | [AstroCmdlets: An Advanced Tutorial](./tutorials/github/github-tutorial-02-full-ModuleForge-Featureset.md) |
+| Full walkthrough - GitHub setup | [GitHub Getting Started Tutorial](./tutorials/github/github-tutorial-01-getting-started.md) |
+| Advanced features - enums, classes, private functions | [AstroCmdlets: An Advanced Tutorial](./tutorials/github/github-tutorial-02-full-ModuleForge-Featureset.md) |
 | Azure DevOps setup | [Azure DevOps Tutorial](./tutorials/azureDevOps/azureDevOps-tutorial-01-getting-started.md) |
 | Choosing version and release options | [Build and Release Guide](./build-and-release.md) |
 | All commit prefixes and their effects | [Commit Prefixes](./commit-prefixes.md) |
+| Optional code style conventions | [PowerShell Style Recommendations](./Concepts/PowerShellStyle.md) |
 | Full function reference | [Functions](./functions/) |

@@ -6,9 +6,9 @@ nav_order: 3
 ---
 # Module Versioning with SemVer
 
-Semantic Versioning (SemVer) is a versioning convention that communicates the nature of changes through the version number itself — `MAJOR.MINOR.PATCH`. The full specification is at [semver.org](https://semver.org/). The following describes how those principles are applied in the context of PowerShell modules and ModuleForge specifically, including the constraints imposed by PSGallery's SemVer V1 support.
+Semantic Versioning (SemVer) is a versioning convention that communicates the nature of changes through the version number itself - `MAJOR.MINOR.PATCH`. The full specification is at [semver.org](https://semver.org/). The following describes how those principles are applied in the context of PowerShell modules and ModuleForge specifically, including the constraints imposed by PSGallery's SemVer V1 support.
 
-SemVer also defines the concept of a prerelease version — an explicitly unstable build that precedes a stable release. For PowerShell modules this is particularly valuable in a healthy SDLC: prerelease versions allow changes to be built, published, and validated in real environments before being promoted to stable. This decouples the act of building from the act of releasing, giving teams the ability to iterate and test without risking disruption to anyone consuming the stable version. A prerelease version extends the standard `MAJOR.MINOR.PATCH` format with a label — for example `1.1.0-prev001` signals a work-in-progress build toward what will eventually become `1.1.0`.
+SemVer also defines the concept of a prerelease version - an explicitly unstable build that precedes a stable release. For PowerShell modules this is particularly valuable in a healthy SDLC: prerelease versions allow changes to be built, published, and validated in real environments before being promoted to stable. This decouples the act of building from the act of releasing, giving teams the ability to iterate and test without risking disruption to anyone consuming the stable version. A prerelease version extends the standard `MAJOR.MINOR.PATCH` format with a label - for example `1.1.0-prev001` signals a work-in-progress build toward what will eventually become `1.1.0`.
 
 ## Definitions
 
@@ -25,7 +25,7 @@ A change to a function that is likely to break backwards compatibility and exist
 
 ### Minor
 
-Introduction of new functionality or non-breaking changes to existing functions — no backwards compatibility impact.
+Introduction of new functionality or non-breaking changes to existing functions - no backwards compatibility impact.
 
 #### Minor Change Examples
 
@@ -43,13 +43,13 @@ No change to parameters or outputs, only code fixes and optimizations.
 #### Patch Examples
 
 - Bug fixes
-- Stream output changes (Verbose, Warning, Error, Information, Debug) — any stream except the output stream
+- Stream output changes (Verbose, Warning, Error, Information, Debug) - any stream except the output stream
 - Performance or style improvements that do not change returned output or input parameters
 - Test updates or additions
 
 ### Prerelease
 
-A prerelease is a test build of a Major, Minor, or Patch change — used to validate changes before committing to a stable release. In the PR template this maps to the **PreRelease series** release intent.
+A prerelease is a test build of a Major, Minor, or Patch change - used to validate changes before committing to a stable release. In the PR template this maps to the **PreRelease series** release intent.
 
 Use prerelease versions when:
 
@@ -65,7 +65,7 @@ PSGallery only supports SemVer V1, which imposes constraints on how prerelease s
 
 The key constraints are:
 
-- Prerelease strings must contain only ASCII alphanumerics (`[0-9A-Za-z-]`) — no periods or `+`
+- Prerelease strings must contain only ASCII alphanumerics (`[0-9A-Za-z-]`) - no periods or `+`
 - The version must be three segments (`Major.Minor.Patch`) when a prerelease string is present
 - It is best practice to begin the prerelease string with an alpha character
 
@@ -111,11 +111,11 @@ In order to clearly identify correct versions whilst maintaining simplicity and 
 
 `{MAJOR}.{MINOR}.{PATCH}-{preReleaseTag}v{XXX}`
 
-- `{preReleaseTag}` defaults to `pre` — see [Prerelease Label](#prerelease-label) below
+- `{preReleaseTag}` defaults to `pre` - see [Prerelease Label](#prerelease-label) below
 - `{XXX}` is a three-digit zero-padded counter, i.e. `001` through `999`
   - A fresh prerelease always starts at `v001`
   - In the unlikely event that prereleases for a single Major.Minor.Patch exceed 999, bump the patch version and skip a release
-- The `v` separator between the label and counter is intentional — it aids readability and distinguishes the counter from the label itself
+- The `v` separator between the label and counter is intentional - it aids readability and distinguishes the counter from the label itself
 
 The use of standards such as `ALPHA`, `BETA`, `RC` is less common in PowerShell modules, but is supported. The important distinction is simply stable vs preview.
 
