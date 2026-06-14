@@ -262,7 +262,14 @@ jobs:
           $psm1Sha = (Get-FileHash -Path $psm1Ref.FullName -Algorithm SHA256).Hash.ToLower()
           # Append to markdown
           $markDownText = "$($markDownText)`n### 🔐 SHA256 Checksums`n$("$moduleName").psd1: $psd1Sha `n$("$moduleName").psm1: $psm1Sha"
-          gh release create $ver --title $releaseName --notes $markDownText
+          # Flag prerelease tags (SemVer prerelease label, e.g. v1.3.0-prev009) so GitHub does not
+          # badge them as "Latest"; stable releases are marked latest explicitly.
+          if($ver -like '*-*')
+          {
+            gh release create $ver --title $releaseName --notes $markDownText --prerelease
+          }else{
+            gh release create $ver --title $releaseName --notes $markDownText --latest
+          }
           gh release upload $ver $nuRef
 
       - name: Publish to GitHub Packages #Publish module to GH Packages
