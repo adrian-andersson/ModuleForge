@@ -71,10 +71,10 @@ Add-MFAzureDevOpsScaffold
 1. Open Azure Devops in your browser and select _Pipelines_
 2. Select `New Pipeline` in the top right of the Pipelines window.
 3. In the _connect_ tab, select `Azure Repos Git` as the option for _where is your code_
-    - ![Pipeline setup — selecting Azure Repos Git as code source](./img/tut_whereIsCode.png)
+    - ![Pipeline setup - selecting Azure Repos Git as code source](./img/tut_whereIsCode.png)
 4. Select the correct repository `PSHelloWorld`
 5. In the _Configure your Pipeline_ screen, select `Existing Azure Pipeline YAML file`
-    - ![Pipeline configuration — selecting existing Azure Pipeline YAML file](./img/tut_configurePipeline.png)
+    - ![Pipeline configuration - selecting existing Azure Pipeline YAML file](./img/tut_configurePipeline.png)
 6. Select the `psScriptAnalyzerLintReport.yml` file
     - ![Azure DevOps YAML file selection dialog](./img/tut_selectYaml.png)
 7. In the _Review your Pipeline_ screen, use the small arrow next to _RUN_ and select `SAVE`

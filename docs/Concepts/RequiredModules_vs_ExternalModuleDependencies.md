@@ -20,15 +20,15 @@ The module manifest supports two ways to declare dependencies: `RequiredModules`
 
 ## RequiredModules
 
-`RequiredModules` creates a hard dependency. When publishing, the repository (e.g. PSGallery) checks that all listed modules are already present — if they're not, the publish will fail. On the user side, `Install-PSResource` or `Install-Module` will automatically pull in the dependencies.
+`RequiredModules` creates a hard dependency. When publishing, the repository (e.g. PSGallery) checks that all listed modules are already present - if they're not, the publish will fail. On the user side, `Install-PSResource` or `Install-Module` will automatically pull in the dependencies.
 
-This is useful when you need to pin to a specific version of a module and you can be confident that dependency will remain available in the target repository. In practice it can be too rigid — any module you list must exist in every repository you publish to, which becomes a problem with private feeds.
+This is useful when you need to pin to a specific version of a module and you can be confident that dependency will remain available in the target repository. In practice it can be too rigid - any module you list must exist in every repository you publish to, which becomes a problem with private feeds.
 
 ## ExternalModuleDependencies
 
 `ExternalModuleDependencies` declares a dependency without enforcing it at publish time. The module will publish regardless of whether the dependency exists in the feed, and installation does not pull it in automatically. The responsibility for installing the dependency falls on the consumer.
 
-This is the more flexible approach for most real-world scenarios — it avoids republishing third-party modules to private repositories, keeps feed trust boundaries clean, and removes any license concerns around redistributing other authors' packages.
+This is the more flexible approach for most real-world scenarios - it avoids republishing third-party modules to private repositories, keeps feed trust boundaries clean, and removes any license concerns around redistributing other authors' packages.
 
 To make the dependency clear to consumers, it is good practice to add an explicit check in the `begin` block of any function that requires it:
 
@@ -68,7 +68,7 @@ Call it from the `begin` block of any function that has an external dependency. 
 
 ## Which Should I Use?
 
-For most PowerShell modules — particularly those that depend on large third-party packages like the Microsoft Graph SDK — `ExternalModuleDependencies` is the better fit. Use `RequiredModules` when you are pinning a specific version of a small, stable dependency that you know is already present in every feed you publish to.
+For most PowerShell modules - particularly those that depend on large third-party packages like the Microsoft Graph SDK - `ExternalModuleDependencies` is the better fit. Use `RequiredModules` when you are pinning a specific version of a small, stable dependency that you know is already present in every feed you publish to.
 
 Both parameters are available on `New-MFProject` when scaffolding a new module, so dependencies can be declared from the start.
 
@@ -80,5 +80,5 @@ For more background, the [OneGet GitHub issue #164](https://github.com/OneGet/on
 
 ## Further Reading
 
-- [New-ModuleManifest — Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest) — official parameter reference for both `RequiredModules` and `ExternalModuleDependencies`
+- [New-ModuleManifest - Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest) - official parameter reference for both `RequiredModules` and `ExternalModuleDependencies`
 

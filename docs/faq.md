@@ -55,13 +55,13 @@ The prerelease label is passed to `Get-MFNextSemver` via the `-PrereleaseLabel` 
 Get-MFNextSemver -PrereleaseLabel 'beta' ...
 ```
 
-Keep the label **lowercase** — the PSResourceGet bug with uppercase labels will cause silent failures on some feeds.
+Keep the label **lowercase** - the PSResourceGet bug with uppercase labels will cause silent failures on some feeds.
 
 ---
 
 ### The changelog is not generating correctly or is missing commits
 
-Commits must follow the exact format `prefix: description` — the colon must immediately follow the prefix with no space before it.
+Commits must follow the exact format `prefix: description` - the colon must immediately follow the prefix with no space before it.
 
 ```text
 feat: add new function       ← recognised
@@ -77,7 +77,7 @@ Added new function           ← NOT recognised (no prefix)
 
 ### My module is Windows-only and won't build on Ubuntu
 
-The module does not need to *load* on Linux — the build step is a file compilation and manifest generation process that is platform-neutral. Most Windows-only modules build successfully on `ubuntu-latest` even if they cannot be imported there.
+The module does not need to *load* on Linux - the build step is a file compilation and manifest generation process that is platform-neutral. Most Windows-only modules build successfully on `ubuntu-latest` even if they cannot be imported there.
 
 **If your tests use Windows-specific cmdlets**, wrap them with a Pester condition:
 
@@ -89,7 +89,7 @@ It 'Does something Windows-specific' -Skip:($IsLinux -or $IsMacOS) {
 
 This lets the CI run on Linux while skipping tests that require Windows APIs, which keeps coverage reporting accurate and avoids false failures.
 
-**If the build itself requires Windows** (rare — usually only if source files contain Windows-only syntax that PowerShell 7 on Linux rejects during parsing), update `runs-on` in all three workflow files:
+**If the build itself requires Windows** (rare - usually only if source files contain Windows-only syntax that PowerShell 7 on Linux rejects during parsing), update `runs-on` in all three workflow files:
 
 ```yaml
 runs-on: windows-latest
@@ -101,7 +101,7 @@ For guidance on writing cross-platform PowerShell, see the [PowerShell cross-pla
 
 ---
 
-### The Build and Release workflow is blocked — Pester tests failed or SHA mismatch
+### The Build and Release workflow is blocked - Pester tests failed or SHA mismatch
 
 The workflow validates that:
 
@@ -110,23 +110,51 @@ The workflow validates that:
 
 If the workflow throws `❌ No match on PR or primary commit`, the most common causes are:
 
-- The Pester workflow has not run yet since the last commit — wait for it to complete
-- The last Pester run was against a different branch — trigger a Pester run against `main` first
-- A merge commit shifted HEAD — this is handled automatically; if it still fails, re-run Pester manually via the Actions tab
+- The Pester workflow has not run yet since the last commit - wait for it to complete
+- The last Pester run was against a different branch - trigger a Pester run against `main` first
+- A merge commit shifted HEAD - this is handled automatically; if it still fails, re-run Pester manually via the Actions tab
 
 ---
 
 ### I want to add extra steps to the CI pipeline
 
-Edit the relevant workflow YAML in `.github/workflows/` directly. The scaffolded files are a starting point — they are yours to modify. Add steps before or after the existing ones as needed.
+Edit the relevant workflow YAML in `.github/workflows/` directly. The scaffolded files are a starting point - they are yours to modify. Add steps before or after the existing ones as needed.
 
 If your addition would benefit other ModuleForge users, consider [contributing it](https://github.com/adrian-andersson/ModuleForge/blob/main/CONTRIBUTING.md).
 
 ---
 
+### How do I upgrade my workflows and scripts to a newer ModuleForge version?
+
+The CI/CD workflow/pipeline files, the PR template, and the helper scripts in `scripts/` (such as `Invoke-MFPester.ps1`) are **copied into your project at scaffold time**. They are static snapshots, not live references to the installed module, so updating the ModuleForge module itself does **not** refresh them. To pick up improvements to these files you have to re-scaffold.
+
+Update ModuleForge, then re-run the relevant scaffold command with `-Force`:
+
+```powershell
+Update-PSResource -Name ModuleForge   # or: Install-PSResource -Name ModuleForge -Reinstall
+
+Add-MFGithubScaffold      -Force   # GitHub Actions workflows + PR template
+Add-MFAzureDevOpsScaffold -Force   # Azure DevOps pipelines (if you use Azure DevOps)
+Add-MFProjectScripts      -Force   # scripts/ (Invoke-MFPester.ps1, etc.)
+```
+
+> **`-Force` overwrites and will clobber local edits.** By default these commands **skip** any file that already exists, so without `-Force` you keep your current (older) files and gain nothing. With `-Force` they overwrite the existing files outright: if you have customised a workflow, the PR template, or a script, your changes are replaced with the stock template and lost. This can lead to unexpected outcomes, for example a reverted `runs-on`/`pool`, removed custom steps, or undone secrets wiring.
+
+Recommended upgrade process:
+
+1. Work on a dedicated branch, never straight on `main`, so the upgrade lands through a PR like any other change.
+2. Start from a clean working tree so the re-scaffold shows up as a clear, reviewable diff.
+3. Run the scaffold command(s) with `-Force`.
+4. **Review the diff carefully** and re-apply any customisations you had made to the regenerated files (custom runner/agent config, extra steps, secrets, environment setup).
+5. Run `.\scripts\Invoke-MFPester.ps1` and open the PR so the refreshed workflows validate themselves before merge.
+
+If you have heavily customised your files, upgrade selectively instead of using `-Force` over your live copies: re-scaffold into a separate clean clone of the repository (or any folder containing a `moduleForgeConfig.xml`, via the `-Path` parameter), then hand-merge only the changes you actually want.
+
+---
+
 ### I want to use GitLab, Bitbucket, or another CI platform
 
-Only GitHub Actions and Azure DevOps are currently supported. If you need another platform, that is a great candidate for a contribution — open an issue to discuss the approach before starting work.
+Only GitHub Actions and Azure DevOps are currently supported. If you need another platform, that is a great candidate for a contribution - open an issue to discuss the approach before starting work.
 
 ---
 
@@ -152,11 +180,39 @@ See [`Invoke-MFBuildPreRelease`](./functions/Invoke-MFBuildPreRelease.md) and [`
 
 ---
 
+## Testing and Code Coverage
+
+### My tests fail to run with a code coverage or language mode error
+
+Pester's code coverage instrumentation cannot run under **Constrained Language Mode (CLM)**. If your system enforces CLM, run the test script with coverage disabled:
+
+```powershell
+.\scripts\Invoke-MFPester.ps1 -SkipCodeCoverage
+```
+
+Tests still run and still hard-fail on any failure - only the coverage measurement is skipped. The CI workflows run in Full Language Mode, so this is a local-environment concern.
+
+---
+
+### My code coverage dropped after upgrading ModuleForge
+
+This is expected. As of v1.3.0, ModuleForge measures code coverage across **both** `source/functions` and `source/private` - previously only the exported functions in `source/functions` were measured. If your private functions don't yet have tests, the larger denominator lowers the reported percentage even though nothing about your code got worse.
+
+The fix is to add `*.Tests.ps1` files alongside your private functions in `source/private`, exactly as you do for exported functions. They are discovered, run, and counted automatically. See [Writing Pester Tests](./Concepts/Pester.md) for the test pattern.
+
+---
+
+### I want to keep my tests in a separate folder instead of alongside my functions
+
+ModuleForge auto-detects a root-level `tests` folder (matched case-insensitively) and adds it to test discovery, so you can keep integration tests - or all your tests - there. Tests in that folder are run but are **not** counted towards code coverage; coverage is only measured against `source/functions` and `source/private`. You can also point at explicit locations with `Invoke-MFPester.ps1 -TestPath`.
+
+---
+
 ## Integration with Other Tools
 
 ### I want to use PSake, Invoke-Build, Plaster, Artifactory, or my own toolchain
 
-There is no conflict. ModuleForge is designed to be composable — use it as a dependency within your existing build toolchain and call its functions directly:
+There is no conflict. ModuleForge is designed to be composable - use it as a dependency within your existing build toolchain and call its functions directly:
 
 | Task | Command |
 | --- | --- |
@@ -201,9 +257,9 @@ See [`Resolve-MFModuleCase`](./functions/Resolve-MFModuleCase.md) for full detai
 
 ---
 
-### I cannot update a prerelease using Install-PSResource — it skips the install
+### I cannot update a prerelease using Install-PSResource - it skips the install
 
-This is a known constraint of how PSResourceGet handles prerelease versioning. Prerelease versions share the same installation folder as their base version — `1.0.0-prev001` and `1.0.0-prev002` both install into a folder named `1.0.0`. When you attempt to install a newer prerelease of the same base version, PSResourceGet sees that folder already exists and skips the install entirely.
+This is a known constraint of how PSResourceGet handles prerelease versioning. Prerelease versions share the same installation folder as their base version - `1.0.0-prev001` and `1.0.0-prev002` both install into a folder named `1.0.0`. When you attempt to install a newer prerelease of the same base version, PSResourceGet sees that folder already exists and skips the install entirely.
 
 The fix is to unload the module from the current session first, then reinstall using the `-Reinstall` switch:
 
@@ -212,15 +268,15 @@ Remove-Module <ModuleName> -Force -ErrorAction SilentlyContinue
 Install-PSResource -Name <ModuleName> -Prerelease -Reinstall
 ```
 
-The `Remove-Module` step is important — omitting it can make the install appear to succeed while the session continues running the old version from memory.
+The `Remove-Module` step is important - omitting it can make the install appear to succeed while the session continues running the old version from memory.
 
 If you cannot use `-Reinstall` (older PSResourceGet versions), manually deleting or renaming the `1.0.0` (example) folder from the module install path and reinstalling achieves the same result.
 
-This is a consequence of the NuGet versioning model, not a PSResourceGet bug — prerelease qualifiers are part of the version identifier but are not reflected in the on-disk folder name.
+This is a consequence of the NuGet versioning model, not a PSResourceGet bug - prerelease qualifiers are part of the version identifier but are not reflected in the on-disk folder name.
 
 ---
 
-### PSGallery already has that version — I published the wrong thing
+### PSGallery already has that version - I published the wrong thing
 
 PSGallery does not allow version deletion. You can **unlist** a version (it stops appearing in search results but remains installable by explicit version), but you cannot remove it entirely. Contact the [PowerShell Gallery support](https://www.powershellgallery.com/policies/Contact) if you need to take further action.
 
@@ -242,7 +298,7 @@ Update-MFProject -Description 'Updated description' -ModuleTags 'powershell', 'a
 Update-MFProject -RequiredModules @('Pester', 'PSScriptAnalyzer')
 ```
 
-Any parameter you don't pass is left unchanged. If you need to make a change that `Update-MFProject` doesn't cover, you can edit `moduleForgeConfig.xml` directly — it is a standard PowerShell CLIXML file.
+Any parameter you don't pass is left unchanged. If you need to make a change that `Update-MFProject` doesn't cover, you can edit `moduleForgeConfig.xml` directly - it is a standard PowerShell CLIXML file.
 
 See [`Update-MFProject`](./functions/Update-MFProject.md) for the full parameter list.
 
