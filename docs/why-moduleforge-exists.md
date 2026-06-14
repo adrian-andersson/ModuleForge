@@ -19,6 +19,12 @@ Most PowerShell modules start the same way: a single `.psm1`, a handful of funct
 
 None of these is hard on its own. Collectively they are why a promising module becomes hard to maintain, and they are exactly the kind of problem tooling should solve once so you never solve it again. For a head-to-head with the specific tools in this space, see [ModuleForge vs Alternatives](./Concepts/ModuleForgeVsAlternatives.md).
 
+## Borrowed from the best
+
+Spend time in other ecosystems and the envy sets in. A single command spins up a complete React project: build tooling, a dev server, tests, and a sensible structure, ready in seconds. A well-run Terraform project tags every resource automatically, enforces its own conventions, and quietly makes the right thing the easy thing. Those communities decided long ago that scaffolding, automation, and convention were not luxuries; they were the baseline.
+
+PowerShell development deserves the same. Nothing about a PowerShell module makes it unworthy of instant project creation, automated versioning and tagging, generated changelogs, and a pipeline that just works. ModuleForge is, in large part, those borrowed ideas brought home: the DevOps niceties other ecosystems take for granted, applied to PowerShell.
+
 ## The idea
 
 ModuleForge is an opinionated build and release tool for PowerShell modules. It makes the boring decisions for you, scaffolds a project that already has CI/CD, versioning, and documentation wired in, and then gets out of your way so you can write functions.
@@ -36,18 +42,28 @@ Those convictions show up as concrete defaults:
 - **Convention over configuration.** A fixed source layout (`functions`, `private`, `classes`, `enums`, and so on) compiled in a known order. Learn it once, recognise it everywhere. Start in [Getting Started](./getting-started.md).
 - **Versioning with discipline.** SemVer with PSGallery-compatible prerelease handling, derived from your git tags rather than hand-edited. See [Module Versioning with SemVer](./Concepts/ModuleVersioning_With_SemVer.md).
 - **Changelogs from your commits.** Well-prefixed commits generate release notes automatically, so the changelog is a by-product of working, not a chore.
-- **Tests and docs as first-class.** Pester runs as a hard gate, coverage is advisory, and a documentation site regenerates from your help text. See [Writing Pester Tests](./Concepts/Pester.md).
+- **Tests and docs as first-class.** Pester runs as a hard gate, coverage is advisory, and a documentation site regenerates from your help text. See [Writing Pester Tests](./Concepts/Pester.md) and [Publishing a Documentation Site](./tutorials/github/github-tutorial-04-documentation-site.md).
 - **Cross-platform by default.** The scaffolded pipelines run on Linux runners, and the conventions assume your code might too.
 
 ModuleForge also has opinions about the code inside your functions, though it does not enforce them. Those are gathered, take them or leave them, in [PowerShell Style Recommendations](./Concepts/PowerShellStyle.md).
 
 ## What it buys you
 
-Consistency you do not have to maintain by hand. A brand-new ModuleForge project has, on day one, the same tested and documented release pipeline as a mature one. A contributor who has seen one ModuleForge module can find their way around any of them. And because the tool builds itself, the workflow you are handed is the workflow that ships ModuleForge, exercised on real code with every release.
+The headline is speed: a new module is one command away from a working structure, CI/CD, versioning, and a documentation pipeline, so your first hour goes on functions, not plumbing.
+
+- **Get going faster.** The setup that normally eats your first day is already done, so you start with code, not boilerplate.
+- **Be encouraged to code to a high standard.** Tests gate the build, linting and coverage report on every PR, conventions stay consistent, and good documentation falls out of good help text. The easy path and the high-quality path are the same path.
+- **Get the niceties other tooling takes for granted.** The scaffolding, automation, and convention this page opened with, brought to PowerShell.
+
+And because the tool builds itself, none of this is theoretical: the workflow you are handed is the one that ships ModuleForge, exercised on real code with every release. A contributor who has seen one ModuleForge module can find their way around any of them.
 
 ## Where it is going
 
-ModuleForge is deliberately scoped: it targets GitHub and Azure DevOps, it does not compile binaries, and it stays opinionated rather than growing endless configuration. Within that scope it keeps sharpening: better changelog tooling, more of its conventions surfaced from the command line, and broader platform support (additional CI platforms, DSC resources) where the community wants to build it.
+ModuleForge is deliberately scoped: it targets GitHub and Azure DevOps, it does not compile binaries, and it stays opinionated rather than growing endless configuration. Within that scope, two directions matter most.
+
+**Security and supply-chain confidence.** Release integrity is already part of the pipeline; published checksums let you prove an installed module is exactly the one that was built (see [Release Integrity and Checksums](./Concepts/ReleaseIntegrity.md)). The next steps build on that foundation: flagging code that will not run under Constrained Language Mode before it ships, and making artifact signing a first-class, documented step.
+
+**Whatever the community actually needs.** The direction is shaped as much by users as by the maintainers, and the project stays open-minded about where it goes next. Some of the most valuable additions, such as support for other CI platforms or DSC resources, are explicitly open for contribution. If ModuleForge is missing something that would make your PowerShell DevOps better, that is a conversation worth starting, not a closed door.
 
 ## Your path through the docs
 
@@ -58,4 +74,4 @@ Depending on why you are here:
 - **Ready to go deep?** The [Concepts](./Concepts/) section covers versioning, testing, release integrity, and more.
 - **Looking for a specific command?** The [function reference](./functions/) documents every exported function.
 
-Welcome. Now go make something great.
+Welcome. Forge something great.
