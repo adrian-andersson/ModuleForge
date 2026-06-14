@@ -1,4 +1,4 @@
-name: Execute psScriptAnalyzer Review
+name: Execute PSScriptAnalyzer Review
 
 on:
   pull_request:
@@ -26,33 +26,36 @@ jobs:
           import-module $moduleList
           get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
   
-      - name: Run psscriptanalyzer tests
+      - name: Run PSScriptAnalyzer tests
         shell: pwsh
         id: psscriptanalyzer_tests
         run: |
             $verbosePreference = 'continue'
             write-verbose 'Declaring PSScriptAnalyzer Params'
             $severity = @('Error','Warning','Information')
-            $sourcePath = $(join-path $(join-path '.' -childPath 'source') -childPath functions)
+            $sourcePath = @(
+                $(join-path $(join-path '.' -childPath 'source') -childPath functions)
+                $(join-path $(join-path '.' -childPath 'source') -childPath private)
+            )
             $weights = @{
                 Error = 50
                 Warning = 15
                 Information = 1
             }
             $excludeRules = @(
-                'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
+                'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
             )
             $psScriptAnalyzerSplat = @{
                 severity = $severity
                 ExcludeRule = $excludeRules
             }
-            write-verbose 'Getting Public Function Files'
-            $functionFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath
+            write-verbose 'Getting source function and private files'
+            $sourceFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath
             $capture = [System.Collections.Generic.List[object]]::new()
             #Do it this way so we can filter out pester files.
             #Temp suspend verbosity, its really noisy here
                 $verbosePreference = 'silentlycontinue'
-            $functionFiles.foreach{
+            $sourceFiles.foreach{
                 remove-variable invokeResult -errorAction ignore #Ensure Clean State
                 Invoke-ScriptAnalyzer -path $_.fullname @psScriptAnalyzerSplat|tee-object -variable invokeResult
                 $invokeResult.foreach{$capture.add($_)}
@@ -134,7 +137,7 @@ jobs:
                 $SAVer = $(Get-Module psscriptanalyzer|Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}}).version
 
                 $lintResultMarkdown = @(
-                    "### 🕵️ PSscriptAnalyzer Linting Results 🕵️‍♀️"
+                    "### 🕵️ PSScriptAnalyzer Linting Results 🕵️‍♀️"
                     ''
                     '_Code Quality Advisory Only_'
                     ''
@@ -154,7 +157,7 @@ jobs:
                     '- _See [the invoke-scriptAnalyzer documentation from microsoft](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer) for information on how to suppress false positives_'
                     ''
                     "### ℹ️ Runtime Info"
-                    "**psscriptanalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
                     "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                     "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                     ''
@@ -167,12 +170,12 @@ jobs:
                 write-verbose 'No results to parse. Either something has gone wrong with psScriptAnalyzer, this script, or youve done an amazing coding job!'
                 write-verbose 'Lets assume you did an amazing coding job!'
                 $lintResultMarkdown = @(
-                    "### 🕵️ PSscriptAnalyzer Linting Results 🕵️‍♀️"
+                    "### 🕵️ PSScriptAnalyzer Linting Results 🕵️‍♀️"
                     ''
                     '_No Script Analyzer Recommendations_ 🥇'
                     ''
                     "### ℹ️ Runtime Info"
-                    "**psscriptanalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
                     "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                     "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                     ''
@@ -186,7 +189,6 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v3
         if: always() && github.event_name == 'pull_request'
         with:
-          recreate: true
           path: psInvokeResult.md
           header: psInvokeResult
     

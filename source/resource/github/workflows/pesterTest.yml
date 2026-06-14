@@ -34,14 +34,21 @@ jobs:
         shell: pwsh
         id: pester_tests
         run: |
+          $functionsPath = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+          $privatePath = $(join-path -path (join-path -path . -childpath 'source') -childpath 'private')
+          # Discover tests alongside functions AND private; if a root 'tests' folder exists (case-insensitive), also discover it. Coverage stays on source/functions only.
+          $runPaths = @($functionsPath)
+          if(test-path $privatePath){ $runPaths += $privatePath }
+          $testsFolder = Get-ChildItem -LiteralPath . -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq 'tests' } | Select-Object -First 1
+          if($testsFolder){ $runPaths += $testsFolder.FullName }
           $pesterConfigHash = @{
               Run = @{
                   Passthru = $true
-                  Path = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+                  Path = $runPaths
               }
               CodeCoverage = @{
                   Enabled = $true
-                  Path = $(join-path -path (join-path -path . -childpath 'source') -childpath 'functions')
+                  Path = $(if(test-path $privatePath){ @($functionsPath,$privatePath) }else{ $functionsPath })
               }
               Output = @{
                   Verbosity = 'Detailed'
@@ -110,7 +117,6 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v3
         if: always() && github.event_name == 'pull_request'
         with:
-          recreate: true
           path: pesterMarkdown.md
           header: pesterResult
           

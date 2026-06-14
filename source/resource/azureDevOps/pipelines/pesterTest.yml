@@ -17,14 +17,21 @@ jobs:
       displayName: 'Install Pester Module'
 
     - pwsh: |
+        $functionsPath = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"
+        $privatePath = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'private')"
+        # Discover tests alongside functions AND private; if a root 'tests' folder exists (case-insensitive), also discover it. Coverage stays on source/functions only.
+        $runPaths = @($functionsPath)
+        if(test-path $privatePath){ $runPaths += $privatePath }
+        $testsFolder = Get-ChildItem -LiteralPath . -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq 'tests' } | Select-Object -First 1
+        if($testsFolder){ $runPaths += $testsFolder.FullName }
         $pesterConfigHash = @{
           Run = @{
             Passthru = $true
-            Path = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"
+            Path = $runPaths
           }
           CodeCoverage = @{
             Enabled = $true
-            Path = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"
+            Path = $(if(test-path $privatePath){ @($functionsPath,$privatePath) }else{ $functionsPath })
             OutputFormat = 'JaCoCo'
             OutputEncoding = 'UTF8'
             OutputPath = "$(Join-Path -Path . -ChildPath 'codeCoverage.xml')"

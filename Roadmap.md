@@ -9,11 +9,22 @@
 - [x] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
 - [x] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
 - [x] Automated PR to update docs
+- [x] Remove unnecessary scaffold folders
+  - filters
+- [x] Change any documentation links to point to the docs site root, so that links don't break between versions.
+- [x] Add a welcome message on New-MFProject, something that prints the ModuleForge version, a link to the docs site, and a comment like "Make something Great"
+- [x] The Pester invocation should check for a Tests folder, and if it exists, use that, otherwise stick to the existing behaviour
+- [x] Re-organise the source files into appropriate subfolders
+- [x] `Build-MFProject`: remove the dead `$nestedModules` variable and its always-`else` manifest block, and correct the `-NoExternalFiles` param help (it said validators go to a "nestedmodule" script, but the code routes them to `ScriptsToProcess`)
+- [x] `Build-MFProject`: decide on `$fileList` — removed the unused accumulation (manifest `FileList` is informational-only and not worth populating)
+- [x] Quality-pass cosmetics: replaced the "I'm not sure why I had this in here. Cannot remember." comment in `New-MFProject` (the trailing-slash trim) with an accurate description; replaced the em-dash (non-ASCII) in `docsUpdate.yml.example` with ASCII
+- [x] Review and update all exported function examples (the `.EXAMPLE` blocks) — ensure they are accurate, current, and reflect the latest parameters/behaviour. Extended into a full metadata pass: synopsis/description accuracy, param descriptions, param-block hygiene (PascalCase, types) across all functions
 
 ## v1.4.0
 
 - [ ] CLM compatibility check — scan for classes, `Add-Type`, COM objects and other CLM-incompatible constructs, surface as soft-fail advisory in PR pipeline
 - [ ] Add CLM compatibility marker to build output / module tags
+- [ ] Add a local helper (e.g. `Get-MFCommitPrefix`) so users can list the recommended commit prefixes from the command line -> build it as a single source of truth: extract the default `ChangeLogTypes` map into one place that `Get-MFGitChangeLog`, the helper, and (ideally) the docs/PR template all consume, so the prefix list cannot drift. Keep it read-only reference, not an interactive commit builder
 
 ## v1.5.0
 

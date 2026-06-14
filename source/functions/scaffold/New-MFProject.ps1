@@ -1,0 +1,170 @@
+function New-MFProject
+{
+    <#
+        .SYNOPSIS
+            Capture some basic parameters, and create the scaffold file structure
+            
+        .DESCRIPTION
+            The New-MFProject function streamlines the process of creating a scaffold (or basic structure) for a new PowerShell module.
+            Whether you're building a custom module for automation, administration, or any other purpose, this function sets up the initial directory structure, essential files, and variables and properties.
+            Think of it as laying the foundation for your module project.
+            
+        ------------
+        .EXAMPLE
+            New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -IconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
+
+            #### DESCRIPTION
+            This example demonstrates how to use the 'new-mfProject' function to create a scaffold for a new PowerShell module named "MyModule". 
+            It includes a description, authors, company name, tags, project URI, icon URI, license URI, required modules, external module dependencies, default command prefix, and private data.
+
+            #### OUTPUT
+            The function will create the directory structure and essential files for the new module "MyModule" in the current working directory. 
+            It will also set up the specified metadata and dependencies.
+            
+        .NOTES
+            Author: Adrian Andersson
+            
+    #>
+
+    [CmdletBinding(SupportsShouldProcess)]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingWriteHost', '', Justification='Welcome banner is intentional decorative console output, not pipeline data')]
+    PARAM(
+        #The name of your module
+        [Parameter(Mandatory)]
+        [string]$ModuleName,
+        #A description of your module. Is used as the descriptor in the module repository
+        [Parameter(Mandatory)]
+        [string]$Description,
+        #Minimum PowerShell version. Defaults to 7.2 as this is the current LTS version
+        [Parameter()]
+        [version]$MinimumPsVersion = [version]::new('7.2.0'),
+        #Who are the primary module authors. Can be updated later with Update-MFProject
+        [Parameter()]
+        [string[]]$ModuleAuthors,
+        #Company Name. If you are building this module for your organisation, this is where it goes
+        [Parameter()]
+        [string]$CompanyName,
+        #Module Tags. Used to help discoverability and compatibility in package repositories
+        [Parameter()]
+        [String[]]$ModuleTags,
+        #Root path of the module. Uses the current working directory by default
+        [alias('Path')]
+        [string]$ModulePath = $(get-location).path,
+        #Project URI. Will try and read from Git if you are using a git repository
+        [Parameter()]
+        [string]$ProjectUri = $(try{git config remote.origin.url}catch{$null}),
+        #A URL to an icon representing this module
+        [Parameter()]
+        [string]$IconUri,
+        #URI to use for your project's license. Will try and use the license file if a projectUri is found
+        [Parameter()]
+        [string]$LicenseUri,
+        #Name of the ModuleForge config file. Defaults to 'moduleForgeConfig.xml'
+        [Parameter(DontShow)]
+        [string]$ConfigFile = 'moduleForgeConfig.xml',
+        #Modules that must be imported into the global environment prior to importing this module
+        [Parameter()]
+        [Object[]]$RequiredModules,
+        #Modules that this module depends on but does not bundle - the consumer is expected to supply them
+        [Parameter()]
+        [String[]]$ExternalModuleDependencies,
+        #Default command prefix applied to all exported function names in the module manifest
+        [Parameter()]
+        [String]$DefaultCommandPrefix,
+        #Additional private data to include in the module manifest PrivateData section. Must be a hashtable - it is forwarded directly to New-ModuleManifest, which requires a hashtable
+        [Parameter()]
+        [hashtable]$PrivateData
+
+    )
+    begin{
+        #Return the script name when running verbose, makes it tidier
+        write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
+        #Return the sent variables when running debug
+        Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
+
+
+        #Strip a trailing slash or backslash so later join-path calls build clean paths
+        if($ModulePath -like '*\' -or $ModulePath -like '*/' )
+        {
+            Write-Verbose 'Superfluous \ or / character found at end of modulePath, removing'
+            $ModulePath = $ModulePath.Substring(0,$($ModulePath.Length-1))
+            Write-Verbose "New path = $ModulePath"
+        }
+
+        $configPath = join-path -path $ModulePath -childpath $configFile
+
+    }
+    
+    process{
+
+        write-verbose 'Validating Module Path'
+        if(!(test-path $ModulePath))
+        {
+            throw "ModulePath: $ModulePath not found"
+        }
+
+        write-verbose 'Checking for Existing Config'
+        if(test-path $configPath)
+        {
+            throw "Config already found at: $configPath"
+        }
+
+
+        write-verbose 'Create Folder Scaffold'
+        Add-MFFilesAndFolders -moduleRoot $ModulePath
+
+
+        #Should we use JSON for this, or CLIXML.
+        #The vote from the internet in July 2024 is stick to CLIXML for PowerShell centric projects. So we will do that
+        $moduleForgeReference = get-module 'ModuleForge'|Sort-Object version -Descending|Select-Object -First 1
+        if(! $moduleForgeReference)
+        {
+            $moduleForgeReference = get-module -listavailable 'ModuleForge'|Sort-Object version -Descending|Select-Object -First 1
+        }
+
+        write-verbose 'Create config file'
+        $config = [psCustomObject]@{
+            #The params set from this function
+            moduleName = $ModuleName
+            description = $description
+            minimumPsVersion = $minimumPsVersion
+            moduleAuthors = [array]$moduleAuthors
+            companyName = $companyName
+            tags = [array]$moduleTags
+            #Some automatic variables
+            projectUri = $projectUri
+            licenseUri = $licenseUri
+            guid = $(new-guid).guid
+            moduleforgeVersion = $(if($moduleForgeReference){ $moduleForgeReference.Version.ToString()}else{'n/a'})
+            iconUri = $iconUri
+            requiredModules = $RequiredModules
+            ExternalModuleDependencies = $ExternalModuleDependencies
+            DefaultCommandPrefix = $DefaultCommandPrefix
+            PrivateData = $PrivateData
+
+        }
+
+        
+
+        write-verbose "Exporting config to: $configPath"
+        if($PSCmdlet.ShouldProcess($configPath, 'Create new ModuleForge project configuration'))
+        {
+            try{
+                $config|export-clixml $configPath
+            }catch{
+                throw 'Error exporting config'
+            }
+
+            #Welcome banner - intentional decorative console output for a freshly scaffolded project
+            $mfVersion = if($moduleForgeReference){ $moduleForgeReference.Version.ToString() }else{ 'unknown' }
+            $docsUri = 'https://adrian-andersson.github.io/ModuleForge/'
+            Write-Host ''
+            Write-Host '  ModuleForge' -ForegroundColor Cyan -NoNewline
+            Write-Host " v$mfVersion" -ForegroundColor DarkCyan
+            Write-Host "  Project '$ModuleName' scaffolded." -ForegroundColor Green
+            Write-Host "  Docs: $docsUri" -ForegroundColor Gray
+            Write-Host '  Happy forging PowerShell.' -ForegroundColor Yellow
+            Write-Host ''
+        }
+    }
+}

@@ -116,25 +116,25 @@ Useful for:
 For quick local inspection without leaving the terminal (truncated):
 
 ```text
-.\source\functions\Invoke-MFBuildPreRelease.ps1
-     >--DEPENDS-ON--> .\source\functions\Build-MFProject.ps1
-         >--DEPENDS-ON--> .\source\functions\Get-MFFolderItemDetails.ps1
-             >--DEPENDS-ON--> .\source\functions\Get-MFFolderItems.ps1
-     >--DEPENDS-ON--> .\source\private\Get-MFProjectRoot.ps1
+.\source\functions\build\Invoke-MFBuildPreRelease.ps1
+     >--DEPENDS-ON--> .\source\functions\build\Build-MFProject.ps1
+         >--DEPENDS-ON--> .\source\functions\build\Get-MFFolderItemDetails.ps1
+             >--DEPENDS-ON--> .\source\functions\build\Get-MFFolderItems.ps1
+     >--DEPENDS-ON--> .\source\private\common\Get-MFProjectRoot.ps1
 ```
 
 Add `-OutputType MermaidMarkdown` to embed directly in docs -> GitHub renders it inline (truncated):
 
 ```mermaid
 flowchart TD
-'.\source\functions\Invoke-MFBuildPreRelease.ps1' --> '.\source\functions\Build-MFProject.ps1'
-'.\source\functions\Invoke-MFBuildPreRelease.ps1' --> '.\source\private\Get-MFProjectRoot.ps1'
-'.\source\functions\Build-MFProject.ps1' --> '.\source\functions\Get-MFFolderItemDetails.ps1'
-'.\source\functions\Build-MFProject.ps1' --> '.\source\functions\Get-MFFolderItems.ps1'
-'.\source\functions\Get-MFFolderItemDetails.ps1' --> '.\source\functions\Get-MFFolderItems.ps1'
-'.\source\functions\Write-MFModuleDocs.ps1' --> '.\source\private\ConvertTo-MFNavTitle.ps1'
-'.\source\functions\Write-MFModuleDocs.ps1' --> '.\source\private\Get-MFH1FromFile.ps1'
-'.\source\functions\New-MFProject.ps1' --> '.\source\private\add-mfFilesAndFolders.ps1'
+'.\source\functions\build\Invoke-MFBuildPreRelease.ps1' --> '.\source\functions\build\Build-MFProject.ps1'
+'.\source\functions\build\Invoke-MFBuildPreRelease.ps1' --> '.\source\private\common\Get-MFProjectRoot.ps1'
+'.\source\functions\build\Build-MFProject.ps1' --> '.\source\functions\build\Get-MFFolderItemDetails.ps1'
+'.\source\functions\build\Build-MFProject.ps1' --> '.\source\functions\build\Get-MFFolderItems.ps1'
+'.\source\functions\build\Get-MFFolderItemDetails.ps1' --> '.\source\functions\build\Get-MFFolderItems.ps1'
+'.\source\functions\docs\Write-MFModuleDocs.ps1' --> '.\source\private\docs\ConvertTo-MFNavTitle.ps1'
+'.\source\functions\docs\Write-MFModuleDocs.ps1' --> '.\source\private\docs\Get-MFH1FromFile.ps1'
+'.\source\functions\scaffold\New-MFProject.ps1' --> '.\source\private\scaffold\Add-MFFilesAndFolders.ps1'
 ```
 
 ## Getting Started
