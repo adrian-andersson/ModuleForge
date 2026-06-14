@@ -11,3 +11,4 @@ nav_order: 1
 - [Getting Started with ModuleForge and GitHub](./github-tutorial-01-getting-started.md)
 - [AstroCmdlets: An Advanced ModuleForge Tutorial](./github-tutorial-02-full-ModuleForge-Featureset.md)
 - [Publishing your private modules to PSGallery](./psGallery-Release-Workflow.md)
+- [Publishing a Documentation Site with GitHub Pages](./github-tutorial-04-documentation-site.md)
