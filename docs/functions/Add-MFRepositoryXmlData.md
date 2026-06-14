@@ -16,7 +16,7 @@ Uncompress a nuspec (Which is just a zip with a different extension), parse the 
 ## SYNTAX
 
 ```
-Add-MFRepositoryXmlData [-RepositoryUri] <String> [-NugetPackagePath] <String> [[-ExtractionPath] <Object>]
+Add-MFRepositoryXmlData [-RepositoryUri] <String> [-NugetPackagePath] <String> [[-ExtractionPath] <String>]
  [-Force] [[-Branch] <String>] [[-Commit] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -33,7 +33,7 @@ This function provides a work-around
 
 ### EXAMPLE 1
 ```
-Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/gituser/example' -NugetPackagePath = 'c:\example\module.1.2.3-beta.4.nupkg -branch 'main' -commit '1234123412341234Y'
+Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/gituser/example' -NugetPackagePath 'c:\example\module.1.2.3-beta.4.nupkg' -Branch 'main' -Commit '1234123412341234'
 ```
 
 #### DESCRIPTION
@@ -72,10 +72,11 @@ Accept wildcard characters: False
 ```
 
 ### -ExtractionPath
-TempExtractionPath
+Temporary path the nupkg is unpacked to before repacking.
+Defaults to a 'tempUnzip' folder in the system temp path
 
 ```yaml
-Type: Object
+Type: String
 Parameter Sets: (All)
 Aliases:
 

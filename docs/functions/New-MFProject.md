@@ -16,11 +16,11 @@ Capture some basic parameters, and create the scaffold file structure
 ## SYNTAX
 
 ```
-New-MFProject [-ModuleName] <String> [-description] <String> [[-minimumPsVersion] <Version>]
- [[-moduleAuthors] <String[]>] [[-companyName] <String>] [[-moduleTags] <String[]>] [[-ModulePath] <String>]
- [[-projectUri] <String>] [[-iconUri] <String>] [[-licenseUri] <String>] [[-configFile] <String>]
+New-MFProject [-ModuleName] <String> [-Description] <String> [[-MinimumPsVersion] <Version>]
+ [[-ModuleAuthors] <String[]>] [[-CompanyName] <String>] [[-ModuleTags] <String[]>] [[-ModulePath] <String>]
+ [[-ProjectUri] <String>] [[-IconUri] <String>] [[-LicenseUri] <String>] [[-ConfigFile] <String>]
  [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String>]
- [[-PrivateData] <Object[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [[-PrivateData] <Hashtable>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -34,7 +34,7 @@ Think of it as laying the foundation for your module project.
 
 ### EXAMPLE 1
 ```
-New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -RconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
+New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -ModuleAuthors "John Doe" -CompanyName "MyCompany" -ModuleTags "automation", "tasks" -ProjectUri "https://github.com/username/repo" -IconUri "https://example.com/icon.png" -LicenseUri "https://example.com/license" -RequiredModules @("Module1", "Module2") -ExternalModuleDependencies @("Dependency1", "Dependency2") -DefaultCommandPrefix "MyMod" -PrivateData @{}
 ```
 
 #### DESCRIPTION
@@ -62,7 +62,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -description
+### -Description
 A description of your module.
 Is used as the descriptor in the module repository
 
@@ -78,7 +78,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -minimumPsVersion
+### -MinimumPsVersion
 Minimum PowerShell version.
 Defaults to 7.2 as this is the current LTS version
 
@@ -94,9 +94,9 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -moduleAuthors
+### -ModuleAuthors
 Who are the primary module authors.
-Can expand later with add-mfmoduleAuthors command
+Can be updated later with Update-MFProject
 
 ```yaml
 Type: String[]
@@ -110,7 +110,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -companyName
+### -CompanyName
 Company Name.
 If you are building this module for your organisation, this is where it goes
 
@@ -126,7 +126,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -moduleTags
+### -ModuleTags
 Module Tags.
 Used to help discoverability and compatibility in package repositories
 
@@ -158,9 +158,9 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -projectUri
+### -ProjectUri
 Project URI.
-Will try and read from Git if your using a git repository.
+Will try and read from Git if you are using a git repository
 
 ```yaml
 Type: String
@@ -174,8 +174,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -iconUri
-A URL to an icon representing this module.
+### -IconUri
+A URL to an icon representing this module
 
 ```yaml
 Type: String
@@ -189,8 +189,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -licenseUri
-URI to use for your projects license.
+### -LicenseUri
+URI to use for your project's license.
 Will try and use the license file if a projectUri is found
 
 ```yaml
@@ -205,7 +205,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -configFile
+### -ConfigFile
 Name of the ModuleForge config file.
 Defaults to 'moduleForgeConfig.xml'
 
@@ -237,7 +237,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExternalModuleDependencies
-Modules that must be imported into the global environment prior to importing this module
+Modules that this module depends on but does not bundle - the consumer is expected to supply them
 
 ```yaml
 Type: String[]
@@ -267,10 +267,11 @@ Accept wildcard characters: False
 ```
 
 ### -PrivateData
-Additional private data to include in the module manifest PrivateData section
+Additional private data to include in the module manifest PrivateData section.
+Must be a hashtable - it is forwarded directly to New-ModuleManifest, which requires a hashtable
 
 ```yaml
-Type: Object[]
+Type: Hashtable
 Parameter Sets: (All)
 Aliases:
 

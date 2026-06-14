@@ -11,7 +11,7 @@ schema: 2.0.0
 # Get-MFLatestSemverFromBuildManifest
 
 ## SYNOPSIS
-If you are manually building, and you have access to the \build folder, you can use this to get the next semver
+Read the current module version from the compiled manifest in the build folder, returned as a semver object
 
 ## SYNTAX
 
@@ -38,7 +38,7 @@ Get-MFLatestSemverFromBuildManifest
 Import build\module\modulemanifest.psd1
 Find the prerelease tag(if present) and module version.
 I.e.
-module version 1.1.0 prerelease tag prev003 = 1.1.0-prrev003
+module version 1.1.0 prerelease tag prev003 = 1.1.0-prev003
 
 
 #### OUTPUT
@@ -103,7 +103,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### [semver] - Returns a Semantec Version object
+### [semver] - Returns a Semantic Version object
 ## NOTES
 Author: Adrian Andersson
 

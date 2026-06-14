@@ -19,7 +19,7 @@ Update the parameters of a moduleForge project
 Update-MFProject [[-ModuleName] <String>] [[-Description] <String>] [[-MinimumPsVersion] <Version>]
  [[-ModuleAuthors] <String[]>] [[-CompanyName] <String>] [[-ModuleTags] <String[]>] [[-ProjectUri] <String>]
  [[-IconUri] <String>] [[-LicenseUri] <String>] [[-RequiredModules] <Object[]>]
- [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String[]>] [[-PrivateData] <Object[]>]
+ [[-ExternalModuleDependencies] <String[]>] [[-DefaultCommandPrefix] <String>] [[-PrivateData] <Hashtable>]
  [[-ModulePath] <String>] [[-ConfigFile] <String>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
@@ -216,7 +216,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExternalModuleDependencies
-Modules that must be imported into the global environment prior to importing this module
+Modules that this module depends on but does not bundle - the consumer is expected to supply them
 
 ```yaml
 Type: String[]
@@ -234,7 +234,7 @@ Accept wildcard characters: False
 If you are specifying a Default Command Prefix via your manifest, this will update that prefix
 
 ```yaml
-Type: String[]
+Type: String
 Parameter Sets: (All)
 Aliases:
 
@@ -246,10 +246,11 @@ Accept wildcard characters: False
 ```
 
 ### -PrivateData
-If you have any additional Private Data you want to add to your module manifest, add it here
+If you have any additional Private Data you want to add to your module manifest, add it here.
+Must be a hashtable - it is forwarded directly to New-ModuleManifest, which requires a hashtable
 
 ```yaml
-Type: Object[]
+Type: Hashtable
 Parameter Sets: (All)
 Aliases:
 

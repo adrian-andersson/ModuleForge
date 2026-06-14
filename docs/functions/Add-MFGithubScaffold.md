@@ -60,8 +60,7 @@ Should have a .github folder, with workflows and a PR template
 
 ### -ModulePath
 Root path of the module.
-Uses the current working directory by default.
-Aliased path, but use modulePath as paramname to avoid confusion
+Uses the current working directory by default
 
 ```yaml
 Type: String

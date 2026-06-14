@@ -28,7 +28,7 @@ Skips existing files by default.
 Includes Invoke-MFPester.ps1  - a standalone Pester runner that does not depend on
 the ModuleForge module, safe for use in clean CI environments.
 
-This function is also called automatically by add-mfFilesAndFolders during project
+This function is also called automatically by Add-MFFilesAndFolders during project
 creation, at which point moduleForgeConfig.xml may not yet exist.
 A warning is
 emitted in that case but the copy proceeds normally.
