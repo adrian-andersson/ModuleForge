@@ -48,10 +48,10 @@ Get-MFNextSemver -Version $Version -Increment 'Minor' -PreRelease
 
 #### DESCRIPTION
 This example takes a SemVer object with version '1.0.0', increments the minor version, and adds a pre-release tag.
-The output will be '1.1.0-prerelease.1'.
+With no -PreReleaseLabel supplied it uses the default 'pre' label and a zero-padded counter, so the output will be '1.1.0-prev001'.
 
 #### OUTPUT
-'1.1.0-prerelease.1'
+'1.1.0-prev001'
 
 ### EXAMPLE 2
 ```
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -StableRelease
-Is this a prerelease
+Is this a stable release - drops the prerelease tag from a prerelease version
 
 ```yaml
 Type: SwitchParameter
@@ -167,7 +167,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### [semver] - Will accept a Semver from pipeline or via direct assignment
 ## OUTPUTS
 
-### [semver] - Returns a Semantec Version object that should increment, based on the other parameters, the input semver
+### [semver] - Returns a Semantic Version object incremented from the input semver, based on the other parameters
 ## NOTES
 Author: Adrian Andersson
 

@@ -54,14 +54,13 @@ Add-MFAzureDevOpsScaffold -Force
 Copies the \`.azuredevops\` scaffold and overwrites existing files in \`.azuredevops\` directory
 
 #### OUTPUT
-Should have a .azuredevops folder, with workflows and a PR template
+Should have a .azuredevops folder, with pipelines and a PR template
 
 ## PARAMETERS
 
 ### -ModulePath
 Root path of the module.
-Uses the current working directory by default.
-Aliased path, but use modulePath as paramname to avoid confusion
+Uses the current working directory by default
 
 ```yaml
 Type: String

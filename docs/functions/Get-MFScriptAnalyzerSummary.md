@@ -34,11 +34,16 @@ Get-MFScriptAnalyzerSummary -SourcePath '.\source\functions'
 ```
 
 #### DESCRIPTION
-Runs PSScriptAnalyzer over all function files in the specified path, provides a summary
-
+Runs PSScriptAnalyzer over all function files in the specified path and returns a summary object.
 
 #### OUTPUT
-Copy of the output of this line
+Errors           : 0
+Warnings         : 3
+Informational    : 12
+TopErrors        :
+TopWarnings      : {@{Name=PSUseShouldProcessForStateChangingFunctions; Count=2}, @{Name=PSAvoidUsingWriteHost; Count=1}}
+TopInformational : {@{Name=PSAvoidUsingCmdletAliases; Count=12}}
+TopFlaggedFiles  : {@{ScriptName=Build-MFProject.ps1; Counter=E:0 W:2 I:4; Weight=34}}
 
 ## PARAMETERS
 
@@ -109,7 +114,7 @@ Accept wildcard characters: False
 ### -ExcludeRules
 Set this for what rules to exclude.
 Noisy rule.
-Preference script readability over strict whitespace adherance
+Preference script readability over strict whitespace adherence
 
 ```yaml
 Type: String[]
@@ -119,7 +124,7 @@ Aliases:
 Required: False
 Position: 4
 Default value: @(
-            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherance
+            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
         )
 Accept pipeline input: False
 Accept wildcard characters: False

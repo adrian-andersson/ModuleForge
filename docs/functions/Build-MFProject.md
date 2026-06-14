@@ -119,8 +119,8 @@ Accept wildcard characters: False
 ```
 
 ### -NoExternalFiles
-Use this to not put anything in nestedmodules, making everything a single file.
-By default validators are put in a separate nestedmodule script to ensure they are loaded properly
+Use this to keep everything in a single module file.
+By default validators (and exported classes/enums) are written to separate scripts loaded via ScriptsToProcess so they resolve correctly; this switch inlines them into the module file instead
 
 ```yaml
 Type: SwitchParameter

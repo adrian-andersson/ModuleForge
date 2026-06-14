@@ -43,7 +43,7 @@ It ensures the Git environment is correctly set up and handles errors if Git is 
 Get-MFGitChangeLog
 ```
 
-DESCRIPTION
+#### DESCRIPTION
 Call the \`Get-MFGitChangeLog\` function with default change Log Types.
 The function will generate a markdown changelog that can be sent to release or artifact notes.
 
@@ -65,7 +65,7 @@ Get-MFGitChangeLog -ChangeLogTypes @{
 }
 ```
 
-DESCRIPTION
+#### DESCRIPTION
 This example demonstrates how to call the \`Get-MFGitChangeLog\` function with a custom set of changelog types, in case you want to control your own
 
 #### OUTPUT
@@ -85,7 +85,7 @@ Version: v1.0.0 --\> v1.1.0
 Get-MFGitChangeLog -All
 ```
 
-DESCRIPTION
+#### DESCRIPTION
 Generates a full markdown changelog with all versions.
 
 #### OUTPUT
@@ -108,7 +108,7 @@ Generates a full markdown changelog with all versions.
 get-mfGitChangeLog -fromLastTag
 ```
 
-DESCRIPTION
+#### DESCRIPTION
 Generates markdown changelog from commit messages from the last tag until now (Head)
 
 #### OUTPUT

@@ -11,12 +11,7 @@ schema: 2.0.0
 # Resolve-MFModuleCase
 
 ## SYNOPSIS
-Nuget specs enforce all lowercase.
-Pwsh specs recommend pascal case for module names.
-This is fine until you install a module from Nuget 2+ on a *NIX platform
-It will install fine, but the folder case will be lowercase, and the manifest will be whatever the module name is
-This means discoverability (Get-Module, Import-Module) are effectively broken
-This function attempts to fix that discrepency by renaming the module folder to the same as the manifest
+Fix module folder casing after a NuGet install so Get-Module and Import-Module can discover the module again
 
 ## SYNTAX
 
@@ -26,11 +21,20 @@ Resolve-MFModuleCase [-ModuleName] <String> [[-ModuleFolder] <String[]>] [-Progr
 ```
 
 ## DESCRIPTION
+NuGet package IDs are enforced as all-lowercase, but PowerShell convention is PascalCase module names.
+When a module is installed from a NuGet v2+ feed on a case-sensitive (*NIX) filesystem, the folder is
+created in lowercase while the manifest keeps its PascalCase name.
+That folder/manifest mismatch
+effectively breaks discoverability (Get-Module, Import-Module).
+This function corrects it by renaming the
+module folder to match the manifest name.
+
+How it works:
 Try and find a module folder based on a module name
 If module folders are found, for each one, try and find the latest Semver version
 If Semvers are identified, choose the latest
 If the latest version folder (As identified above) has a manifest, get the manifest name
-Case-Compare the manifest name with the folder name. 
+Case-Compare the manifest name with the folder name.
 If the name does not match, try and rename the folder
 On rename, sleep for 4 seconds, then proceed to other found locations and repeat if necessary
 
@@ -47,7 +51,7 @@ Resolve-MFModuleCase -ModuleName moduleforgecasetest -Verbose
 VERBOSE: ===========Executing Resolve-MFModuleCase===========
 VERBOSE: Found 1 locations.
 Getting latest manifest
-VERBOSE: Checking folder C:\Users\example\Documents\PowerShell\Modulesmmoduleforgecasetest
+VERBOSE: Checking folder C:\Users\example\Documents\PowerShell\Modules\moduleforgecasetest
 VERBOSE: Found latest version of: 1.0.1
 VERBOSE: Found Manifest name with: ModuleForgeCaseTest
 WARNING: Case mismatch between module folder moduleforgecasetest and ModuleForgeCaseTest
