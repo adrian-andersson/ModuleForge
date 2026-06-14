@@ -38,12 +38,12 @@ jobs:
         run: |
           $VerbosePreference = 'Continue'
 
-          # Auto-trigger always targets latest stable; manual trigger respects the selector input
+          # Auto-trigger documents the latest release (prerelease or stable); manual trigger respects the selector input
           $releaseSelector = if('${{ github.event_name }}' -eq 'workflow_dispatch')
           {
             '${{ github.event.inputs.release_selector }}'
           }else{
-            'latest-stable'
+            'latest-release'
           }
           write-verbose "Release selector: $releaseSelector"
 
@@ -66,19 +66,6 @@ jobs:
           if(!$release)
           {
             throw "No matching release found for selector: $releaseSelector"
-          }
-
-          # For the auto-trigger: if the most recently created release is a prerelease, the workflow
-          # was triggered by a prerelease build — skip and wait for a stable release.
-          if('${{ github.event_name }}' -eq 'workflow_run')
-          {
-            $latestRelease = $releases | Select-Object -First 1
-            if($latestRelease.isPrerelease)
-            {
-              write-verbose '⚠️  Most recent release is a prerelease — skipping docs update'
-              "skip=true" | Out-File $env:GITHUB_OUTPUT -Append
-              exit 0
-            }
           }
 
           write-verbose "Selected release: $($release.tagName) — isPrerelease: $($release.isPrerelease)"
