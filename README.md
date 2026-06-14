@@ -21,9 +21,9 @@ Install-PSResource -Name ModuleForge
 
 ## Why ModuleForge?
 
-Setting up a PowerShell module correctly is tedious. Consistent folder structure, semantic versioning, changelog automation, CI/CD pipelines for both GitHub and Azure DevOps, Pester integration, PSResourceGet compatibility: There is a lot to know, a lot to get right, and even more to maintain across projects.
+Other ecosystems made this effortless years ago: one command scaffolds a React app, and well-run Terraform projects tag and version everything automatically. PowerShell development deserves the same DevOps niceties. ModuleForge brings them in a single, opinionated toolchain for structure, versioning, changelogs, testing, and publishing, that gets out of your way once you're up and running.
 
-ModuleForge solves this with a single, opinionated CI/CD toolchain that gets out of your way once you're up and running.
+Read the full rationale in **[Why ModuleForge Exists](https://adrian-andersson.github.io/ModuleForge/why-moduleforge-exists.html)**.
 
 ## Key Features
 
@@ -139,7 +139,15 @@ flowchart TD
 
 ## Getting Started
 
-Full tutorials, function reference, and examples are available in the **[ModuleForge documentation](https://adrian-andersson.github.io/ModuleForge/)**.
+Install ModuleForge, scaffold a project, and wire up CI/CD in three commands:
+
+```powershell
+Install-PSResource -Name ModuleForge
+New-MFProject -ModuleName 'MyModule' -Description 'What my module does'
+Add-MFGithubScaffold   # or Add-MFAzureDevOpsScaffold
+```
+
+Commit the scaffold to your default branch and you have a module that builds, tests, and releases itself. Full tutorials, function reference, and examples are available in the **[ModuleForge documentation](https://adrian-andersson.github.io/ModuleForge/)**.
 
 ---
 
