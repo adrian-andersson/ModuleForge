@@ -12,15 +12,7 @@ ModuleForge is opinionated by design. That is its strength in many situations, a
 
 ## The Problem It Solves
 
-Setting up a PowerShell module with a consistent structure, meaningful versioning, automated tests, and a working CI/CD pipeline involves a lot of decisions and a lot of plumbing:
-
-- Where do functions, classes, and private helpers live?
-- How does the compiled `.psm1` get generated?
-- What constitutes a breaking change, and what increments which version component?
-- How do PRs surface test results without manual intervention?
-- What format does PSGallery actually accept for prerelease version strings?
-
-Most teams answer these questions inconsistently across projects, or copy-paste pipelines from a previous repo and hope they still work. ModuleForge makes those decisions once and encodes them into a scaffold that just works from day one.
+ModuleForge takes the pile of decisions and plumbing that every module needs (consistent structure, meaningful versioning, automated tests, a working CI/CD pipeline) and makes them once, encoding them into a scaffold that works from day one. That motivation is covered in full on [Why ModuleForge Exists](../why-moduleforge-exists.md); this page focuses on how ModuleForge stacks up against the tools you might otherwise reach for.
 
 ---
 

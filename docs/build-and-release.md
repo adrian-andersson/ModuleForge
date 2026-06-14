@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Build and Release Guide
-nav_order: 4
+nav_order: 5
 ---
 
 # Build and Release Guide
