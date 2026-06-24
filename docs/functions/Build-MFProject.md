@@ -18,7 +18,7 @@ Grab all the files from source, compile them into a single PowerShell module fil
 ```
 Build-MFProject [-Version] <SemanticVersion> [[-ModulePath] <String>] [[-ConfigFile] <String>] [-ExportClasses]
  [-ExportEnums] [-NoExternalFiles] [[-ReleaseNotes] <String>] [-IncludeReleaseNotesInDescription]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-NoBuildProvenance] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -151,6 +151,24 @@ Accept wildcard characters: False
 
 ### -IncludeReleaseNotesInDescription
 If set, appends the release notes to the module description in the manifest
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -NoBuildProvenance
+If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForgeBuild* keys in
+the manifest PrivateData).
+Provenance is on by default - the SHA256 hashes it records match the checksums
+published on the ModuleForge release, so impacted builds can be traced if a vulnerability is found in the tooling
 
 ```yaml
 Type: SwitchParameter
