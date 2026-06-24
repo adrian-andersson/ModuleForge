@@ -50,9 +50,14 @@ function Build-MFProject
         [string]$ReleaseNotes,
         #If set, appends the release notes to the module description in the manifest
         [Parameter()]
-        [switch]$IncludeReleaseNotesInDescription
+        [switch]$IncludeReleaseNotesInDescription,
+        #If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForgeBuild* keys in
+        #the manifest PrivateData). Provenance is on by default - the SHA256 hashes it records match the checksums
+        #published on the ModuleForge release, so impacted builds can be traced if a vulnerability is found in the tooling
+        [Parameter()]
+        [switch]$NoBuildProvenance
 
-        
+
     )
     begin{
         #Return the script name when running verbose, makes it tidier
@@ -134,15 +139,42 @@ function Build-MFProject
             }
         }
 
-        $moduleForgeDetails = (get-module 'ModuleForge' |Sort-Object -Property Version -Descending|select-object -First 1)
-        if($moduleForgeDetails)
+        #Capture the ModuleForge version (including any prerelease label) and the SHA256 of the ModuleForge
+        #psd1/psm1 used for this build. The prerelease label lives in PrivateData.PSData.Prerelease because a
+        #manifest ModuleVersion cannot hold a SemVer prerelease tag, so get-module's .Version alone drops it.
+        #The hashes provide build provenance - they match the SHA256 checksums published on the corresponding
+        #ModuleForge GitHub release, letting a consumer verify which ModuleForge build produced this module.
+        #Suppressed entirely (header and manifest keys) when -NoBuildProvenance is set.
+        if($NoBuildProvenance)
         {
-            $mfVersion = $moduleForgeDetails.version.tostring()
+            write-verbose 'NoBuildProvenance set; skipping ModuleForge build provenance'
+            $moduleHeader = $null
         }else{
-            $mfVersion = 'unknown'
-        }
+            $moduleForgeDetails = (get-module 'ModuleForge' |Sort-Object -Property Version -Descending|select-object -First 1)
+            if($moduleForgeDetails)
+            {
+                $mfVersion = $moduleForgeDetails.version.tostring()
+                $mfPrerelease = $moduleForgeDetails.PrivateData.PSData.Prerelease
+                if($mfPrerelease)
+                {
+                    $mfVersion = "$mfVersion-$mfPrerelease"
+                }
+                #Hash the ModuleForge psd1/psm1 from the loaded module base. Guard each so a hashing failure
+                #(e.g. an unusual module layout) degrades to 'unknown' rather than failing the build.
+                $mfPsd1Path = join-path -path $moduleForgeDetails.ModuleBase -ChildPath 'ModuleForge.psd1'
+                $mfPsm1Path = join-path -path $moduleForgeDetails.ModuleBase -ChildPath 'ModuleForge.psm1'
+                $mfPsd1Hash = if(test-path $mfPsd1Path){(Get-FileHash -Path $mfPsd1Path -Algorithm SHA256).Hash.ToLower()}else{'unknown'}
+                $mfPsm1Hash = if(test-path $mfPsm1Path){(Get-FileHash -Path $mfPsm1Path -Algorithm SHA256).Hash.ToLower()}else{'unknown'}
+            }else{
+                $mfVersion = 'unknown'
+                $mfPsd1Hash = 'unknown'
+                $mfPsm1Hash = 'unknown'
+            }
 
-        $moduleHeader = "<#`nModule created by ModuleForge`n`t ModuleForge Version: $mfVersion`n`tBuildDate: $(get-date -format s)`n#>"
+            #Single timestamp shared by the psm1 header and the manifest provenance block
+            $mfBuildDate = get-date -format s
+            $moduleHeader = "<#`nModule built with ModuleForge`n`t ModuleForge Version: $mfVersion`n`tModuleForge psd1 SHA256: $mfPsd1Hash`n`tModuleForge psm1 SHA256: $mfPsm1Hash`n`tBuildDate: $mfBuildDate`n#>"
+        }
         $sourceFolder = join-path -path $ModulePath -childPath 'source'
 
         #What folders do we need to copy the files contents of
@@ -178,8 +210,15 @@ function Build-MFProject
 
         
         #Start creating the moduleFile
-        write-verbose 'Adding Header Comment'
-        $moduleHeader|out-file $moduleFile -Force
+        if($moduleHeader)
+        {
+            write-verbose 'Adding Header Comment'
+            $moduleHeader|out-file $moduleFile -Force
+        }else{
+            #No provenance header (-NoBuildProvenance); still need to initialise/overwrite the module file
+            write-verbose 'Skipping header comment; initialising empty module file'
+            $null = new-item -Path $moduleFile -ItemType File -Force
+        }
 
 
         
@@ -398,6 +437,20 @@ function Build-MFProject
             #Recast to a clean hashtable. The value comes back from Import-Clixml as a deserialized hashtable
             #which New-ModuleManifest rejects with 'PrivateData ... must be a hash table' when Tags/ProjectUri/etc are also set
             $splatManifest.PrivateData = [hashtable]$config.PrivateData
+        }elseif(!$NoBuildProvenance){
+            $splatManifest.PrivateData = @{}
+        }
+        #ModuleForge build provenance. Added as flat scalar keys (not a nested hashtable) because
+        #New-ModuleManifest stringifies a nested hashtable in custom PrivateData to 'System.Collections.Hashtable',
+        #losing the values. Scalar keys serialise natively and sit alongside the PSData block the cmdlet generates.
+        #These SHA256 hashes match the checksums published on the corresponding ModuleForge GitHub release,
+        #so a consumer can verify which ModuleForge build produced this module. Skipped when -NoBuildProvenance is set.
+        if(!$NoBuildProvenance)
+        {
+            $splatManifest.PrivateData.ModuleForgeBuildVersion    = $mfVersion
+            $splatManifest.PrivateData.ModuleForgeBuildPsd1SHA256 = $mfPsd1Hash
+            $splatManifest.PrivateData.ModuleForgeBuildPsm1SHA256 = $mfPsm1Hash
+            $splatManifest.PrivateData.ModuleForgeBuildDate       = $mfBuildDate
         }
 
         #FunctionsToExport

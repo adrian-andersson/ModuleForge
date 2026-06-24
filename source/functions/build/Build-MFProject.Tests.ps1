@@ -223,6 +223,27 @@ describe 'Build-MFProject' {
         $privateData.PSData.IconUri | Should -Be 'https://example.com/logo.png'
     }
 
+    It 'Should record ModuleForge build provenance in the manifest PrivateData' {
+        #Flat scalar keys let a consumer verify which ModuleForge build produced the module, by comparing
+        #these SHA256 hashes against the checksums published on the ModuleForge release. They are flat rather
+        #than a nested hashtable because New-ModuleManifest stringifies nested hashtables in custom PrivateData
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $privateData = (Import-PowerShellDataFile -Path $psd).PrivateData
+        $privateData.ModuleForgeBuildVersion | Should -Not -BeNullOrEmpty
+        #Hashes are lower-case SHA256 hex, or 'unknown' when the ModuleForge files cannot be located
+        $privateData.ModuleForgeBuildPsd1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
+        $privateData.ModuleForgeBuildPsm1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
+        $privateData.ModuleForgeBuildDate | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Should include the ModuleForge version and hashes in the psm1 header' {
+        $psm1 = (get-childItem -path 'build' -recurse -filter '*.psm1').fullname
+        $header = Get-Content -Path $psm1 -Raw
+        $header | Should -BeLike '*Module built with ModuleForge*'
+        $header | Should -BeLike '*ModuleForge psd1 SHA256:*'
+        $header | Should -BeLike '*ModuleForge psm1 SHA256:*'
+    }
+
 
 
 }
@@ -339,6 +360,29 @@ describe 'Build-MFProject with ReleaseNotes' {
     it 'Should have release notes appended to the description' {
         $manifest = Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
         $manifest.Description | Should -BeLike '*Test release notes*'
+    }
+}
+
+describe 'Build-MFProject with NoBuildProvenance' {
+    beforeAll {
+        Set-Location $testPath
+        Build-MFProject -version '1.0.0-PREv005' -NoBuildProvenance
+    }
+    it 'Should not write ModuleForge build provenance to the manifest' {
+        $privateData = (Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname).PrivateData
+        $privateData.ModuleForgeBuildVersion | Should -BeNullOrEmpty
+        $privateData.ModuleForgeBuildPsd1SHA256 | Should -BeNullOrEmpty
+        $privateData.ModuleForgeBuildPsm1SHA256 | Should -BeNullOrEmpty
+    }
+    it 'Should keep any custom PrivateData even with provenance suppressed' {
+        #The switch only drops ModuleForge provenance, not the author's own PrivateData
+        $privateData = (Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname).PrivateData
+        $privateData.TestKey | Should -Be 'TestValue'
+    }
+    it 'Should not stamp the ModuleForge provenance header in the psm1' {
+        $psm1 = Get-Content -Path (get-childItem -path 'build' -recurse -filter '*.psm1').fullname -Raw
+        $psm1 | Should -Not -BeLike '*built with ModuleForge*'
+        $psm1 | Should -Not -BeLike '*ModuleForge psm1 SHA256:*'
     }
 }
 
