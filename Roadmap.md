@@ -1,30 +1,13 @@
 # ModuleForge Roadmap
 
-## v1.3.0
-
-- [x] Add `Resolve-MFModuleCase` to fix NuGet package ID casing for GitHub Packages
-- [x] Add PSGallery publish YAML — install dependencies, pull module from git, run `Resolve-MFModuleCase`, validate with `Get-Module`, publish to PSGallery
-- [x] Add a function/method to invoke Pester locally
-- [x] Clean up function documentation — fill missing parameter descriptions in `Build-MFProject`, `New-MFProject`, `Get-MFLatestSemverFromBuildManifest`, and `Get-MFDependencyTree`; consider stripping `ProgressAction` from generated docs
-- [x] Update `Write-MFModuleDocs` to inject Just The Docs front matter (`parent:`, `title:`) for proper grouped sidebar navigation
-- [x] Update `Write-MFModuleDocs` to use each page's H1 heading as link text in the index rather than the filename
-- [x] Automated PR to update docs
-- [x] Remove unnecessary scaffold folders
-  - filters
-- [x] Change any documentation links to point to the docs site root, so that links don't break between versions.
-- [x] Add a welcome message on New-MFProject, something that prints the ModuleForge version, a link to the docs site, and a comment like "Make something Great"
-- [x] The Pester invocation should check for a Tests folder, and if it exists, use that, otherwise stick to the existing behaviour
-- [x] Re-organise the source files into appropriate subfolders
-- [x] `Build-MFProject`: remove the dead `$nestedModules` variable and its always-`else` manifest block, and correct the `-NoExternalFiles` param help (it said validators go to a "nestedmodule" script, but the code routes them to `ScriptsToProcess`)
-- [x] `Build-MFProject`: decide on `$fileList` — removed the unused accumulation (manifest `FileList` is informational-only and not worth populating)
-- [x] Quality-pass cosmetics: replaced the "I'm not sure why I had this in here. Cannot remember." comment in `New-MFProject` (the trailing-slash trim) with an accurate description; replaced the em-dash (non-ASCII) in `docsUpdate.yml.example` with ASCII
-- [x] Review and update all exported function examples (the `.EXAMPLE` blocks) — ensure they are accurate, current, and reflect the latest parameters/behaviour. Extended into a full metadata pass: synopsis/description accuracy, param descriptions, param-block hygiene (PascalCase, types) across all functions
-
 ## v1.4.0
 
 - [ ] CLM compatibility check — scan for classes, `Add-Type`, COM objects and other CLM-incompatible constructs, surface as soft-fail advisory in PR pipeline
 - [ ] Add CLM compatibility marker to build output / module tags
 - [ ] Add a local helper (e.g. `Get-MFCommitPrefix`) so users can list the recommended commit prefixes from the command line -> build it as a single source of truth: extract the default `ChangeLogTypes` map into one place that `Get-MFGitChangeLog`, the helper, and (ideally) the docs/PR template all consume, so the prefix list cannot drift. Keep it read-only reference, not an interactive commit builder
+- [ ] Dependency manifest (e.g. `dependencies.json`) imported at **both** Pester-test and Build-and-Release time. Must support choosing a source — PSGallery, MAR (Microsoft Artifact Registry / private ACR), or a private feed — and version pinning. Non-trivial; needs a design pass before implementation. (Related Summit theme: secure supply chain / ACR is "the future of PowerShell modules".)
+- [ ] Allow custom PSScriptAnalyzer settings — detect a `PSScriptAnalyzer` folder and run it as an **additive** pass on top of the built-in rules (don't replace the opinionated defaults). Candidate rule sources from Summit notes: cross-platform-compatibility rules, InjectionHunter (security/injection), and possibly powering the CLM compatibility check above.
+- [ ] Optional code-signing support in the pipeline — keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below.
 
 ## v1.5.0
 
@@ -33,23 +16,19 @@
 - [ ] Add `skip-changelog: true` commit footer token — exclude individual commits from changelog without manual filtering
 - [ ] Consider `ai-assisted: true` commit footer token — surface AI-assisted commits in changelog (under consideration)
 
-## README
-
-- [x] Add something to showcase the DependencyTree function
-
 ## Docs Site
 
-- [x] Write "Why ModuleForge" background page — origin story, cross-pollination from Terraform/React patterns, pure PowerShell decision
-- [x] Add commit prefix reference page — covered in `CommitStrategy_And_PRProcess.md`
 - [ ] Add document signing tutorial — working YAML example showing how to bolt signing onto the existing pipeline
-- [x] Add note on test-alongside-function convention and why it works — covered in `Pester.md`
-- [x] Add `Get-MFDependencyTree` Mermaid output example to function page
-- [x] Investigate GH Pages light/dark mode — implemented Just The Docs theme with dark colour scheme
-- [x] Add a list of bugs, quirks, and behaviours that were worked around in the making of this project, including:
-  - Upper-Case Azure-DevOps Packages + Nuget + PreRelease Tags
-  - Unpacking the NUPKG to inject the source repository URL to ensure compatibility with NUGET v3 and GHPackages
-  - Load order of non-exported items (Classes, Enums)
-  - Pester-specific work-arounds
+
+## Discoverability / SEO
+
+Improve SEO
+
+- [ ] **Add `jekyll-sitemap` plugin** to docs `_config.yml` (already have `jekyll-seo-tag`; sitemap is on the GH Pages allowlist) so crawlers get a `sitemap.xml`.
+- [ ] **Put the keyword in the title** — change docs `title` / add a `tagline` so page `<title>`s carry "PowerShell" (e.g. `ModuleForge — PowerShell Module Build Tool`).
+- [ ] **Add an icon + OG/social image** — `iconUri` in the manifest is empty and links unfurl blank; a social card lifts click-through and backlinks.
+- [ ] **Register with Google Search Console** — verify the site and submit the sitemap; lets us see actual indexing/ranking.
+- [ ] **Build backlinks** — PR to `awesome-powershell`, a dev.to / r/PowerShell launch post; the 2027 Summit talk is itself a backlink driver.
 
 ## Considerations
 
