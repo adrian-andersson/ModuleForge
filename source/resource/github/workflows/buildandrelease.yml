@@ -24,7 +24,7 @@ on:
       moduleforge_release_toggle:
         description: 'Select ModuleForge Release Type'
         required: false
-        default: 'stable'
+        default: 'moduleforge-latest-stable-only'
         type: choice
         options:
           - moduleforge-latest-stable-only
