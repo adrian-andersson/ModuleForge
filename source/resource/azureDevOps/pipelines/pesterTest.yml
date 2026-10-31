@@ -65,12 +65,14 @@ jobs:
           write-host "##vso[task.setvariable variable=pesterVersion;isOutput=true]$($pesterCapture.Version)"
         }
         if($pesterFailed){throw 'Error with Pester invocation'}
+        if($pesterCapture.Result -eq 'Failed'){throw "Pester failed: $($pesterCapture.FailedCount) test(s), $($pesterCapture.FailedContainersCount) container(s)"}
 
       name: RunPester
       displayName: 'Execute Pester Testing'
 
 
     - task: PublishCodeCoverageResults@2
+      condition: succeededOrFailed() #Still publish coverage when tests fail
       inputs:
         summaryFileLocation: '$(Build.SourcesDirectory)/codeCoverage.xml'
       displayName: 'Publish Code Coverage Results'

@@ -112,6 +112,7 @@ jobs:
           }
 
           if($pesterFailed){throw 'Error with Pester invocation'}
+          if($pesterCapture.Result -eq 'Failed'){throw "Pester failed: $($pesterCapture.FailedCount) test(s), $($pesterCapture.FailedContainersCount) container(s)"}
           
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
@@ -123,13 +124,17 @@ jobs:
   codeCoverageCheck:
       needs: pesterTest
       runs-on: ubuntu-latest
+      permissions: {} #Only compares two numbers, so it needs no token access
       continue-on-error: true
       steps:
         - name: Check Coverage Threshold
           shell: pwsh
+          env:
+            COVERAGE: ${{ needs.pesterTest.outputs.coverage }} #PR code writes this value, so keep it out of the script text
+            COVERAGE_TARGET: ${{ needs.pesterTest.outputs.coverageTarget }}
           run: | 
-            $coverage = [int]"${{ needs.pesterTest.outputs.coverage }}"
-            $coverageTarget = [int]"${{ needs.pesterTest.outputs.coverageTarget }}"
+            $coverage = [int]$env:COVERAGE
+            $coverageTarget = [int]$env:COVERAGE_TARGET
             Write-Verbose "Coverage from previous job: $coverage%"
 
             if ($coverage -lt $coverageTarget) {
