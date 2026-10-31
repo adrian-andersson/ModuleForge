@@ -100,7 +100,6 @@ function Get-MFGitPrefixHelp
                 'GOTCHAS'
                 '  Unknown prefixes are dropped without warning: feature:, bugfix:, feat!:'
                 '  Scopes are not supported yet, so feat(build): is dropped too.'
-                '  Text after a second colon is lost: "fix: bad path: C:\x" -> "bad path"'
                 '  Only the subject line is read. A BREAKING CHANGE: note in the body has'
                 '    no effect, so choose the major increment yourself.'
                 '  Prefixes do not bump versions. They only guide the increment you pick.'

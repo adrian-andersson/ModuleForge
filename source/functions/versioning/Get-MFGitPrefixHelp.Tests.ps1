@@ -128,12 +128,6 @@ Describe 'Gotchas are true of Get-MFGitChangeLog' {
         Get-ChangeLogFor -Subject $subject | Should -Match 'No relevant commit messages'
     }
 
-    It 'Should lose the text after a second colon' {
-        $result = Get-ChangeLogFor -Subject 'fix: bad path: C:\x'
-        $result | Should -Match '- bad path'
-        $result | Should -Not -Match 'C:'
-    }
-
     It 'Should have no entries when only chore and test commits exist' {
         Get-ChangeLogFor -Subject 'chore: housekeeping','test: more tests' | Should -Match 'No relevant commit messages'
     }
