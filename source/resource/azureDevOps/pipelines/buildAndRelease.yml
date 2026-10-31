@@ -37,6 +37,7 @@ jobs:
     displayName: 'Checkout repository'
     persistCredentials: true
     fetchDepth: 0
+    fetchTags: true #Versioning reads the tags, so do not rely on the Sync tags pipeline setting
 
   - pwsh: |
       $VerbosePreference = 'Continue'

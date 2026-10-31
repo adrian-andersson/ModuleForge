@@ -171,7 +171,7 @@ function Get-MFGitChangeLog
                         $commitMessages = git log "$($t2)..$($t1)" --pretty=format:"%s"
                     }
                         
-                    $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+                    $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_ -split ':',2;[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
                     $grouped = $commitObjects.where{$_.type -in $ChangeLogTypes.getEnumerator().name} | group-object -property 'type'
                     $grouped.forEach{
                         $markDown.Add("`n### $($ChangeLogTypes.$($_.name))`n")
@@ -202,7 +202,7 @@ function Get-MFGitChangeLog
         if(!$All -and $commitMessages)
         {
             write-verbose 'Getting Commit Objects, grouping and parsing based on changeLogTypes variable'
-            $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_.split(":");[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
+            $commitObjects = $commitMessages.forEach{if($_ -like '*:*'){$s = $_ -split ':',2;[PSCustomObject]@{Type = $s[0].trim();Message = $s[1].trim()}}}
             $grouped = $commitObjects.where{$_.type -in $ChangeLogTypes.getEnumerator().name} | group-object -property 'type'
             $grouped.forEach{
                 $markDown.Add("`n## $($ChangeLogTypes.$($_.name))`n")

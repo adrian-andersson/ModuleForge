@@ -601,3 +601,29 @@ Describe 'get-mfGitChangeLog with -fromLastTag and single tag' {
         remove-alias git
     }
 }
+
+Describe 'get-mfGitChangeLog with colons in the commit description' {
+    BeforeAll{
+        Push-Location $TestDrive
+        git init --quiet
+        git config user.email 'test@example.com'
+        git config user.name 'test'
+        git commit --quiet --allow-empty -m 'chore: first commit'
+        git tag v1.0.0
+        git commit --quiet --allow-empty -m 'fix: bad path: C:\temp'
+        git tag v1.1.0
+        git commit --quiet --allow-empty -m 'feat: add options: one, two: three'
+    }
+
+    It 'should keep the full description with -fromLastTag' {
+        Get-MFGitChangeLog -FromLastTag | Should -BeLike '*- add options: one, two: three*'
+    }
+
+    It 'should keep the full description with -All' {
+        Get-MFGitChangeLog -All | Should -BeLike '*- bad path: C:\temp*'
+    }
+
+    AfterAll{
+        Pop-Location
+    }
+}
