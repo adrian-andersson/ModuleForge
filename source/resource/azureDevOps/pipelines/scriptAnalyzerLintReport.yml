@@ -178,7 +178,6 @@ jobs:
             $commentUri = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/git/repositories/$($env:BUILD_REPOSITORY_NAME)/pullRequests/$($env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads?api-version=7.1"
             write-verbose "commentUri : $commentUri"
             $accToken = $($env:SYSTEM_ACCESSTOKEN)
-            write-verbose "Got AccessToken with length $($accToken.length) $($accToken[0..2] -join '')...$($accToken[-1]))"
             $headers = @{
                 Authorization = "Bearer $accToken"
                 Accept = 'application/json'
