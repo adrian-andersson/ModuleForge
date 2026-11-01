@@ -10,6 +10,7 @@ function Add-MFGithubScaffold
             This function will create a '.github' folder in the moduleforge root (if one does not exist).
             It will create 2 github actions workflows, 1 for Pester testing, 1 for buildAndRelease
             It will create 1 Pull Request template.
+            It will also add any missing project scripts, as some workflow templates call them.
 
             The buildAndRelease template will use Git Tags to mark versions. If you stick with this template you should refrain from
             using tags for other purposes.
@@ -129,6 +130,8 @@ function Add-MFGithubScaffold
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
+        #Workflow templates call the project scripts, and existing projects may not have them. Skips existing files
+        Add-MFProjectScripts -ModulePath $ModulePath -WarningAction SilentlyContinue
         $warning = "We've added the GitHub Actions workflows and PR template to your repo. GitHub will pick these up automatically once you push to GitHub.`n`nYou may need to enable workflow permissions (read/write) and configure any required secrets for the build and release workflow to run.`n`nSee https://docs.github.com/actions or `nhttps://adrian-andersson.github.io/ModuleForge/ for guidance, examples and tutorials"
         Write-Warning $warning
 

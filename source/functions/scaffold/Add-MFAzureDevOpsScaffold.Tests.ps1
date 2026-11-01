@@ -31,12 +31,17 @@ BeforeAll{
     $pipelinesFolder = join-path $azdFolder 'pipelines'
     $pesterTestFile = join-path $pipelinesFolder 'pesterTest.yml'
     $buildandreleaseFile = join-path $pipelinesFolder 'buildAndRelease.yml'
+    $projectRulesExample = join-path $pipelinesFolder 'projectRules.yml.example'
+    $projectRulesActive = join-path $pipelinesFolder 'projectRules.yml'
+    $projectRulesScript = join-path (join-path $testPath 'scripts') 'Invoke-MFProjectRules.ps1'
 
 
      #Load This File
      $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
      $functionName = 'Add-MFAzureDevOpsScaffold'
     . $fileName
+    #The scaffold calls Add-MFProjectScripts, so load it for the call to resolve
+    . $PSCommandPath.Replace('Add-MFAzureDevOpsScaffold.Tests.ps1','Add-MFProjectScripts.ps1')
 
 
     
@@ -74,6 +79,13 @@ Describe 'Add-MFAzureDevOpsScaffold should Copy Files' {
     It 'Should have created the buildandrelease file '  {
         get-Item $buildandreleaseFile|Should -Not -BeNullOrEmpty
         get-content $buildandreleaseFile|should -Not -BeNullOrEmpty
+    }
+    It 'Should have left the project rules pipeline disabled' {
+        $projectRulesExample|Should -Exist
+        $projectRulesActive|Should -Not -Exist
+    }
+    It 'Should have added the script the project rules pipeline calls' {
+        $projectRulesScript|Should -Exist
     }
 
 }
