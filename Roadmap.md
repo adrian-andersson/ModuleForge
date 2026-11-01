@@ -5,7 +5,7 @@
 - [x] CLM compatibility check - an example rule set for the opt-in Project Rules workflow, using PSScriptAnalyzer's `PSUseConstrainedLanguageMode` rule. Soft-fail advisory in the PR pipeline
 - [ ] Add CLM compatibility marker to build output / module tags. Needs a rethink: Project Rules is opt-in, so the build has no result to stamp, and a clean static check is not proof of compatibility
 - [x] Add a local helper (`Get-MFGitPrefixHelp`) so users can list the recommended commit prefixes, examples and gotchas from the command line. Read-only reference, not an interactive commit builder
-- [ ] Dependency manifest (e.g. `dependencies.json`) imported at **both** Pester-test and Build-and-Release time. Must support choosing a source - PSGallery, MAR (Microsoft Artifact Registry / private ACR), or a private feed - and version pinning. Non-trivial; needs a design pass before implementation. (Related Summit theme: secure supply chain / ACR is "the future of PowerShell modules".)
+- [ ] Dependency manifest (e.g. `dependencies.json`) imported at **both** Pester-test and Build-and-Release time. Must support choosing a source - PSGallery, MAR (Microsoft Artifact Registry / private ACR), or a private feed - and version pinning. Non-trivial; needs a design pass before implementation.
 - [x] Allow custom PSScriptAnalyzer settings - an opt-in Project Rules workflow runs a `PSScriptAnalyzer` folder as an **additive** pass with its own PR comment, leaving the default lint untouched. Local files only for now. Rule packs from a gallery, such as InjectionHunter (security/injection), need installing, so they wait on the dependency manifest above.
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below.
 
@@ -29,7 +29,7 @@ Improve SEO
 - [ ] **Put the keyword in the title** - change docs `title` / add a `tagline` so page `<title>`s carry "PowerShell" (e.g. `ModuleForge - PowerShell Module Build Tool`).
 - [ ] **Add an icon + OG/social image** - `iconUri` in the manifest is empty and links unfurl blank; a social card lifts click-through and backlinks.
 - [ ] **Register with Google Search Console** - verify the site and submit the sitemap; lets us see actual indexing/ranking.
-- [ ] **Build backlinks** - PR to `awesome-powershell`, a dev.to / r/PowerShell launch post; the 2027 Summit talk is itself a backlink driver.
+- [ ] **Build backlinks** - PR to `awesome-powershell`, a dev.to / r/PowerShell launch post.
 
 ## Considerations
 
