@@ -10,6 +10,7 @@ function Add-MFAzureDevOpsScaffold
             This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
             It will create 2 Azure DevOps Pipelines files, 1 for Pester testing, 1 for buildAndRelease
             It will create 1 Pull Request template.
+            It will also add any missing project scripts, as some pipeline templates call them.
 
             The buildAndRelease pipeline will use Git Tags to mark versions. If you stick with this template you should refrain from
             using tags for other purposes.
@@ -129,6 +130,8 @@ function Add-MFAzureDevOpsScaffold
                 copy-item -Path $_.FullName -Destination $destinationPath
             }
         }
+        #Pipeline templates call the project scripts, and existing projects may not have them. Skips existing files
+        Add-MFProjectScripts -ModulePath $ModulePath -WarningAction SilentlyContinue
         $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/ for guidance, examples and tutorials"
         Write-Warning $warning 
 

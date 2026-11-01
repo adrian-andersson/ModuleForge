@@ -31,13 +31,18 @@ BeforeAll{
     $workflowsFolder = join-path $githubFolder 'workflows'
     $pesterTestFile = join-path $workflowsFolder 'pesterTest.yml'
     $buildandreleaseFile = join-path $workflowsFolder 'buildandrelease.yml'
+    $projectRulesExample = join-path $workflowsFolder 'projectRules.yml.example'
+    $projectRulesActive = join-path $workflowsFolder 'projectRules.yml'
+    $projectRulesScript = join-path (join-path $testPath 'scripts') 'Invoke-MFProjectRules.ps1'
 
 
      #Load This File
      $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
      $functionName = 'Add-MFGithubScaffold'
     . $fileName
-    
+    #The scaffold calls Add-MFProjectScripts, so load it for the call to resolve
+    . $PSCommandPath.Replace('Add-MFGithubScaffold.Tests.ps1','Add-MFProjectScripts.ps1')
+
 }
 
 Describe 'Check Clean Environment' {
@@ -71,6 +76,13 @@ Describe 'Add-MFGithubScaffold should Copy Files' {
     It 'Should have created the buildandrelease file '  {
         get-Item $buildandreleaseFile|Should -Not -BeNullOrEmpty
         get-content $buildandreleaseFile|should -Not -BeNullOrEmpty
+    }
+    It 'Should have left the project rules workflow disabled' {
+        $projectRulesExample|Should -Exist
+        $projectRulesActive|Should -Not -Exist
+    }
+    It 'Should have added the script the project rules workflow calls' {
+        $projectRulesScript|Should -Exist
     }
 
 }

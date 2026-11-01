@@ -1,0 +1,144 @@
+# =============================================================================
+# OPTIONAL PIPELINE — rename to enable
+# =============================================================================
+#
+# The default PSScriptAnalyzer pipeline checks your code follows expected
+# PowerShell idioms. This one checks it follows your own, and keeps its own
+# pull request comment up to date. It never repeats the default rules, and
+# findings are advisory.
+#
+# TO ENABLE:
+#   1. Rename this file to projectRules.yml (remove the .example extension)
+#   2. Create a pipeline pointing to this file, and add it to build validation
+#      on your main branch, as you did for the other pipelines
+#   3. Add rules to a PSScriptAnalyzer folder in the root of your repository.
+#      The files in that folder decide what runs. With no files, this pipeline
+#      exits early and posts no comment.
+#
+#      PSScriptAnalyzer/*.psd1          Settings files naming the rules to run
+#      PSScriptAnalyzer/rules/<Name>/   Custom rule modules
+#
+# EXAMPLE - check for Constrained Language Mode compatibility:
+#   Save this as PSScriptAnalyzer/clm.psd1. It needs PSScriptAnalyzer 1.25.0+
+#
+#   @{
+#       IncludeRules = @('PSUseConstrainedLanguageMode')
+#       Rules = @{
+#           PSUseConstrainedLanguageMode = @{
+#               Enable = $true
+#               IgnoreSignatures = $true
+#           }
+#       }
+#   }
+#
+#   This is a static check, so a clean result does not prove your module works
+#   under Constrained Language Mode. Note that a class anywhere in your module
+#   stops all of it importing, even if nothing uses that class.
+#
+# THE COMMENT THREAD:
+#   Each run updates one thread. It is active while there is anything to look
+#   at and closed when clean. If your branch policy requires comments to be
+#   resolved, an active thread will block completion until it is resolved.
+#
+# SECURITY:
+#   Custom rules are PowerShell code that runs on every pull request. They run
+#   in a job with no access token, and the comment is posted by a second job
+#   that never checks out your code. Consider requiring review of changes to
+#   the PSScriptAnalyzer folder.
+# =============================================================================
+
+trigger: none
+
+jobs:
+  - job: ProjectRulesScan
+    continueOnError: true
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+      displayName: 'Checkout repository'
+
+    - pwsh: |
+        $reportPath = join-path -path $env:BUILD_ARTIFACTSTAGINGDIRECTORY -childPath 'projectRules.md'
+        $result = & ./scripts/Invoke-MFProjectRules.ps1 -InstallPSScriptAnalyzer -ReportPath $reportPath
+        if($result.HasRuleSets)
+        {
+          $result.ThreadStatus|out-file -FilePath (join-path -path $env:BUILD_ARTIFACTSTAGINGDIRECTORY -childPath 'threadStatus.txt') -encoding UTF8
+          write-output '##vso[task.setvariable variable=hasReport;isOutput=true]true'
+        }
+      name: RunProjectRules
+      displayName: 'Run project rules'
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: projectRules
+      displayName: 'Publish report'
+      condition: eq(variables['RunProjectRules.hasReport'], 'true')
+
+  - job: ProjectRulesComment #This job holds the access token, so it must never checkout or run repository code
+    dependsOn: ProjectRulesScan
+    continueOnError: true
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), eq(dependencies.ProjectRulesScan.outputs['RunProjectRules.hasReport'], 'true'))
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: none
+
+    - download: current
+      artifact: projectRules
+      displayName: 'Download report'
+
+    - pwsh: |
+        $verbosePreference = 'continue'
+        $artifactPath = join-path -path $env:PIPELINE_WORKSPACE -childPath 'projectRules'
+        $report = get-content -path (join-path -path $artifactPath -childPath 'projectRules.md') -raw
+        $threadStatus = if((get-content -path (join-path -path $artifactPath -childPath 'threadStatus.txt') -raw).trim() -eq 'closed'){'closed'}else{'active'}
+
+        $threadProperty = 'ModuleForge.ProjectRules'
+        $reportMarker = '<!-- moduleforge:project-rules -->'
+        $threadsUri = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/git/repositories/$($env:BUILD_REPOSITORY_NAME)/pullRequests/$($env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads"
+        $apiVersion = 'api-version=7.1'
+        $headers = @{
+            Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
+            Accept = 'application/json'
+        }
+
+        write-verbose 'Looking for an existing thread'
+        $threads = (invoke-restmethod -uri "$($threadsUri)?$($apiVersion)" -headers $headers -method Get).value
+        $thread = $threads.where{
+            !$_.isDeleted -and ($_.properties.$threadProperty -or $_.comments[0].content -like "$reportMarker*")
+        }|select-object -first 1
+
+        if($thread)
+        {
+            write-verbose "Updating thread $($thread.id)"
+            $commentUri = "$($threadsUri)/$($thread.id)/comments/$($thread.comments[0].id)?$($apiVersion)"
+            $commentBody = @{content = $report}|convertTo-json -depth 10
+            $null = invoke-restmethod -uri $commentUri -headers $headers -contenttype 'application/json' -method Patch -body $commentBody
+            if($thread.status -ne $threadStatus)
+            {
+                write-verbose "Changing thread status from $($thread.status) to $threadStatus"
+                $statusBody = @{status = $threadStatus}|convertTo-json -depth 10
+                $null = invoke-restmethod -uri "$($threadsUri)/$($thread.id)?$($apiVersion)" -headers $headers -contenttype 'application/json' -method Patch -body $statusBody
+            }
+        }else{
+            write-verbose 'Creating a new thread'
+            $postBody = @{
+                comments = @(
+                    @{
+                        parentCommentId = 0
+                        content = $report
+                        commentType = 1
+                    }
+                )
+                status = $threadStatus
+                properties = @{
+                    $threadProperty = 'true'
+                }
+            }|convertTo-json -depth 10
+            $null = invoke-restmethod -uri "$($threadsUri)?$($apiVersion)" -headers $headers -contenttype 'application/json' -method Post -body $postBody
+        }
+      displayName: 'Update pull request comment'
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
