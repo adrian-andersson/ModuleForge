@@ -46,6 +46,9 @@ Describe 'Add-MFProjectScripts should Copy Files' {
         Get-Item $pesterScript | Should -Not -BeNullOrEmpty
         Get-Content $pesterScript | Should -Not -BeNullOrEmpty
     }
+    It 'Should have created the Invoke-MFProjectRules script' {
+        Join-Path $scriptsFolder 'Invoke-MFProjectRules.ps1' | Should -Exist
+    }
 }
 
 Describe 'Add-MFProjectScripts should NOT copy if files exist' {
