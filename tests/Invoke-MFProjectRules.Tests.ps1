@@ -261,6 +261,18 @@ Describe 'Invoke-MFProjectRules report' {
         $mixed.Report | Should -Not -Match '#### typo'
         $mixed.Report | Should -Not -Match '#### Throws'
     }
+    It 'Should show what a single rule found, not its name again' {
+        $mixed.Report | Should -Match '\|Finding\|Occurrence\|'
+        $mixed.Report | Should -Match 'PSCustomObject.*\|1\|'
+        $mixed.Report | Should -Not -Match '\|PSUseConstrainedLanguageMode\|1\|'
+    }
+    It 'Should show rule names when a rule set has several rules' {
+        $settings = "@{ IncludeRules = @('PSAvoidUsingCmdletAliases','PSUseConstrainedLanguageMode'); Rules = @{ PSUseConstrainedLanguageMode = @{ Enable = `$true } } }"
+        $report = (Invoke-TestProject (New-TestProject @{ 'PSScriptAnalyzer/mixed.psd1' = $settings })).Report
+        $report | Should -Match '\|Rule\|Occurrence\|'
+        $report | Should -Match '\|PSAvoidUsingCmdletAliases\|1\|'
+        $report | Should -Not -Match '\|Finding\|Occurrence\|'
+    }
     It 'Should show the PSScriptAnalyzer version' {
         $mixed.Report | Should -Match '_PSScriptAnalyzer \d+\.\d+\.\d+_'
         $clean.Report | Should -Match '_PSScriptAnalyzer \d+\.\d+\.\d+_'

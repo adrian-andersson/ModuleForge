@@ -155,14 +155,17 @@ function New-MFReport
 
     $sections = foreach($item in $RuleSet.Where{$_.Status -eq 'Findings'})
     {
-        $topRules = $item.Findings | Group-Object -Property 'RuleName' | Sort-Object -Property @{Expression='Count';Descending=$true},'Name' | Select-Object -First $Top
+        #With one rule its name adds nothing to the status table, so show what it found instead
+        $byMessage = @($item.Findings.RuleName | Sort-Object -Unique).Count -eq 1
+        $groupBy = if($byMessage){'Message'}else{'RuleName'}
+        $topItems = $item.Findings | Group-Object -Property $groupBy | Sort-Object -Property @{Expression='Count';Descending=$true},'Name' | Select-Object -First $Top
         $topFiles = $item.Findings | Group-Object -Property 'ScriptName' | Sort-Object -Property @{Expression='Count';Descending=$true},'Name' | Select-Object -First $Top
         ''
         "#### $($item.Name)"
         ''
-        '|Rule|Occurrence|'
+        "|$(if($byMessage){'Finding'}else{'Rule'})|Occurrence|"
         '|-|-|'
-        $topRules.ForEach{ "|$($_.Name)|$($_.Count)|" }
+        $topItems.ForEach{ "|$(ConvertTo-MFTableCell $_.Name)|$($_.Count)|" }
         ''
         '|Filename|Findings|'
         '|-|-|'
