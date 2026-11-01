@@ -3,7 +3,6 @@
 ## v1.4.0
 
 - [x] CLM compatibility check - an example rule set for the opt-in Project Rules workflow, using PSScriptAnalyzer's `PSUseConstrainedLanguageMode` rule. Soft-fail advisory in the PR pipeline
-- [ ] Add CLM compatibility marker to build output / module tags. Needs a rethink: Project Rules is opt-in, so the build has no result to stamp, and a clean static check is not proof of compatibility
 - [x] Add a local helper (`Get-MFGitPrefixHelp`) so users can list the recommended commit prefixes, examples and gotchas from the command line. Read-only reference, not an interactive commit builder
 - [ ] Dependency manifest (e.g. `dependencies.json`) imported at **both** Pester-test and Build-and-Release time. Must support choosing a source - PSGallery, MAR (Microsoft Artifact Registry / private ACR), or a private feed - and version pinning. Non-trivial; needs a design pass before implementation.
 - [x] Allow custom PSScriptAnalyzer settings - an opt-in Project Rules workflow runs a `PSScriptAnalyzer` folder as an **additive** pass with its own PR comment, leaving the default lint untouched. Local files only for now. Rule packs from a gallery, such as InjectionHunter (security/injection), need installing, so they wait on the dependency manifest above.
