@@ -89,7 +89,7 @@ function Invoke-MFRuleSetScan
         foreach($file in $SourceFile)
         {
             #-ErrorAction Stop as a rule that throws is otherwise only a printed error and zero findings
-            Invoke-ScriptAnalyzer -Path $file @splat -ErrorAction Stop | ForEach-Object { $findings.Add($_) }
+            Invoke-ScriptAnalyzer -Path $file @splat -ErrorAction Stop | Sort-Object -Property Line | ForEach-Object { $findings.Add($_) }
         }
     }
     catch
@@ -249,7 +249,12 @@ if(($settingsFiles.Count + $customRules.Count) -lt 1)
 
 if($InstallPSScriptAnalyzer)
 {
-    Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+    #Only if there is something newer. Reinstalling the version a runner already has warns that it is in use
+    $installed = Get-Module -ListAvailable -Name PSScriptAnalyzer | Sort-Object -Property Version -Descending | Select-Object -First 1
+    if(!$installed -or $installed.Version -lt [version](Find-Module -Name PSScriptAnalyzer).Version)
+    {
+        Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+    }
 }
 if(!(Get-Module -ListAvailable -Name PSScriptAnalyzer))
 {

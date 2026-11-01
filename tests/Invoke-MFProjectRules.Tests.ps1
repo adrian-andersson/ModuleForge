@@ -188,12 +188,46 @@ Describe 'Invoke-MFProjectRules scanning' {
         }
         (Invoke-TestProject $project).RuleSets.Findings.ScriptName | Should -Not -Contain 'template.ps1'
     }
+    It 'Should list findings in line order within a file' {
+        $settings = "@{ IncludeRules = @('PSAvoidUsingCmdletAliases','PSUseConstrainedLanguageMode'); Rules = @{ PSUseConstrainedLanguageMode = @{ Enable = `$true } } }"
+        $project = New-TestProject @{
+            'PSScriptAnalyzer/mixed.psd1' = $settings
+            'source/functions/Get-Other.ps1' = "[PSCustomObject]@{a=1}`ngci`n[PSCustomObject]@{a=2}"
+        }
+        ((Invoke-TestProject $project).RuleSets.Findings | Where-Object { $_.ScriptName -eq 'Get-Other.ps1' }).Line | Should -Be @(1,2,3)
+    }
     It 'Should cope with a source folder holding no scripts, as scaffolded projects have' {
         $project = New-TestProject @{
             'PSScriptAnalyzer/clm.psd1' = $clmSettings
             'source/classes/.gitignore' = ''
         }
         (Invoke-TestProject $project).RuleSets.Status | Should -Be 'Findings'
+    }
+}
+
+Describe 'Invoke-MFProjectRules installing PSScriptAnalyzer' {
+    BeforeAll{
+        $installProject = New-TestProject @{ 'PSScriptAnalyzer/clm.psd1' = $clmSettings }
+        $installedVersion = (Get-Module -ListAvailable PSScriptAnalyzer | Sort-Object -Property Version -Descending | Select-Object -First 1).Version
+    }
+    It 'Should not reinstall the version already installed' {
+        Mock Find-Module { [PSCustomObject]@{ Version = $installedVersion.ToString() } }
+        Mock Install-Module {}
+        $null = Invoke-TestProject $installProject @{ InstallPSScriptAnalyzer = $true }
+        Should -Invoke Install-Module -Times 0 -Exactly
+    }
+    It 'Should install when the gallery has something newer' {
+        Mock Find-Module { [PSCustomObject]@{ Version = '999.0.0' } }
+        Mock Install-Module {}
+        $null = Invoke-TestProject $installProject @{ InstallPSScriptAnalyzer = $true }
+        Should -Invoke Install-Module -Times 1 -Exactly
+    }
+    It 'Should not look for it with nothing to run' {
+        Mock Find-Module {}
+        Mock Install-Module {}
+        $null = Invoke-TestProject (New-TestProject) @{ InstallPSScriptAnalyzer = $true }
+        Should -Invoke Find-Module -Times 0 -Exactly
+        Should -Invoke Install-Module -Times 0 -Exactly
     }
 }
 
