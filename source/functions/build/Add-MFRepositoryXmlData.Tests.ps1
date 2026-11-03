@@ -7,13 +7,12 @@ BeforeAll{
     #Reference Current Path
     $currentPath = $(get-location).path
 
-    # Add-MFRepositoryXmlData depends only on built-in cmdlets (Expand-Archive, XML, Compress-Archive),
-    # so there are no source-function dependencies to dot-source.
-
     #Load This File
     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
     $functionName = 'Add-MFRepositoryXmlData'
     . $fileName
+    #Its one source dependency, which cleans the repository URI
+    . (Get-ChildItem -Path (join-path $currentPath 'source') -Recurse -Filter 'ConvertTo-MFSafeUri.ps1' -File | Select-Object -First 1).FullName
 
     #Create a working folder under the project root (consistent with the other tests). Keeping all file IO
     #inside the repo workspace is also safer on locked-down CI runners than reaching into the system temp path.
@@ -90,6 +89,16 @@ Describe 'Add-MFRepositoryXmlData' {
 
     It 'Should preserve the original package payload through the repack' {
         $repackedFileNames | Should -Contain 'TestModule.psm1'
+    }
+
+    It 'Should never publish credentials in the repository url' {
+        $tokenPackage = join-path $repoXmlTestPath 'TokenModule.1.0.0.nupkg'
+        Compress-Archive -Path (join-path $packSource '*') -DestinationPath $tokenPackage -Force
+        Add-MFRepositoryXmlData -RepositoryUri 'https://user:ghp_secret@github.com/test/repo.git' -NugetPackagePath $tokenPackage -ExtractionPath (join-path $repoXmlTestPath 'extractToken') -Force
+        $tokenVerify = join-path $repoXmlTestPath 'verifyToken'
+        Expand-Archive -Path $tokenPackage -DestinationPath $tokenVerify -Force
+        [xml]$tokenNuspec = Get-Content (Get-ChildItem $tokenVerify -Filter '*.nuspec' -Recurse | Select-Object -First 1).FullName -Raw
+        $tokenNuspec.package.metadata.repository.url | Should -Be 'https://github.com/test/repo'
     }
 
     It 'Should throw when the supplied file is not a .nupkg' {

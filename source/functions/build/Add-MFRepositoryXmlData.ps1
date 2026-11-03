@@ -71,6 +71,9 @@ function Add-MFRepositoryXmlData
 
         write-verbose "Found nupkg file at: $($nuPackage.fullname)"
 
+        #Published in the package, and a git remote can carry a token
+        $RepositoryUri = ConvertTo-MFSafeUri -Uri $RepositoryUri
+
         #Get a clean extraction folder
         if(!(test-path $ExtractionPath))
         {

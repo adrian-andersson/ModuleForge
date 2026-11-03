@@ -50,7 +50,7 @@ function New-MFProject
         #Root path of the module. Uses the current working directory by default
         [alias('Path')]
         [string]$ModulePath = $(get-location).path,
-        #Project URI. Will try and read from Git if you are using a git repository
+        #Project URI. Will try and read from Git if you are using a git repository. Any credentials in it are removed
         [Parameter()]
         [string]$ProjectUri = $(try{git config remote.origin.url}catch{$null}),
         #A URL to an icon representing this module
@@ -92,6 +92,10 @@ function New-MFProject
         }
 
         $configPath = join-path -path $ModulePath -childpath $configFile
+
+        #These are published in the module manifest, and a git remote can carry a token
+        $ProjectUri = ConvertTo-MFSafeUri -Uri $ProjectUri
+        $LicenseUri = ConvertTo-MFSafeUri -Uri $LicenseUri
 
     }
     

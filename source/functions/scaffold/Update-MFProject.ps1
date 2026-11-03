@@ -153,6 +153,8 @@ function Update-MFProject
 
         if($ProjectUri)
         {
+            #Published in the module manifest, and a git remote can carry a token
+            $ProjectUri = ConvertTo-MFSafeUri -Uri $ProjectUri
             write-verbose "Updating Module projectUri from: $($config.projectUri) -> $($ProjectUri)"
             $config.projectUri = $ProjectUri
         }
@@ -165,6 +167,7 @@ function Update-MFProject
 
         if($LicenseUri)
         {
+            $LicenseUri = ConvertTo-MFSafeUri -Uri $LicenseUri
             write-verbose "Updating Module licenseUri from: $($config.licenseUri) -> $($LicenseUri)"
             $config.licenseUri = $LicenseUri
         }

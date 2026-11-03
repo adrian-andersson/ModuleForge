@@ -14,6 +14,7 @@ BeforeAll{
     $sourceMap = @{}
     Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
     $dependencies = @(
+        'ConvertTo-MFSafeUri.ps1'
         'Get-MFFolderItems.ps1'
         'Get-MFDependencyTree.ps1'
         'Get-MFFolderItemDetails.ps1'

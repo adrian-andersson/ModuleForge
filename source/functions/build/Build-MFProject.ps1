@@ -411,12 +411,13 @@ function Build-MFProject
         }
         #Add the extra bits if present
         #Splatting really doesn't like nulls
+        #Cleaned again here, so a config written before ModuleForge removed credentials can't publish a token
         if($config.licenseUri)
         {
-            $splatManifest.licenseUri = $config.licenseUri
+            $splatManifest.licenseUri = ConvertTo-MFSafeUri -Uri $config.licenseUri
         }
         if($config.projecturi){
-            $splatManifest.projecturi = $config.projecturi
+            $splatManifest.projecturi = ConvertTo-MFSafeUri -Uri $config.projecturi
         }
         if($config.tags){
             $splatManifest.tags = $config.tags

@@ -12,6 +12,7 @@ BeforeAll{
     $sourceMap = @{}
     Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
     $dependencies = @(
+        'ConvertTo-MFSafeUri.ps1'
         'Update-MFProject.ps1'
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
@@ -131,6 +132,12 @@ Describe 'New-MFProject trims a trailing path separator' {
         New-MFProject -ModuleName 'TrailingModule' -description 'Trailing separator test' -ModulePath $trailingPath
         #Config should land at the trimmed path, not a double-separator path
         Test-Path -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml') | Should -Be $true
+    }
+    It 'Should strip credentials from the project URI' {
+        $tokenPath = join-path $testPath -ChildPath 'tokenProject'
+        $null = new-item -ItemType Directory -Path $tokenPath -Force
+        New-MFProject -ModuleName 'TokenModule' -description 'Token test' -ModulePath $tokenPath -ProjectUri 'https://org:pat123@dev.azure.com/org/project/_git/repo'
+        (Import-Clixml -Path (join-path $tokenPath -ChildPath 'moduleForgeConfig.xml')).projectUri | Should -Be 'https://dev.azure.com/org/project/_git/repo'
     }
     It 'Should default the minimum PowerShell version to the current LTS' {
         (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).minimumPsVersion | Should -Be ([version]'7.6.0')
