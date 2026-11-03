@@ -10,11 +10,12 @@ jobs:
       displayName: 'Checkout repository'
 
     - pwsh: |
-        Install-Module -Name Pester -Force -SkipPublisherCheck
+        #Everything in BuildDependencies.psd1, including any modules this project's own code needs
+        ./scripts/Install-MFBuildDependencies.ps1 | Format-Table
         $moduleList = @('Pester')
         Import-Module $moduleList
         Get-Module $moduleList | Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease) {"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}} | Format-Table
-      displayName: 'Install Pester Module'
+      displayName: 'Install dependencies'
 
     - pwsh: |
         $functionsPath = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"

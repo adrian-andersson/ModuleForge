@@ -77,8 +77,8 @@ jobs:
         shell: pwsh
         run: |
           $VerbosePreference = 'Continue'
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
-          Install-Module -Name PlatyPS -Force -SkipPublisherCheck
+          #The version pinned in BuildDependencies.psd1. Write-MFModuleDocs needs platyPS 0.14, not the newer Microsoft.PowerShell.PlatyPS
+          ./source/resource/scripts/Install-MFBuildDependencies.ps1 -Name platyPS | Format-Table
           Import-Module Microsoft.PowerShell.PSResourceGet, PlatyPS
           Get-Module Microsoft.PowerShell.PSResourceGet, PlatyPS | Select-Object Name, Version | Format-Table
 

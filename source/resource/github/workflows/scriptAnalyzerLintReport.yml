@@ -23,7 +23,8 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
-          Install-Module -Name psscriptanalyzer -Force -SkipPublisherCheck
+          #The version pinned in BuildDependencies.psd1, or the latest from PSGallery if it is not pinned
+          ./scripts/Install-MFBuildDependencies.ps1 -Name PSScriptAnalyzer | Format-Table
           $moduleList = @('psscriptanalyzer')
           import-module $moduleList
           get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table

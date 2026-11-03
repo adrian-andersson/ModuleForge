@@ -32,7 +32,8 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
-          Install-Module -Name Pester -Force -SkipPublisherCheck
+          #Everything in BuildDependencies.psd1, including any modules this project's own code needs
+          ./source/resource/scripts/Install-MFBuildDependencies.ps1 | Format-Table
           $moduleList = @('Pester')
           import-module $moduleList
           get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
@@ -198,6 +199,6 @@ jobs:
   #     - name: Run Pester tests
   #       shell: pwsh
   #       run: |
-  #         Install-Module -Name Pester -Force -SkipPublisherCheck
+  #         ./source/resource/scripts/Install-MFBuildDependencies.ps1 | Format-Table
   #         $result = ./source/resource/scripts/Invoke-MFPester.ps1 -SkipCodeCoverage -Verbosity Normal
   #         if($result.Result -ne 'Passed'){throw "Pester failed on $($env:RUNNER_OS): $($result.FailedCount) test(s)"}
