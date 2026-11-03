@@ -52,6 +52,16 @@ jobs:
             $invokeResult.foreach{$capture.add($_)}
         }
         $verbosePreference = 'continue'
+        #Prove the analyzer works, so a clean result means clean code, not nothing checked. Uses its own settings, so it works whatever severities are chosen above
+        $canaryHits = @(Invoke-ScriptAnalyzer -ScriptDefinition 'function Get-Canary { gci }' -Settings @{ IncludeRules = @('PSAvoidUsingCmdletAliases') }).Count
+        $scannedLines = ($sourceFiles | ForEach-Object { @(Get-Content -LiteralPath $_.FullName).Count } | Measure-Object -Sum).Sum
+        $scanSummary = "**Scanned:** $(@($sourceFiles).Count) files, $([int]$scannedLines) lines, at $($severity -join ', ') severity. Excluded rules: $($excludeRules -join ', ')"
+        $scanStatus = if($canaryHits -lt 1){
+            '❌ **PSScriptAnalyzer did not run correctly.** It missed a known problem, so these results can not be trusted. Check the output for errors'
+        }elseif(@($sourceFiles).Count -lt 1){
+            '⚠️ **No source files found** in source/functions or source/private, so nothing was checked'
+        }
+        write-verbose "Canary findings: $canaryHits. $scanSummary"
         #Resolve the analyzer version once so both the results and no-results branches can use it
         $psScriptAnalyzerVer = $(Get-Module psscriptanalyzer|Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}}).version
         if ($env:BUILD_REASON -eq 'PullRequest')
@@ -138,6 +148,9 @@ jobs:
                     "- **Errors:** $($capture.where{$_.severity -eq 'Error'}.count)❌"
                     "- **Warnings:** $($capture.where{$_.severity -eq 'Warning'}.count)⚠️"
                     "- **Information:** $($capture.where{$_.severity -eq 'Information'}.count)❕"
+                    ''
+                    "$scanSummary"
+                    $(if($scanStatus){'';$scanStatus})
                     "$ErrorsMarkdown"
                     "$warningsMarkdown"
                     "$infoMarkdown"
@@ -166,7 +179,9 @@ jobs:
                 $lintResultMarkdown = @(
                     "### 🕵️ PSScriptAnalyzer Linting Results 🕵️‍♀️"
                     ''
-                    '_No Script Analyzer Recommendations_ 🥇'
+                    $(if($scanStatus){$scanStatus}else{'_No Script Analyzer Recommendations_ 🥇'})
+                    ''
+                    "$scanSummary"
                     ''
                     "### ℹ️ Runtime Info"
                     "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
