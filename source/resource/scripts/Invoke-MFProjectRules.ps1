@@ -135,6 +135,8 @@ function New-MFReport
         "**PSScriptAnalyzer:** $AnalyzerVersion$(if($AnalyzerSource){" · $AnalyzerSource"})"
         "**PSVersion:** $($PSVersionTable.PSVersion.ToString()) $($PSVersionTable.PSEdition)"
         "**OS:** $($PSVersionTable.OS) $($PSVersionTable.Platform)"
+        ''
+        '_This comment was generated automatically by the CI pipeline._'
     ) -join "`n"
 
     if(!($RuleSet.Where{$_.Status -ne 'Clean'}))

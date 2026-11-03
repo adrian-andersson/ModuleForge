@@ -297,6 +297,7 @@ Describe 'Invoke-MFProjectRules report' {
             $report | Should -Match '\*\*PSScriptAnalyzer:\*\* \d+\.\d+\.\d+'
             $report | Should -Match '\*\*PSVersion:\*\* \d+\.\d+'
             $report | Should -Match '\*\*OS:\*\* '
+            $report | Should -Match '_This comment was generated automatically by the CI pipeline\._'
         }
     }
     It 'Should save the report when asked' {
