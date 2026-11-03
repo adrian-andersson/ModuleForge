@@ -1,4 +1,4 @@
-#Requires -Module Pester
+#Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '6.0.0' }
 <#
     .SYNOPSIS
         Run Pester tests for a ModuleForge project with code coverage.

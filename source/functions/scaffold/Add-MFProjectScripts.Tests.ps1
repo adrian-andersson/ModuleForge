@@ -19,7 +19,7 @@ BeforeAll{
     $scriptsFolder  = Join-Path $testPath 'scripts'
     $pesterScript   = Join-Path $scriptsFolder 'Invoke-MFPester.ps1'
 
-    $fileName     = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName     = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Add-MFProjectScripts'
     . $fileName
 
@@ -27,10 +27,10 @@ BeforeAll{
 
 Describe 'Check Clean Environment' {
     BeforeAll {
-        Write-Warning "PSCommandPath: $PSCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+        Write-Warning "PSCommandPath: $PSCommandPath; scriptToLoad: $(($PSCommandPath -replace '\.tests\.ps1$','.ps1'))"
     }
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1') | Should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1') | Should -be $fileName
         (Get-Command $functionName).source | Should -BeNullOrEmpty
     }
 }
@@ -67,7 +67,7 @@ Describe 'Add-MFProjectScripts pins ModuleForge to the running version' {
         #Run it from inside a throwaway module, as it would be from ModuleForge itself
         $pinPath = Join-Path $TestDrive 'pinProject'
         $null = New-Item -ItemType Directory -Path $pinPath -Force
-        $functionText = Get-Content -Path $PSCommandPath.Replace('.Tests.ps1','.ps1') -Raw
+        $functionText = Get-Content -Path ($PSCommandPath -replace '\.tests\.ps1$','.ps1') -Raw
         $fakeModule = New-Module -Name 'FakeModuleForge' -ScriptBlock ([scriptblock]::Create("$functionText`nExport-ModuleMember -Function Add-MFProjectScripts"))
         $pinVersion = $fakeModule.Version
     }

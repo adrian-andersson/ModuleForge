@@ -8,7 +8,7 @@ BeforeAll{
     $currentPath = $(get-location).path
 
     #Load This File
-    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Add-MFRepositoryXmlData'
     . $fileName
     #Its one source dependency, which cleans the repository URI
@@ -60,7 +60,7 @@ BeforeAll{
 
 Describe 'Check Clean Environment' {
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1') | should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1') | should -be $fileName
         (get-command $functionName).source | should -BeNullOrEmpty
     }
 }

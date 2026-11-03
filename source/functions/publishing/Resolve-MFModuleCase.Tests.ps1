@@ -4,7 +4,7 @@ param()
 BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Load This File
-    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Resolve-MFModuleCase'
     . $fileName
     
@@ -29,10 +29,10 @@ BeforeAll{
 
 Describe 'Check Clean Environment' {
     BeforeAll {
-        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $(($PSCommandPath -replace '\.tests\.ps1$','.ps1'))"
     }
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1')|should -be $fileName
         (get-command $functionName).source |should -BeNullOrEmpty
     }
 }

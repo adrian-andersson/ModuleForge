@@ -6,7 +6,7 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
 
     #Load This File (the function lives alongside this test in source/private)
-    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Add-MFJtdFrontMatter'
     . $fileName
 

@@ -27,7 +27,7 @@ BeforeAll{
     }
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     
     #Create a temp folder so we don't clobber anything
     $testPath = join-path -path $currentPath -childPath 'moduleTest'
