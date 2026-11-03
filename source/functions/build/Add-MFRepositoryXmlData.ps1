@@ -35,9 +35,9 @@ function Add-MFRepositoryXmlData
         #Path to the actual file in the repository, should be something like C:\Users\{UserName}\AppData\Local\Temp\LocalTestRepository\{ModuleName}.{ModuleVersion}.nupkg
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
         [string]$NugetPackagePath,
-        #Temporary path the nupkg is unpacked to before repacking. Defaults to a 'tempUnzip' folder in the system temp path
+        #Temporary path the nupkg is unpacked to before repacking. Defaults to a new, uniquely named folder in the system temp path, which is removed afterwards
         [Parameter()]
-        [string]$ExtractionPath = $(join-path -path ([System.IO.Path]::GetTempPath()) -childpath 'tempUnzip'),
+        [string]$ExtractionPath,
         #Use force to ignore remove prompt
         [Parameter()]
         [switch]$Force,
@@ -53,7 +53,14 @@ function Add-MFRepositoryXmlData
         write-verbose "===========Executing $($MyInvocation.InvocationName)==========="
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
-        
+
+        #A unique folder by default, so a persistent runner, or two builds at once, never share one or hit the prompt below
+        $removeExtractionPath = !$ExtractionPath
+        if(!$ExtractionPath)
+        {
+            $ExtractionPath = join-path -path ([System.IO.Path]::GetTempPath()) -childpath "mfRepack_$(New-Guid)"
+        }
+
     }
     
     process{
@@ -153,6 +160,12 @@ function Add-MFRepositoryXmlData
 
         }else{
             throw 'Error finding NuSpec'
+        }
+
+        if($removeExtractionPath)
+        {
+            write-verbose "Removing extraction path: $ExtractionPath"
+            remove-item -Path $ExtractionPath -Recurse -Force -ErrorAction SilentlyContinue
         }
 
         

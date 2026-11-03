@@ -101,6 +101,17 @@ Describe 'Add-MFRepositoryXmlData' {
         $tokenNuspec.package.metadata.repository.url | Should -Be 'https://github.com/test/repo'
     }
 
+    It 'Should use a new temp folder by default, and never prompt, even when run twice' {
+        Mock Read-Host { throw 'Prompted for input' }
+        $defaultPackage = join-path $repoXmlTestPath 'DefaultModule.1.0.0.nupkg'
+        Compress-Archive -Path (join-path $packSource '*') -DestinationPath $defaultPackage -Force
+        $before = @(Get-ChildItem ([System.IO.Path]::GetTempPath()) -Directory -Filter 'mfRepack_*').Count
+        { Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/test/repo' -NugetPackagePath $defaultPackage } | Should -Not -Throw
+        { Add-MFRepositoryXmlData -RepositoryUri 'https://github.com/test/repo' -NugetPackagePath $defaultPackage } | Should -Not -Throw
+        Should -Invoke Read-Host -Times 0 -Exactly
+        @(Get-ChildItem ([System.IO.Path]::GetTempPath()) -Directory -Filter 'mfRepack_*').Count | Should -Be $before
+    }
+
     It 'Should throw when the supplied file is not a .nupkg' {
         $notNupkg = join-path $repoXmlTestPath 'notapackage.txt'
         'not a package' | Out-File -FilePath $notNupkg
