@@ -157,6 +157,18 @@ Describe 'Install-MFBuildDependencies -ForTests' {
         Should -Invoke Install-PSResource -Times 0 -Exactly -ParameterFilter { $Name -eq 'ModuleForge' }
     }
 
+    It 'Should still install Pester and PSScriptAnalyzer for All when the file does not pin them' {
+        $project = New-TestProject "@{ 'Az.Accounts' = @{ version = '[5.0.0, 6.0.0)'; repository = 'PSGallery' } }"
+        Set-TestDependencies -Path $project -Value 'All'
+        $null = & $scriptPath -ProjectPath $project -ForTests -WarningVariable warned
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter {
+            $RequiredResource -and $RequiredResource.Count -eq 1 -and $RequiredResource.ContainsKey('Az.Accounts')
+        }
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter { $Name -eq 'Pester' }
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter { $Name -eq 'PSScriptAnalyzer' }
+        "$warned" | Should -Match 'Pester is not pinned'
+    }
+
     It 'Should throw for an unknown testDependencies value' {
         $project = New-TestProject $allFour
         Set-TestDependencies -Path $project -Value 'Everything'

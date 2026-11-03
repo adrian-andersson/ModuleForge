@@ -17,8 +17,12 @@
         moduleForgeConfig.xml asks for:
           - None                     nothing, so tests use the modules the runner already has
           - PesterAndScriptAnalyzer  Pester and PSScriptAnalyzer. The default, and used when the setting is missing
-          - All                      everything in the file except ModuleForge, which tests never need as they
-                                     load from source. Mock anything else your code depends on where you can
+          - All                      Pester and PSScriptAnalyzer, plus everything else in the file except
+                                     ModuleForge, which tests never need as they load from source. Mock anything
+                                     else your code depends on where you can
+
+        Pester and PSScriptAnalyzer are always installed for -ForTests unless the setting is None. If the file
+        does not pin them, the latest comes from PSGallery with a warning.
 
         If the file is missing, or does not list a module named in -Name, that module is installed from
         PSGallery with a warning, so a project without the file still builds.
@@ -99,7 +103,7 @@ if(!$ProjectPath)
 }
 Write-Verbose "Project root: $ProjectPath"
 
-$testsExcludeModuleForge = $false
+$testsAll = $false
 if($ForTests)
 {
     if($Name)
@@ -128,8 +132,7 @@ if($ForTests)
             return
         }
         'PesterAndScriptAnalyzer' { $Name = 'Pester','PSScriptAnalyzer' }
-        #Tests load from source, so they never need the ModuleForge that builds the module
-        'All' { $testsExcludeModuleForge = $true }
+        'All' { $testsAll = $true }
         default { throw "Unknown testDependencies value '$testDependencies' in moduleForgeConfig.xml. Use None, PesterAndScriptAnalyzer or All" }
     }
 }
@@ -154,9 +157,11 @@ if($dependencyPath)
 }
 
 $wanted = if($Name){ $Name }elseif($dependencies.Count){ @($dependencies.Keys) }else{ $essentialModules }
-if($testsExcludeModuleForge)
+if($testsAll)
 {
-    $wanted = @($wanted | Where-Object { $_ -ne 'ModuleForge' })
+    #Tests can't run without Pester, so never leave it to the file to remember it. Tests load from source,
+    #so they never need the ModuleForge that builds the module
+    $wanted = @(@('Pester','PSScriptAnalyzer') + $wanted | Sort-Object -Unique | Where-Object { $_ -ne 'ModuleForge' })
 }
 
 #Match the file's module names case-insensitively, as PowerShell does
