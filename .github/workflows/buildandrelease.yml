@@ -45,6 +45,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 #Ensure we are getting all the tag history
+          persist-credentials: false #The build runs repository code, so keep the token off disk. Only the tag step gets it
 
       - name: Git Check
         shell: pwsh
@@ -70,7 +71,7 @@ jobs:
           $repositoryUri = "https://github.com/$($env:REPO_URI)"
           $apiUri = "https://api.github.com/repos/$Repo/actions/workflows/$Workflow/runs?per_page=2&status=completed"
           write-verbose "apiUri: $apiUri"
-          $token = "${{ secrets.GITHUB_TOKEN }}"
+          $token = $env:GITHUB_TOKEN
           $headers = @{
             Authorization = "token $token"
             Accept = 'application/vnd.github.v3+json'
@@ -130,13 +131,16 @@ jobs:
         shell: pwsh
         id: generate_tag
         if: success()
+        env:
+          VERSION_TYPE: ${{ github.event.inputs.version_type }}
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
         run: |
           $VerbosePreference = 'Continue'
           $latest = get-mfGitLatestVersion
           #Inputs to determine next semver
-          $versionType="${{ github.event.inputs.version_type }}"
+          $versionType = $env:VERSION_TYPE
           write-verbose "Version Increment Type: $versionType"
-          $releaseType="${{ github.event.inputs.release_type }}"
+          $releaseType = $env:RELEASE_TYPE
           write-verbose "Version Release Type: $releaseType"
           $nextVerSplat = @{
             version = $latest #The current version
@@ -210,17 +214,25 @@ jobs:
         if: success()
         env:
           NEXT_VERSION: ${{ steps.generate_tag.outputs.next_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $VerbosePreference = 'Continue'
           write-verbose 'Post VerbosePreference'
           Write-Verbose "Creating tag v$($env:NEXT_VERSION)"
           $ver = "v$($env:NEXT_VERSION)"
-          
+
           if($ver -and $ver -ne 'v' -and $ver.length -ge 6)
           {
             write-verbose "Tagging Version as: $ver"
             git tag "$ver"
-            git push --tags 
+            #Checkout did not keep the token, so hand it to this push only, through env rather than the command line
+            $basicAuth = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("x-access-token:$($env:GITHUB_TOKEN)"))
+            write-output "::add-mask::$basicAuth"
+            $env:GIT_CONFIG_COUNT = '1'
+            $env:GIT_CONFIG_KEY_0 = 'http.https://github.com/.extraheader'
+            $env:GIT_CONFIG_VALUE_0 = "AUTHORIZATION: basic $basicAuth"
+            git push origin "refs/tags/$ver"
+            if($LASTEXITCODE -ne 0){throw "Unable to push tag $ver"}
           }else{
             throw 'No Version Tag found'
           }

@@ -35,7 +35,7 @@ jobs:
   steps:
   - checkout: self
     displayName: 'Checkout repository'
-    persistCredentials: true
+    persistCredentials: false #The build runs repository code, so keep the token off disk. Only the tag step gets it
     fetchDepth: 0
     fetchTags: true #Versioning reads the tags, so do not rely on the Sync tags pipeline setting
 
@@ -177,11 +177,18 @@ jobs:
       {
         write-verbose "Tagging Version as: $nextVersionTag"
         git tag "$nextVersionTag"
-        git push --tags 
+        #Checkout did not keep the token, so hand it to this push only, through env rather than the command line
+        $env:GIT_CONFIG_COUNT = '1'
+        $env:GIT_CONFIG_KEY_0 = 'http.extraheader'
+        $env:GIT_CONFIG_VALUE_0 = "AUTHORIZATION: bearer $($env:SYSTEM_ACCESSTOKEN)"
+        git push origin "refs/tags/$nextVersionTag"
+        if($LASTEXITCODE -ne 0){throw "Unable to push tag $nextVersionTag"}
       }else{
         throw 'Error, Next Version was not correctly passed through'
       }
     displayName: 'Apply Version Tag'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 
   - task: DotNetCoreCLI@2
