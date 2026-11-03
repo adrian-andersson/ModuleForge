@@ -6,18 +6,16 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference paths for loading the dependency function
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
-    #Add-MFFilesAndFolders calls Add-MFProjectScripts, so load it for the call to resolve. Resolve it
-    #by filename anywhere under source/, so the test stays independent of the folder layout. In this
-    #dot-sourced context Add-MFProjectScripts cannot find the module resource folder, so it safely
-    #no-ops with a suppressed warning - the same behaviour relied on by the New-MFProject tests.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @('Add-MFProjectScripts.ps1')
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){ . $sourceMap[$_] }else{ write-warning "Dependency not found under source: $_" }
-    }
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
+        'Add-MFProjectScripts.ps1'
+    )
+    $dependencies.ForEach{ . $_ }
 
     #Load This File (the function lives alongside this test in source/private)
     $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')

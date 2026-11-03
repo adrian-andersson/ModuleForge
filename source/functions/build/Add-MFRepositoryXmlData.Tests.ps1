@@ -11,12 +11,17 @@ BeforeAll{
     $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Add-MFRepositoryXmlData'
     . $fileName
-    #Its one source dependency, which cleans the repository URI
-    . (Get-ChildItem -Path (join-path $currentPath 'source') -Recurse -Filter 'ConvertTo-MFSafeUri.ps1' -File | Select-Object -First 1).FullName
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
+    #Its one source dependency, which cleans the repository URI. Throws if it is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name 'ConvertTo-MFSafeUri.ps1'
+    $dependencies.ForEach{ . $_ }
 
     #Create a working folder under the project root (consistent with the other tests). Keeping all file IO
     #inside the repo workspace is also safer on locked-down CI runners than reaching into the system temp path.
-    $repoXmlTestPath = join-path -path $currentPath -childPath 'repoXmlTest'
+    $repoXmlTestPath = join-path -path $TestDrive -childPath 'repoXmlTest'
     if(test-path $repoXmlTestPath){ remove-item $repoXmlTestPath -Recurse -Force -ErrorAction Ignore }
     $null = new-item -ItemType Directory -Path $repoXmlTestPath
 

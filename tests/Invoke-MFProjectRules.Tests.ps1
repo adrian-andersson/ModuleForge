@@ -14,9 +14,10 @@ BeforeDiscovery{
 BeforeAll{
 
     $WarningPreference = 'SilentlyContinue'
-    #Reference Current Path
-    $currentPath = $(get-location).path
-    $scriptPath = join-path -path $currentPath -childPath 'source/resource/scripts/Invoke-MFProjectRules.ps1'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $scriptPath = join-path -path $projectRoot -childPath 'source/resource/scripts/Invoke-MFProjectRules.ps1'
 
     #Need to ensure PSScriptAnalyzer is available
     if(!(get-module 'PSScriptAnalyzer' -ListAvailable))
@@ -303,7 +304,7 @@ Describe 'Invoke-MFProjectRules report' {
 
 Describe 'Project Rules template for <Name>' -ForEach $templates {
     BeforeAll{
-        $content = Get-Content -LiteralPath (join-path $currentPath $Path) -Raw
+        $content = Get-Content -LiteralPath (join-path $projectRoot $Path) -Raw
     }
     It 'Should call the script' {
         $content | Should -Match 'Invoke-MFProjectRules\.ps1 -InstallPSScriptAnalyzer'

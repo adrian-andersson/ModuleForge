@@ -6,16 +6,19 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
-    $tempCopyLocation = join-path -Path $currentPath -ChildPath 'TempCopy'
+    $tempCopyLocation = join-path -Path $TestDrive -ChildPath 'TempCopy'
 
     $privatePath = join-path $sourcePath -ChildPath 'private'
 
     $mockPsScriptRoot = $sourcePath
 
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'gitScaffoldTest'
+    $testPath = join-path -path ([System.IO.Path]::GetTempPath()) -childPath "mfTest_gitScaffoldTest_$(New-Guid)"
     if(!(test-path $testPath)){
         new-Item -ItemType Directory -Path $testPath
     }

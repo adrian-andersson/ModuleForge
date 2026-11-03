@@ -7,10 +7,11 @@ param()
 BeforeAll{
 
     $WarningPreference = 'SilentlyContinue'
-    #Reference Current Path
-    $currentPath = $(get-location).path
-    $scriptPath = join-path -path $currentPath -childPath 'source/resource/scripts/Install-MFBuildDependencies.ps1'
-    $templatePath = join-path -path $currentPath -childPath 'source/resource/projectRoot/BuildDependencies.psd1'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $scriptPath = join-path -path $projectRoot -childPath 'source/resource/scripts/Install-MFBuildDependencies.ps1'
+    $templatePath = join-path -path $projectRoot -childPath 'source/resource/projectRoot/BuildDependencies.psd1'
 
     function New-TestProject
     {

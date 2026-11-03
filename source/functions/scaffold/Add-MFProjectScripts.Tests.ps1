@@ -5,11 +5,13 @@ BeforeAll{
 
     $WarningPreference = 'SilentlyContinue'
     $currentPath = $(Get-Location).path
-    $sourcePath = Join-Path $currentPath 'source'
-
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = Join-Path $projectRoot 'source'
     $mockPsScriptRoot = $sourcePath
 
-    $testPath = Join-Path $currentPath 'scriptScaffoldTest'
+    $testPath = join-path -path ([System.IO.Path]::GetTempPath()) -childPath "mfTest_scriptScaffoldTest_$(New-Guid)"
     if(!(Test-Path $testPath)){
         New-Item -ItemType Directory -Path $testPath
     }
@@ -51,6 +53,9 @@ Describe 'Add-MFProjectScripts should Copy Files' {
     }
     It 'Should have created the Install-MFBuildDependencies script' {
         Join-Path $scriptsFolder 'Install-MFBuildDependencies.ps1' | Should -Exist
+    }
+    It 'Should have created the Get-MFTestDependency script' {
+        Join-Path $scriptsFolder 'Get-MFTestDependency.ps1' | Should -Exist
     }
     It 'Should have added BuildDependencies.psd1 to the project root, not the scripts folder' {
         Join-Path $testPath 'BuildDependencies.psd1' | Should -Exist

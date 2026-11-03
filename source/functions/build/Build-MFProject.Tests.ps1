@@ -6,14 +6,15 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
     # Captured before $sourcePath is reassigned to the temp build folder below
     $mockPsScriptRoot = $sourcePath
 
-    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @(
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'ConvertTo-MFSafeUri.ps1'
         'Get-MFFolderItems.ps1'
         'Get-MFDependencyTree.ps1'
@@ -25,14 +26,7 @@ BeforeAll{
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
     )
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){
-            write-verbose "Dependency identified at: $($sourceMap[$_])"
-            . $sourceMap[$_]
-        }else{
-            write-warning "Dependency not found under source: $_"
-        }
-    }
+    $dependencies.ForEach{ . $_ }
     
     #Load This File
     $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
@@ -40,7 +34,7 @@ BeforeAll{
     . $fileName
     
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'buildTest'
+    $testPath = join-path -path ([System.IO.Path]::GetTempPath()) -childPath "mfTest_buildTest_$(New-Guid)"
     $sourcePath = join-path $testPath -ChildPath 'source'
     $functionsPath = join-path $sourcePath -ChildPath functions
     $privatePath = join-path $sourcePath -ChildPath private

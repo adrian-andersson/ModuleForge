@@ -10,7 +10,7 @@ BeforeAll{
 
     
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'psInvokeTest'
+    $testPath = join-path -path $TestDrive -childPath 'psInvokeTest'
     $sourcePath = join-path $testPath -ChildPath 'Source'
     $functionsPath = join-path $sourcePath -ChildPath functions
     $functionsFile = join-path $functionsPath -ChildPath 'test.ps1'

@@ -6,7 +6,10 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
     
     #Load This File
@@ -14,7 +17,7 @@ BeforeAll{
      $functionName = 'Get-MFFolderItems'
     . $fileName
 
-    $tempCopyLocation = join-path -Path $currentPath -ChildPath 'TempCopy'
+    $tempCopyLocation = join-path -Path $TestDrive -ChildPath 'TempCopy'
 
     $privatePath = join-path $sourcePath -ChildPath 'private'
 
@@ -73,7 +76,7 @@ Describe 'Get-MFFolderItems w Copy' {
 
 Describe 'Get-MFFolderItems throws on invalid destination' {
     It 'Should throw when the destination path does not exist' {
-        $invalidDest = join-path $currentPath 'NonExistentDestination99999'
+        $invalidDest = join-path $TestDrive 'NonExistentDestination99999'
         { Get-MFFolderItems -Path $sourcePath -Destination $invalidDest } | Should -Throw
     }
     It 'Should handle a destination path with a trailing separator' {
@@ -88,7 +91,7 @@ Describe 'Get-MFFolderItems throws on invalid destination' {
 
 Describe 'Get-MFFolderItems respects .mfignore' {
     BeforeAll {
-        $ignorePath = join-path $currentPath 'MFIgnoreTest'
+        $ignorePath = join-path $TestDrive 'MFIgnoreTest'
         new-item -ItemType Directory -Path $ignorePath
         'function include-me {}' | Out-File (join-path $ignorePath 'include-me.ps1')
         'function exclude-me {}' | Out-File (join-path $ignorePath 'exclude-me.ps1')
