@@ -23,8 +23,8 @@
         version = '[1.25.0, 2.0.0)'
         repository = 'PSGallery'
     }
-    'platyPS' = @{
-        version = '[0.14.2, 1.0.0)'
+    'Microsoft.PowerShell.PlatyPS' = @{
+        version = '[1.0.3, 2.0.0)'
         repository = 'PSGallery'
     }
 }

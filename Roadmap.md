@@ -9,6 +9,7 @@
 - [x] Security hardening - the default lint can no longer be made to run PR code, PR comments are posted by jobs that never run PR code, build pipelines keep the git token off disk while repository code runs, and credentials in a git remote are no longer published as the project URI
 - [x] Built manifests list exported aliases by name and no longer use a wildcard for aliases or variables
 - [x] Packaging - a unique, cleaned-up repack folder for persistent runners, optional branch and commit metadata, a build summary with hashes (`Get-MFBuildSummary`), and reruns that finish the version an earlier attempt tagged
+- [x] Move docs generation from the unmaintained platyPS 0.14 to Microsoft.PowerShell.PlatyPS 1.0. Drops the bogus `-ProgressAction` parameter and the front matter that changed on every run, and stops rather than publish an empty functions section when PlatyPS writes nothing. Not on MAR yet, so it installs from PSGallery
 - [x] Minimum PowerShell 7.6 LTS and Pester 6. Tests find the project root and their dependencies with `Get-MFTestDependency`, run from any folder, and keep temp files out of the repo
 - [ ] Bring the PSGallery release workflow onto `BuildDependencies.psd1`; it still has its own ModuleForge stable or prerelease toggle
 - [ ] Project Rules installs the latest PSScriptAnalyzer itself, rather than the version pinned in `BuildDependencies.psd1`

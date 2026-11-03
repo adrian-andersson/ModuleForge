@@ -105,10 +105,10 @@ jobs:
         shell: pwsh
         run: |
           $VerbosePreference = 'Continue'
-          #The versions pinned in BuildDependencies.psd1. Write-MFModuleDocs needs platyPS 0.14, not the newer Microsoft.PowerShell.PlatyPS
-          ./scripts/Install-MFBuildDependencies.ps1 -Name ModuleForge,platyPS | Format-Table
-          Import-Module Microsoft.PowerShell.PSResourceGet, ModuleForge, PlatyPS
-          Get-Module Microsoft.PowerShell.PSResourceGet, ModuleForge, PlatyPS | Select-Object Name, Version | Format-Table
+          #The versions pinned in BuildDependencies.psd1. Write-MFModuleDocs needs Microsoft.PowerShell.PlatyPS 1.0 or newer, not the older platyPS
+          ./scripts/Install-MFBuildDependencies.ps1 -Name ModuleForge,Microsoft.PowerShell.PlatyPS | Format-Table
+          Import-Module Microsoft.PowerShell.PSResourceGet, ModuleForge, Microsoft.PowerShell.PlatyPS
+          Get-Module Microsoft.PowerShell.PSResourceGet, ModuleForge, Microsoft.PowerShell.PlatyPS | Select-Object Name, Version | Format-Table
 
       - name: Register GitHub Packages repository
         if: steps.get_release.outputs.skip != 'true'

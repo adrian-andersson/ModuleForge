@@ -3,12 +3,17 @@ function Write-MFModuleDocs
 
     <#
         .SYNOPSIS
-            Generates and updates function documentation using PlatyPS, and creates an index for module functions.
+            Generates and updates function documentation using Microsoft.PowerShell.PlatyPS, and creates an index for module functions.
 
         .DESCRIPTION
-            Automates documentation generation based on module functions, leveraging PlatyPS to create and
-            update Markdown help files. Injects Just The Docs front matter into every generated page so the
+            Automates documentation generation based on module functions, leveraging Microsoft.PowerShell.PlatyPS
+            to create Markdown help files. Injects Just The Docs front matter into every generated page so the
             Jekyll sidebar renders a proper navigation hierarchy without manual editing.
+
+            Needs Microsoft.PowerShell.PlatyPS 1.0 or newer. The older platyPS 0.14 module is no longer used.
+
+            PlatyPS front matter that changes with the machine or the day, ms.date and Locale, is dropped, so
+            regenerating the docs only changes pages whose help actually changed.
 
             The -StampAllDocs switch extends that treatment to the entire docs folder: it scans every
             subdirectory, creates parent index pages with child link lists, and non-destructively injects
@@ -81,12 +86,13 @@ function Write-MFModuleDocs
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $platyPs = (get-module -Name PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
-        if($platyPs)
+        $platyPs = (get-module -Name Microsoft.PowerShell.PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
+        if($platyPs -and $platyPs.Version -ge [version]'1.0.0')
         {
-            write-verbose "Build Function Documentation with PlatyPS Version $($platyPs.version)"
+            write-verbose "Build Function Documentation with Microsoft.PowerShell.PlatyPS Version $($platyPs.version)"
+            Import-Module $platyPs -ErrorAction Stop
         }else{
-            throw "This function relies on module PlatyPS. Please install it from the PSGallery"
+            throw "This function relies on module Microsoft.PowerShell.PlatyPS 1.0.0 or newer. Please install it from the PSGallery. The older platyPS module is no longer supported"
         }
 
         $module = (get-module -Name $ModuleName|Sort-Object -Property version -Descending|select-object -first 1)
@@ -150,11 +156,36 @@ function Write-MFModuleDocs
 
         # Generate raw function docs via PlatyPS
         write-verbose 'Create markdown help from module help'
-        New-MarkdownHelp -Module $module.Name -Force -OutputFolder $functionsFullPath
+        $null = New-MarkdownCommandHelp -ModuleInfo $module -OutputFolder $functionsFullPath -Force
+
+        # PlatyPS writes into a subfolder named after the module. Move the pages up into the functions folder
+        $platyModuleFolder = join-path -Path $functionsFullPath -ChildPath $module.Name
+        if(test-path $platyModuleFolder)
+        {
+            Get-ChildItem $platyModuleFolder -Filter '*.md' | Move-Item -Destination $functionsFullPath -Force
+            remove-item $platyModuleFolder -Recurse -Force
+        }
+
+        #PlatyPS writes nothing, without an error, if a function of the same name is loaded outside the module.
+        #Stop rather than publish an empty functions section
+        $generatedPages = @(Get-ChildItem $functionsFullPath -Filter '*.md')
+        $exportedCount = @($module.ExportedFunctions.Keys).Count
+        if($generatedPages.Count -eq 0 -and $exportedCount -gt 0)
+        {
+            throw "PlatyPS generated no pages for the $exportedCount functions $($module.Name) exports. Check no function of the same name is loaded outside the module, such as by dot-sourcing"
+        }
+        if($generatedPages.Count -lt $exportedCount)
+        {
+            write-warning "PlatyPS generated $($generatedPages.Count) pages for the $exportedCount functions $($module.Name) exports"
+        }
 
         # Post-process every generated function page:
         #   - merge JTD front matter with the existing PlatyPS front matter
         #   - strip the ProgressAction parameter section (PS7 noise)
+        #   - give the default parameter set a readable heading
+        #PlatyPS front matter to drop: title clashes with the JTD title, and ms.date and Locale change with the
+        #day and the machine, which would rewrite every page on every run
+        $droppedPlatyKeys = 'title','ms.date','Locale'
         $functionsNavTitle = ConvertTo-MFNavTitle -FolderName $FunctionsFolder
         write-verbose "Injecting JTD front matter into function pages (parent: '$functionsNavTitle')"
 
@@ -167,8 +198,12 @@ function Write-MFModuleDocs
             $bodyContent = $rawContent
             if($rawContent -match '(?s)^---\r?\n(.*?)\r?\n---\r?\n')
             {
-                $existingFm  = $Matches[1] -replace '\r\n', "`n"
+                #Take both from $Matches first, as the -match in the filter below replaces it
                 $bodyContent = $rawContent.Substring($Matches[0].Length)
+                $platyFmLines = ($Matches[1] -replace '\r\n', "`n") -split "`n"
+                $existingFm  = ($platyFmLines | Where-Object {
+                    !($_ -match '^([^:]+):' -and $Matches[1].Trim() -in $droppedPlatyKeys)
+                }) -join "`n"
             }
 
             # Derive the page title from the H1 heading
@@ -192,6 +227,10 @@ function Write-MFModuleDocs
                 if($inProgressAction -and $line -match '^### ')
                 {
                     $inProgressAction = $false
+                }
+                if($line -match '^### __AllParameterSets\s*$')
+                {
+                    $line = '### All parameter sets'
                 }
                 if(-not $inProgressAction){ $filteredLines.Add($line) }
             }

@@ -104,7 +104,7 @@ Describe 'BuildDependencies.psd1 template' {
     It 'Should be a valid data file' {
         $template | Should -BeOfType [hashtable]
     }
-    It 'Should pin <_> to a version range on PSGallery' -ForEach @('ModuleForge','Pester','PSScriptAnalyzer','platyPS') {
+    It 'Should pin <_> to a version range on PSGallery' -ForEach @('ModuleForge','Pester','PSScriptAnalyzer','Microsoft.PowerShell.PlatyPS') {
         $template[$_].version | Should -Match '^\[.+\)$'
         $template[$_].repository | Should -Be 'PSGallery'
     }

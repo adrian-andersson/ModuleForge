@@ -93,9 +93,9 @@ function get-helloWorld
     . $fileName
 
     #Need to ensure PlatyPS is available
-    if(! (get-module 'platyPs' -ListAvailable))
+    if(! (get-module 'Microsoft.PowerShell.PlatyPS' -ListAvailable))
     {
-        install-module -Repository 'PSGallery' -Name platyPS -Force -SkipPublisherCheck
+        Install-PSResource -Repository 'PSGallery' -Name Microsoft.PowerShell.PlatyPS -TrustRepository -Quiet
     }
 
 }
@@ -166,7 +166,7 @@ Describe 'write-mfModuleDocs' {
 
         Set-Alias -name 'git' -Value invoke-GitCommand
         import-module $manifestPath
-        import-module platyPS
+        import-module Microsoft.PowerShell.PlatyPS
         write-mfModuleDocs -modulename platyPsTest -path $docsPath -includeChangeLog
         $newDocsPath  = join-path $docsPath 'docs'
         $newFuncsPath = join-path $newDocsPath 'functions'
@@ -180,8 +180,8 @@ Describe 'write-mfModuleDocs' {
         (get-command -name get-helloworld -Module platyPsTest).Name |Should -Not -BeNullOrEmpty
     }
 
-    it 'Should have the platyPs module available'{
-        (get-module platyPs).Name |Should -Not -BeNullOrEmpty
+    it 'Should have the Microsoft.PowerShell.PlatyPS module available'{
+        (get-module Microsoft.PowerShell.PlatyPS).Name |Should -Not -BeNullOrEmpty
     }
 
     # --- Changelog ---
@@ -227,6 +227,33 @@ Describe 'write-mfModuleDocs' {
     it 'Should not include ProgressAction in the function doc' {
         $content = get-content (join-path $newFuncsPath 'get-helloWorld.md')
         $content |Should -Not -Contain '### -ProgressAction'
+    }
+
+    it 'Should put function pages directly in the functions folder, not a module subfolder' {
+        Test-Path (join-path $newFuncsPath 'platyPsTest') |Should -Be $false
+    }
+
+    it 'Should have exactly one title in the function doc front matter' {
+        $content = get-content (join-path $newFuncsPath 'get-helloWorld.md') -Raw
+        $null = $content -match '(?s)^---\r?\n(.*?)\r?\n---'
+        $frontMatter = $Matches[1]
+        @($frontMatter -split '\r?\n' | Where-Object { $_ -match '^title:' }) |Should -HaveCount 1
+        $frontMatter |Should -Match '(?m)^title: get-helloWorld\s*$'
+    }
+
+    it 'Should drop PlatyPS front matter that changes with the day or the machine' {
+        $content = get-content (join-path $newFuncsPath 'get-helloWorld.md')
+        ($content |Where-Object { $_ -match '^(ms\.date|Locale):' }) |Should -BeNullOrEmpty
+    }
+
+    it 'Should keep the PlatyPS schema version in the front matter' {
+        $content = get-content (join-path $newFuncsPath 'get-helloWorld.md')
+        ($content |Where-Object { $_ -match '^PlatyPS schema version:' }) |Should -Not -BeNullOrEmpty
+    }
+
+    it 'Should give the default parameter set a readable heading' {
+        $content = get-content (join-path $newFuncsPath 'get-helloWorld.md')
+        $content |Should -Not -Contain '### __AllParameterSets'
     }
 
     # --- Functions index page ---
@@ -327,6 +354,18 @@ Describe 'write-mfModuleDocs' {
         It 'Should preserve the homepage body content on re-run' {
             $content = get-content (join-path $newDocsPath 'index.md')
             ($content | Where-Object { $_ -match 'A test module for PlatyPS' }) | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    # --- PlatyPS writing nothing ---
+
+    Describe 'write-mfModuleDocs when PlatyPS writes no pages' {
+        BeforeAll {
+            #PlatyPS does this, without an error, when a same-named function is loaded outside the module
+            Mock New-MarkdownCommandHelp {}
+        }
+        It 'Should throw rather than publish an empty functions section' {
+            { write-mfModuleDocs -modulename platyPsTest -path $docsPath -SkipIndex } | Should -Throw '*generated no pages*'
         }
     }
 
@@ -439,7 +478,7 @@ Custom content.
 
     AfterAll{
         remove-alias git
-        remove-module platyPsTest,platyPs -ErrorAction Ignore
+        remove-module platyPsTest,Microsoft.PowerShell.PlatyPS -ErrorAction Ignore
         remove-item -Path $testPath -Force -recurse -ProgressAction SilentlyContinue
     }
 }
