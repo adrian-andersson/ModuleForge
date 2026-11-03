@@ -35,9 +35,15 @@ function New-MFProject
         #A description of your module. Is used as the descriptor in the module repository
         [Parameter(Mandatory)]
         [string]$Description,
-        #Minimum PowerShell version. Defaults to 7.2 as this is the current LTS version
+        #Minimum PowerShell version. Defaults to 7.6 as this is the current LTS version
         [Parameter()]
-        [version]$MinimumPsVersion = [version]::new('7.2.0'),
+        [version]$MinimumPsVersion = [version]::new('7.6.0'),
+        #What the Pester workflows install before running tests. None relies on the modules the runner already has.
+        #PesterAndScriptAnalyzer installs the versions pinned in BuildDependencies.psd1. All installs everything in
+        #BuildDependencies.psd1 except ModuleForge, which tests never need as they load from source
+        [Parameter()]
+        [ValidateSet('None','PesterAndScriptAnalyzer','All')]
+        [string]$TestDependencies = 'PesterAndScriptAnalyzer',
         #Who are the primary module authors. Can be updated later with Update-MFProject
         [Parameter()]
         [string[]]$ModuleAuthors,
@@ -50,7 +56,7 @@ function New-MFProject
         #Root path of the module. Uses the current working directory by default
         [alias('Path')]
         [string]$ModulePath = $(get-location).path,
-        #Project URI. Will try and read from Git if you are using a git repository
+        #Project URI. Will try and read from Git if you are using a git repository. Any credentials in it are removed
         [Parameter()]
         [string]$ProjectUri = $(try{git config remote.origin.url}catch{$null}),
         #A URL to an icon representing this module
@@ -93,6 +99,10 @@ function New-MFProject
 
         $configPath = join-path -path $ModulePath -childpath $configFile
 
+        #These are published in the module manifest, and a git remote can carry a token
+        $ProjectUri = ConvertTo-MFSafeUri -Uri $ProjectUri
+        $LicenseUri = ConvertTo-MFSafeUri -Uri $LicenseUri
+
     }
     
     process{
@@ -128,6 +138,7 @@ function New-MFProject
             moduleName = $ModuleName
             description = $description
             minimumPsVersion = $minimumPsVersion
+            testDependencies = $TestDependencies
             moduleAuthors = [array]$moduleAuthors
             companyName = $companyName
             tags = [array]$moduleTags

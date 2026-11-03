@@ -42,9 +42,13 @@ function Update-MFProject
         #A description of your module. Is used as the descriptor in the module repository
         [Parameter()]
         [string]$Description,
-        #Minimum PowerShell version. Defaults to 7.2 as this is the current LTS version
+        #Minimum PowerShell version for the built module
         [Parameter()]
         [version]$MinimumPsVersion,
+        #What the Pester workflows install before running tests: None, PesterAndScriptAnalyzer or All. See New-MFProject
+        [Parameter()]
+        [ValidateSet('None','PesterAndScriptAnalyzer','All')]
+        [string]$TestDependencies,
         #Who are the primary module authors. Can expand later with add-mfmoduleAuthors command
         [Parameter()]
         [string[]]$ModuleAuthors,
@@ -133,6 +137,13 @@ function Update-MFProject
             $config.minimumPsVersion = $MinimumPsVersion
         }
 
+        if($TestDependencies)
+        {
+            write-verbose "Updating Module testDependencies from: $($config.testDependencies) -> $($TestDependencies)"
+            #Configs made before this setting existed don't have the property yet
+            $config|Add-Member -NotePropertyName 'testDependencies' -NotePropertyValue $TestDependencies -Force
+        }
+
         if($ModuleAuthors)
         {
             write-verbose "Updating Module moduleAuthors from: $($config.moduleAuthors) -> $($ModuleAuthors)"
@@ -153,6 +164,8 @@ function Update-MFProject
 
         if($ProjectUri)
         {
+            #Published in the module manifest, and a git remote can carry a token
+            $ProjectUri = ConvertTo-MFSafeUri -Uri $ProjectUri
             write-verbose "Updating Module projectUri from: $($config.projectUri) -> $($ProjectUri)"
             $config.projectUri = $ProjectUri
         }
@@ -165,6 +178,7 @@ function Update-MFProject
 
         if($LicenseUri)
         {
+            $LicenseUri = ConvertTo-MFSafeUri -Uri $LicenseUri
             write-verbose "Updating Module licenseUri from: $($config.licenseUri) -> $($LicenseUri)"
             $config.licenseUri = $LicenseUri
         }

@@ -3,10 +3,18 @@
 ## v1.4.0
 
 - [x] CLM compatibility check - an example rule set for the opt-in Project Rules workflow, using PSScriptAnalyzer's `PSUseConstrainedLanguageMode` rule. Soft-fail advisory in the PR pipeline
-- [ ] Add CLM compatibility marker to build output / module tags. Needs a rethink: Project Rules is opt-in, so the build has no result to stamp, and a clean static check is not proof of compatibility
 - [x] Add a local helper (`Get-MFGitPrefixHelp`) so users can list the recommended commit prefixes, examples and gotchas from the command line. Read-only reference, not an interactive commit builder
-- [ ] Dependency manifest (e.g. `dependencies.json`) imported at **both** Pester-test and Build-and-Release time. Must support choosing a source - PSGallery, MAR (Microsoft Artifact Registry / private ACR), or a private feed - and version pinning. Non-trivial; needs a design pass before implementation.
-- [x] Allow custom PSScriptAnalyzer settings - an opt-in Project Rules workflow runs a `PSScriptAnalyzer` folder as an **additive** pass with its own PR comment, leaving the default lint untouched. Local files only for now. Rule packs from a gallery, such as InjectionHunter (security/injection), need installing, so they wait on the dependency manifest above.
+- [x] Dependency manifest - `BuildDependencies.psd1`, in the PSResourceGet `RequiredResourceFile` format, pins the modules the Pester, lint, docs and build pipelines install. The build pipeline can also take the latest, or latest prerelease, from PSGallery instead. Each module can name its repository, but a private feed or MAR must already be registered on the runner, with credentials; registering one is not handled yet
+- [x] Allow custom PSScriptAnalyzer settings - an opt-in Project Rules workflow runs a `PSScriptAnalyzer` folder as an **additive** pass with its own PR comment, leaving the default lint untouched. Local files only for now. Rule packs from a gallery, such as InjectionHunter (security/injection), could now be pinned in `BuildDependencies.psd1`, but Project Rules does not load installed rule modules yet
+- [x] Security hardening - the default lint can no longer be made to run PR code, PR comments are posted by jobs that never run PR code, build pipelines keep the git token off disk while repository code runs, and credentials in a git remote are no longer published as the project URI
+- [x] Built manifests list exported aliases by name and no longer use a wildcard for aliases or variables
+- [x] Packaging - a unique, cleaned-up repack folder for persistent runners, optional branch and commit metadata, a build summary with hashes (`Get-MFBuildSummary`), and reruns that finish the version an earlier attempt tagged
+- [x] Move docs generation from the unmaintained platyPS 0.14 to Microsoft.PowerShell.PlatyPS 1.0. Drops the bogus `-ProgressAction` parameter and the front matter that changed on every run, and stops rather than publish an empty functions section when PlatyPS writes nothing. Not on MAR yet, so it installs from PSGallery
+- [x] Minimum PowerShell 7.6 LTS and Pester 6. Tests find the project root and their dependencies with `Get-MFTestDependency`, run from any folder, and keep temp files out of the repo
+- [x] `testDependencies` setting in `moduleForgeConfig.xml` decides what the Pester workflows install: `None`, `PesterAndScriptAnalyzer` (the default) or `All` (everything in `BuildDependencies.psd1` except ModuleForge). Set it with `New-MFProject` or `Update-MFProject`
+- [ ] Bring the PSGallery release workflow onto `BuildDependencies.psd1`; it still has its own ModuleForge stable or prerelease toggle
+- [x] Project Rules installs PSScriptAnalyzer through `Install-MFBuildDependencies`, so it uses the version pinned in `BuildDependencies.psd1`
+- [x] Workflows import exactly the version they resolved, so a newer copy elsewhere on a runner can't replace a pinned one, and the Pester, PSScriptAnalyzer and Project Rules comments say where each module came from (pinned, latest from PSGallery and why, or the runner's own)
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below.
 
 ## v1.5.0
@@ -32,6 +40,10 @@ Improve SEO
 - [ ] **Build backlinks** - PR to `awesome-powershell`, a dev.to / r/PowerShell launch post.
 
 ## Considerations
+
+- **GitHub Environments for releases** - an `environment:` on Build and Release and the PSGallery release workflow would allow a `main`-only branch restriction (nothing stops a release from a PR branch today), required reviewers, and environment-scoped secrets such as the PSGallery key. Small change; PSGallery is the strongest case, as a publish there can't be undone
+
+- **Out of scope: integration testing, private or authenticated dependency feeds, and the secrets they need.** ModuleForge does unit testing; anything needing real or private dependencies is the user's to run, in a separate runner or repository if needed. `BuildDependencies.psd1` can name any feed already registered on the runner. Decided during 1.4.0-prev003, as an integration tier kept adding jobs, config files and secrets handling
 
 - **Configurable Pester settings** via `pesterConfig.xml` - stay opinionated for now; the fixed defaults are a feature
 

@@ -6,31 +6,25 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
-    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @(
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'Register-MFLocalPsResourceRepository.ps1'
     )
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){
-            write-verbose "Dependency identified at: $($sourceMap[$_])"
-            . $sourceMap[$_]
-        }else{
-            write-warning "Dependency not found under source: $_"
-        }
-    }
+    $dependencies.ForEach{ . $_ }
     
     #Create a temp folder so we don't clobber anything
-    $repoTestPath = join-path -path $currentPath -childPath 'repoTest'
+    $repoTestPath = join-path -path $TestDrive -childPath 'repoTest'
     if(!(test-path $repoTestPath)){
         new-item -ItemType Directory -Path $repoTestPath
     }
 
     #Load This File
-    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Register-MFLocalPsResourceRepository'
     . $fileName
     
@@ -41,10 +35,10 @@ BeforeAll{
 
 Describe 'Check Clean Environment' {
     BeforeAll {
-        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $(($PSCommandPath -replace '\.tests\.ps1$','.ps1'))"
     }
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1')|should -be $fileName
         (get-command $functionName).source |should -BeNullOrEmpty
     }
 }

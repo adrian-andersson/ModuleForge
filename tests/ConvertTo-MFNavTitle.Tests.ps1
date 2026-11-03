@@ -4,6 +4,7 @@
 # (so we have a working test OF that feature) and serves as a worked example for anyone who prefers
 # the separate-tests-folder convention. Because it is not co-located, it resolves the function under
 # test by filename anywhere under source/ (layout-independent) instead of the $PSCommandPath trick.
+# For a project scaffolded by ModuleForge, the helper it uses is scripts/Get-MFTestDependency.ps1.
 
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification='PSScriptAnalyzer cannot see Pester BeforeAll scoping')]
 param()
@@ -13,13 +14,15 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path. Invoke-MFPester sets the working directory to the project root before running
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
     #This test lives in the dedicated /tests folder, not alongside the function, so we cannot use the
     #$PSCommandPath co-location trick. Resolve the function by filename anywhere under source/ instead.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $fileName = $sourceMap['ConvertTo-MFNavTitle.ps1']
+    #Throws if it is missing or found more than once
+    $fileName = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name 'ConvertTo-MFNavTitle.ps1'
     $functionName = 'ConvertTo-MFNavTitle'
     . $fileName
 

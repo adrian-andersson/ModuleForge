@@ -5,7 +5,7 @@ BeforeAll{
 
     $WarningPreference = 'SilentlyContinue'
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     #The help describes this function, so the tests check one against the other
     . $PSCommandPath.Replace('Get-MFGitPrefixHelp.Tests.ps1','Get-MFGitChangeLog.ps1')
 

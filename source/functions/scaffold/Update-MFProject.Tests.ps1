@@ -6,30 +6,25 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
-    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @(
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
+        'ConvertTo-MFSafeUri.ps1'
         'New-MFProject.ps1'
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
     )
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){
-            write-verbose "Dependency identified at: $($sourceMap[$_])"
-            . $sourceMap[$_]
-        }else{
-            write-warning "Dependency not found under source: $_"
-        }
-    }
+    $dependencies.ForEach{ . $_ }
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'moduleTest'
+    $testPath = join-path -path $TestDrive -childPath 'moduleTest'
 
 }
 
@@ -103,6 +98,26 @@ Describe 'Update-MFProject' {
         $config.RequiredModules | Should -Contain 'Pester'
         $config.ExternalModuleDependencies | Should -Contain 'PSReadLine'
         $config.PrivateData.TestKey | Should -Be 'TestValue'
+    }
+
+    It 'Should add testDependencies to a config made before the setting existed' {
+        #Strip the setting, as a config from an older ModuleForge would not have it
+        $config = Import-Clixml -Path $moduleConfig
+        $config.PSObject.Properties.Remove('testDependencies')
+        $config | Export-Clixml -Path $moduleConfig
+        (Import-Clixml -Path $moduleConfig).PSObject.Properties.Name | Should -Not -Contain 'testDependencies'
+
+        Update-MFProject -TestDependencies All
+        (Import-Clixml -Path $moduleConfig).testDependencies | Should -Be 'All'
+    }
+
+    It 'Should change an existing testDependencies setting' {
+        Update-MFProject -TestDependencies None
+        (Import-Clixml -Path $moduleConfig).testDependencies | Should -Be 'None'
+    }
+
+    It 'Should reject an unknown testDependencies value' {
+        { Update-MFProject -TestDependencies Everything } | Should -Throw
     }
 
     AfterAll{

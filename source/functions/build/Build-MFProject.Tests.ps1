@@ -6,14 +6,16 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
     # Captured before $sourcePath is reassigned to the temp build folder below
     $mockPsScriptRoot = $sourcePath
 
-    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @(
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
+        'ConvertTo-MFSafeUri.ps1'
         'Get-MFFolderItems.ps1'
         'Get-MFDependencyTree.ps1'
         'Get-MFFolderItemDetails.ps1'
@@ -24,22 +26,15 @@ BeforeAll{
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
     )
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){
-            write-verbose "Dependency identified at: $($sourceMap[$_])"
-            . $sourceMap[$_]
-        }else{
-            write-warning "Dependency not found under source: $_"
-        }
-    }
+    $dependencies.ForEach{ . $_ }
     
     #Load This File
-    $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     $functionName = 'Build-MFProject'
     . $fileName
     
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'buildTest'
+    $testPath = join-path -path ([System.IO.Path]::GetTempPath()) -childPath "mfTest_buildTest_$(New-Guid)"
     $sourcePath = join-path $testPath -ChildPath 'source'
     $functionsPath = join-path $sourcePath -ChildPath functions
     $privatePath = join-path $sourcePath -ChildPath private
@@ -65,10 +60,10 @@ BeforeAll{
 
 Describe 'Check Clean Environment' {
     BeforeAll {
-        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $(($PSCommandPath -replace '\.tests\.ps1$','.ps1'))"
     }
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1')|should -be $fileName
         (get-command $functionName).source |should -BeNullOrEmpty
     }
 }
@@ -87,8 +82,10 @@ Describe 'Build-MFProject' {
 describe 'Build-MFProject' {
     beforeAll {
         write-verbose 'build test module files'
+        #Lands in source/private, so its alias must not be exported
         $testFunction = @(
             'function get-text {'
+            '    [Alias("gtNotExported")]'
             '    param ('
             '        [string]$returnString = "Hello"'
             '    )'
@@ -98,8 +95,11 @@ describe 'Build-MFProject' {
             '}'
         )
 
+        #Lands in source/functions, so it and its aliases are public
         $privateFunction = @(
             'function get-textPrivate {'
+            '    [CmdletBinding()]'
+            '    [Alias("gtp","Get-TextAlias")]'
             '    param ('
             '        [string]$returnString = "Hello"'
             '    )'
@@ -234,6 +234,29 @@ describe 'Build-MFProject' {
         $privateData.ModuleForgeBuildPsd1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
         $privateData.ModuleForgeBuildPsm1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
         $privateData.ModuleForgeBuildDate | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Should export the aliases of public functions by name' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $manifest = Import-PowerShellDataFile -Path $psd
+        $manifest.AliasesToExport | Sort-Object | Should -Be @('Get-TextAlias','gtp')
+    }
+
+    It 'Should not export aliases of private functions' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        (Import-PowerShellDataFile -Path $psd).AliasesToExport | Should -Not -Contain 'gtNotExported'
+    }
+
+    It 'Should export no variables, rather than everything' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        #New-ModuleManifest writes an empty list as a commented line, so the key is absent, which exports nothing
+        (Import-PowerShellDataFile -Path $psd).VariablesToExport | Should -BeNullOrEmpty
+        Get-Content -Path $psd | Should -Not -Match "^\s*VariablesToExport\s*=\s*'\*'"
+    }
+
+    It 'Should not use a wildcard for aliases' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        Get-Content -Path $psd | Should -Not -Match "^\s*AliasesToExport\s*=\s*'\*'"
     }
 
     It 'Should include the ModuleForge version and hashes in the psm1 header' {

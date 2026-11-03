@@ -14,9 +14,10 @@ BeforeDiscovery{
 BeforeAll{
 
     $WarningPreference = 'SilentlyContinue'
-    #Reference Current Path
-    $currentPath = $(get-location).path
-    $scriptPath = join-path -path $currentPath -childPath 'source/resource/scripts/Invoke-MFProjectRules.ps1'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $scriptPath = join-path -path $projectRoot -childPath 'source/resource/scripts/Invoke-MFProjectRules.ps1'
 
     #Need to ensure PSScriptAnalyzer is available
     if(!(get-module 'PSScriptAnalyzer' -ListAvailable))
@@ -207,26 +208,42 @@ Describe 'Invoke-MFProjectRules scanning' {
 
 Describe 'Invoke-MFProjectRules installing PSScriptAnalyzer' {
     BeforeAll{
-        $installProject = New-TestProject @{ 'PSScriptAnalyzer/clm.psd1' = $clmSettings }
         $installedVersion = (Get-Module -ListAvailable PSScriptAnalyzer | Sort-Object -Property Version -Descending | Select-Object -First 1).Version
+        #Pinned to the version on this machine, so the exact import that follows the mocked install works
+        $installProject = New-TestProject @{
+            'PSScriptAnalyzer/clm.psd1' = $clmSettings
+            'BuildDependencies.psd1' = "@{ 'PSScriptAnalyzer' = @{ version = '[$installedVersion, ]'; repository = 'PSGallery' } }"
+        }
     }
-    It 'Should not reinstall the version already installed' {
-        Mock Find-Module { [PSCustomObject]@{ Version = $installedVersion.ToString() } }
+    BeforeEach{
+        #Never install anything for real
+        Mock Install-PSResource {}
         Mock Install-Module {}
-        $null = Invoke-TestProject $installProject @{ InstallPSScriptAnalyzer = $true }
-        Should -Invoke Install-Module -Times 0 -Exactly
-    }
-    It 'Should install when the gallery has something newer' {
         Mock Find-Module { [PSCustomObject]@{ Version = '999.0.0' } }
-        Mock Install-Module {}
-        $null = Invoke-TestProject $installProject @{ InstallPSScriptAnalyzer = $true }
-        Should -Invoke Install-Module -Times 1 -Exactly
+        Mock Get-InstalledPSResource { [PSCustomObject]@{ Name = 'PSScriptAnalyzer'; Version = $installedVersion; Prerelease = $null } }
     }
-    It 'Should not look for it with nothing to run' {
-        Mock Find-Module {}
-        Mock Install-Module {}
+    It 'Should install through the shared installer, at the pinned version' {
+        $result = Invoke-TestProject $installProject @{ InstallPSScriptAnalyzer = $true }
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter { $RequiredResource -and $RequiredResource.ContainsKey('PSScriptAnalyzer') }
+        Should -Invoke Install-Module -Times 0 -Exactly
+        $result.Report | Should -Match "\*\*PSScriptAnalyzer:\*\* $([regex]::Escape("$installedVersion")) · pinned \[$([regex]::Escape("$installedVersion")), \] in BuildDependencies\.psd1"
+    }
+    It 'Should fall back to the latest from PSGallery when the shared installer is not beside it' {
+        $alone = Join-Path $TestDrive 'aloneScript'
+        $null = New-Item -ItemType Directory -Path $alone -Force
+        Copy-Item -Path $scriptPath -Destination $alone
+        $result = & (Join-Path $alone 'Invoke-MFProjectRules.ps1') -ProjectPath $installProject -InstallPSScriptAnalyzer -InformationAction SilentlyContinue
+        Should -Invoke Install-Module -Times 1 -Exactly
+        Should -Invoke Install-PSResource -Times 0 -Exactly
+        $result.Report | Should -Match '\*\*PSScriptAnalyzer:\*\* .* · latest from PSGallery'
+    }
+    It 'Should say it used what was already installed when not asked to install' {
+        (Invoke-TestProject $installProject).Report | Should -Match '\*\*PSScriptAnalyzer:\*\* .* · already installed'
+        Should -Invoke Install-PSResource -Times 0 -Exactly
+    }
+    It 'Should not install anything with nothing to run' {
         $null = Invoke-TestProject (New-TestProject) @{ InstallPSScriptAnalyzer = $true }
-        Should -Invoke Find-Module -Times 0 -Exactly
+        Should -Invoke Install-PSResource -Times 0 -Exactly
         Should -Invoke Install-Module -Times 0 -Exactly
     }
 }
@@ -273,9 +290,15 @@ Describe 'Invoke-MFProjectRules report' {
         $report | Should -Match '\|PSAvoidUsingCmdletAliases\|1\|'
         $report | Should -Not -Match '\|Finding\|Occurrence\|'
     }
-    It 'Should show the PSScriptAnalyzer version' {
-        $mixed.Report | Should -Match '_PSScriptAnalyzer \d+\.\d+\.\d+_'
-        $clean.Report | Should -Match '_PSScriptAnalyzer \d+\.\d+\.\d+_'
+    It 'Should end with the same Runtime Info as the Pester and PSScriptAnalyzer comments' {
+        foreach($report in $mixed.Report,$clean.Report)
+        {
+            $report | Should -Match '### ℹ️ Runtime Info'
+            $report | Should -Match '\*\*PSScriptAnalyzer:\*\* \d+\.\d+\.\d+'
+            $report | Should -Match '\*\*PSVersion:\*\* \d+\.\d+'
+            $report | Should -Match '\*\*OS:\*\* '
+            $report | Should -Match '_This comment was generated automatically by the CI pipeline\._'
+        }
     }
     It 'Should save the report when asked' {
         (Get-Content $mixedReportPath -Raw).Trim() | Should -Be $mixed.Report.Trim()
@@ -303,7 +326,7 @@ Describe 'Invoke-MFProjectRules report' {
 
 Describe 'Project Rules template for <Name>' -ForEach $templates {
     BeforeAll{
-        $content = Get-Content -LiteralPath (join-path $currentPath $Path) -Raw
+        $content = Get-Content -LiteralPath (join-path $projectRoot $Path) -Raw
     }
     It 'Should call the script' {
         $content | Should -Match 'Invoke-MFProjectRules\.ps1 -InstallPSScriptAnalyzer'

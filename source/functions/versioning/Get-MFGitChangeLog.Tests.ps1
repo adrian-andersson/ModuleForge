@@ -5,7 +5,7 @@ BeforeAll{
 
     $WarningPreference = 'SilentlyContinue'
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
 
 }
 

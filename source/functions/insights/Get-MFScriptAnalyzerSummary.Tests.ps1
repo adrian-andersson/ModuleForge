@@ -10,7 +10,7 @@ BeforeAll{
 
     
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'psInvokeTest'
+    $testPath = join-path -path $TestDrive -childPath 'psInvokeTest'
     $sourcePath = join-path $testPath -ChildPath 'Source'
     $functionsPath = join-path $sourcePath -ChildPath functions
     $functionsFile = join-path $functionsPath -ChildPath 'test.ps1'
@@ -41,7 +41,7 @@ BeforeAll{
     set-location $testPath
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
 
     #Need to ensure PSScriptAnalyzer is available 
     if(! (get-module 'PSScriptAnalyzer' -ListAvailable))
@@ -80,6 +80,32 @@ describe 'Get-MFScriptAnalyzerSummary with SuppressOutput' {
     }
     It 'Should still report 1 warning in the summary' {
         $suppressedOutput.Warnings | Should -Be 1
+    }
+}
+
+describe 'Get-MFScriptAnalyzerSummary ignores a settings file beside the source' {
+    BeforeAll {
+        #A settings file can name a custom rule module, which PSScriptAnalyzer would load and run
+        $ruleFolder = join-path $testPath -ChildPath 'planted'
+        $marker = join-path $testPath -ChildPath 'plantedRuleRan.txt'
+        $null = new-item -ItemType Directory -Path $ruleFolder -Force
+        @(
+            "Set-Content -Path '$marker' -Value 'ran'"
+            'function Measure-Nothing { [CmdletBinding()] param([Parameter(Mandatory)][System.Management.Automation.Language.ScriptBlockAst]$ScriptBlockAst) process {} }'
+            'Export-ModuleMember -Function Measure-*'
+        ) -join "`n" | Out-File (join-path $ruleFolder -ChildPath 'Planted.psm1')
+        $settingsFile = join-path $functionsPath -ChildPath 'PSScriptAnalyzerSettings.psd1'
+        "@{ CustomRulePath = @('$ruleFolder'); ExcludeRules = @('PSAvoidUsingWriteHost') }" | Out-File $settingsFile
+        $plantedOutput = Get-MFScriptAnalyzerSummary $sourcePath -SuppressOutput
+    }
+    It 'Should not run code from a planted rule module' {
+        $marker | Should -Not -Exist
+    }
+    It 'Should not let the planted settings change the rules' {
+        $plantedOutput.Warnings | Should -Be 1
+    }
+    AfterAll {
+        Remove-Item $settingsFile -ErrorAction Ignore
     }
 }
 

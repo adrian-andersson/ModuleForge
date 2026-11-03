@@ -7,7 +7,7 @@
     <MS>
       <S N="moduleName">ModuleForge</S>
       <S N="description">Takes the grunt work out of PowerShell module development. Scaffolds project structure, Pester test stubs, and GitHub Actions or Azure DevOps CI/CD pipelines with semantic versioning, automated changelogs, and PSGallery publishing -&gt; up and running in minutes.</S>
-      <Version N="minimumPsVersion">7.2</Version>
+      <Version N="minimumPsVersion">7.6</Version>
       <Obj N="moduleAuthors" RefId="1">
         <TN RefId="1">
           <T>Deserialized.System.String[]</T>
@@ -53,6 +53,7 @@
       </Obj>
       <Nil N="DefaultCommandPrefix" />
       <Nil N="PrivateData" />
+      <S N="testDependencies">All</S>
     </MS>
   </Obj>
 </Objs>

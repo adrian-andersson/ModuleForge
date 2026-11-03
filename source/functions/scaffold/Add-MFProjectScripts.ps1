@@ -12,6 +12,10 @@ function Add-MFProjectScripts
             Includes Invoke-MFPester.ps1  - a standalone Pester runner that does not depend on
             the ModuleForge module, safe for use in clean CI environments.
 
+            Also adds BuildDependencies.psd1 to the project root if it is missing. It pins the modules the CI
+            templates install, with ModuleForge pinned to the version running this command, so the templates
+            and the ModuleForge that runs them match. -Force replaces it too, resetting any pins you changed.
+
             This function is also called automatically by Add-MFFilesAndFolders during project
             creation, at which point moduleForgeConfig.xml may not yet exist. A warning is
             emitted in that case but the copy proceeds normally.
@@ -123,6 +127,31 @@ function Add-MFProjectScripts
             }else{
                 write-verbose "Copying $($_) to $destinationPath"
                 Copy-Item -Path $_.FullName -Destination $destinationPath
+            }
+        }
+
+        $resourceFolderProjectRoot = Join-Path $resourceFolder 'projectRoot'
+        if(Test-Path $resourceFolderProjectRoot)
+        {
+            #Pin ModuleForge to the version running now, as the templates it copies are written for it
+            $moduleForge = $MyInvocation.MyCommand.Module
+            Get-ChildItem $resourceFolderProjectRoot -File | ForEach-Object {
+                $destinationPath = Join-Path $ModulePath $_.Name
+                if((Test-Path $destinationPath) -and !$Force)
+                {
+                    write-warning "Skipping $destinationPath as it exists"
+                    return
+                }
+                $content = Get-Content -Path $_.FullName -Raw
+                if($_.Name -eq 'BuildDependencies.psd1' -and $moduleForge)
+                {
+                    $prerelease = $moduleForge.PrivateData.PSData.Prerelease
+                    $minimum = "$($moduleForge.Version.Major).$($moduleForge.Version.Minor).$($moduleForge.Version.Build)$(if($prerelease){"-$prerelease"})"
+                    $pin = "version = '[$minimum, $($moduleForge.Version.Major + 1).0.0)'$(if($prerelease){"`n        prerelease = 'true'"})"
+                    $content = $content -replace "(?s)('ModuleForge' = @\{\s*)version = '[^']*'", "`$1$pin"
+                }
+                write-verbose "Writing $destinationPath"
+                $content | Set-Content -Path $destinationPath -NoNewline
             }
         }
     }

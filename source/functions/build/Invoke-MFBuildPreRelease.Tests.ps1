@@ -4,19 +4,18 @@ param()
 BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
-    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @(
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'Get-MFLatestSemverFromBuildManifest.ps1'
         'Get-MFNextSemver.ps1'
         'Get-MFProjectRoot.ps1'
     )
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){ . $sourceMap[$_] }else{ write-warning "Dependency not found under source: $_" }
-    }
+    $dependencies.ForEach{ . $_ }
     #Stub BuildMFProject so we can check the parameters sent to it without actually running a build
     function Build-MFProject {
         param(
@@ -30,7 +29,7 @@ BeforeAll{
     $global:__BuildMFProjectCalls = @()
 
     #Load This File
-     $fileName = $PSCommandPath.Replace('.Tests.ps1','.ps1')
+     $fileName = ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
      $functionName = 'Invoke-MFBuildPreRelease'
     . $fileName
 }
@@ -38,10 +37,10 @@ BeforeAll{
 
 Describe 'Check Clean Environment' {
     BeforeAll {
-        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $(($PSCommandPath -replace '\.tests\.ps1$','.ps1'))"
     }
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1')|should -be $fileName
         (get-command $functionName).source |should -BeNullOrEmpty
     }
 }
@@ -107,10 +106,10 @@ Describe 'Invoke-MFBuildPreRelease Error Handling' {
 
 Describe 'Check we still have a Clean Environment' {
     BeforeAll {
-        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $($PSCommandPath.Replace('.Tests.ps1','.ps1'))"
+        write-warning "PSCommandPath: $psCommandPath; scriptToLoad: $(($PSCommandPath -replace '\.tests\.ps1$','.ps1'))"
     }
     It 'Should have loaded the script directly, not from the module' {
-        $PSCommandPath.Replace('.Tests.ps1','.ps1')|should -be $fileName
+        ($PSCommandPath -replace '\.tests\.ps1$','.ps1')|should -be $fileName
         (get-command $functionName).source |should -BeNullOrEmpty
     }
 }

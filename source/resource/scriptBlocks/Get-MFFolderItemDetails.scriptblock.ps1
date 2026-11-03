@@ -57,7 +57,14 @@ function Get-MFScriptDetails {
                 $TypeDependenciesList        = New-Object System.Collections.Generic.List[string]
                 $paramTypeDependenciesList   = New-Object System.Collections.Generic.List[string]
                 $validatorTypeDependenciesList = New-Object System.Collections.Generic.List[string]
+                $aliasList = New-Object System.Collections.Generic.List[string]
                 $FunctionName = $Function.Name
+                #Aliases declared with [Alias()] on the function, so the manifest can export them by name
+                $aliasAttributes = $Function.Body.ParamBlock.Attributes | Where-Object { $_.TypeName.Name -in 'Alias','AliasAttribute','System.Management.Automation.AliasAttribute' }
+                foreach($aliasArgument in $aliasAttributes.PositionalArguments)
+                {
+                    $aliasArgument.FindAll({ $args[0] -is [System.Management.Automation.Language.StringConstantExpressionAst] }, $true).Value.foreach{ $aliasList.add($_) }
+                }
                 $Cmdlets = $Function.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
                 foreach($c in $Cmdlets)
                 {
@@ -88,8 +95,15 @@ function Get-MFScriptDetails {
                     types          = $TypeDependenciesList|group-object|Select-Object Name,Count
                     parameterTypes = $paramTypeDependenciesList|group-object|Select-Object name,count
                     Validators     = $validatorTypeDependenciesList|Group-Object|Select-Object name,count
+                    aliases        = $aliasList.ToArray()
                 }
             }
+            #Set-Alias or New-Alias outside a function makes an alias the manifest can't find by name
+            $scriptLevelAliases = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -in 'Set-Alias','New-Alias','sal','nal' }, $true) | Where-Object {
+                $parent = $_.Parent
+                while($parent -and $parent -isnot [System.Management.Automation.Language.FunctionDefinitionAst]){ $parent = $parent.Parent }
+                !$parent
+            } | ForEach-Object { $_.Extent.Text }
         }
         if($Type -eq 'all' -or $Type -eq 'Class')
         {
@@ -119,6 +133,7 @@ function Get-MFScriptDetails {
             Path            = $file.FullName
             FileSize        = "$([math]::round($file.length / 1kb,2)) kb"
             FunctionDetails = $functionDetails
+            ScriptLevelAliases = @($scriptLevelAliases)
             ClassDetails    = $classDetails
             Content         = $AST.ToString()
         }

@@ -6,30 +6,25 @@ BeforeAll{
     $WarningPreference = 'SilentlyContinue'
     #Reference Current Path
     $currentPath = $(get-location).path
-    $sourcePath = join-path -path $currentPath -childPath 'source'
+    #Walk up from this test to the project root, so it runs the same from any working directory
+    $projectRoot = $PSScriptRoot
+    while(!(test-path (join-path -path $projectRoot -childPath 'moduleForgeConfig.xml'))){ $projectRoot = split-path -path $projectRoot -parent; if(!$projectRoot){ throw 'Unable to find moduleForgeConfig.xml above this test' } }
+    $sourcePath = join-path -path $projectRoot -childPath 'source'
 
-    # Resolve dependencies by filename anywhere under source/, so tests stay independent of the folder layout. List order is load order.
-    $sourceMap = @{}
-    Get-ChildItem -Path $sourcePath -Recurse -Filter '*.ps1' -File | ForEach-Object { if(-not $sourceMap.ContainsKey($_.Name)){ $sourceMap[$_.Name] = $_.FullName } }
-    $dependencies = @(
+    #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
+    $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
+        'ConvertTo-MFSafeUri.ps1'
         'Update-MFProject.ps1'
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
     )
-    $dependencies.ForEach{
-        if($sourceMap.ContainsKey($_)){
-            write-verbose "Dependency identified at: $($sourceMap[$_])"
-            . $sourceMap[$_]
-        }else{
-            write-warning "Dependency not found under source: $_"
-        }
-    }
+    $dependencies.ForEach{ . $_ }
     
     #Load This File
-    . $PSCommandPath.Replace('.Tests.ps1','.ps1')
+    . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
     
     #Create a temp folder so we don't clobber anything
-    $testPath = join-path -path $currentPath -childPath 'moduleTest'
+    $testPath = join-path -path $TestDrive -childPath 'moduleTest'
 
 }
 
@@ -131,6 +126,18 @@ Describe 'New-MFProject trims a trailing path separator' {
         New-MFProject -ModuleName 'TrailingModule' -description 'Trailing separator test' -ModulePath $trailingPath
         #Config should land at the trimmed path, not a double-separator path
         Test-Path -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml') | Should -Be $true
+    }
+    It 'Should strip credentials from the project URI' {
+        $tokenPath = join-path $testPath -ChildPath 'tokenProject'
+        $null = new-item -ItemType Directory -Path $tokenPath -Force
+        New-MFProject -ModuleName 'TokenModule' -description 'Token test' -ModulePath $tokenPath -ProjectUri 'https://org:pat123@dev.azure.com/org/project/_git/repo'
+        (Import-Clixml -Path (join-path $tokenPath -ChildPath 'moduleForgeConfig.xml')).projectUri | Should -Be 'https://dev.azure.com/org/project/_git/repo'
+    }
+    It 'Should default testDependencies to Pester and PSScriptAnalyzer' {
+        (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).testDependencies | Should -Be 'PesterAndScriptAnalyzer'
+    }
+    It 'Should default the minimum PowerShell version to the current LTS' {
+        (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).minimumPsVersion | Should -Be ([version]'7.6.0')
     }
     AfterAll{
         Set-Location $currentPath
