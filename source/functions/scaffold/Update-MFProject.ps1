@@ -42,7 +42,7 @@ function Update-MFProject
         #A description of your module. Is used as the descriptor in the module repository
         [Parameter()]
         [string]$Description,
-        #Minimum PowerShell version. Defaults to 7.2 as this is the current LTS version
+        #Minimum PowerShell version for the built module
         [Parameter()]
         [version]$MinimumPsVersion,
         #Who are the primary module authors. Can expand later with add-mfmoduleAuthors command

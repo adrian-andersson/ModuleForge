@@ -132,6 +132,9 @@ Describe 'New-MFProject trims a trailing path separator' {
         #Config should land at the trimmed path, not a double-separator path
         Test-Path -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml') | Should -Be $true
     }
+    It 'Should default the minimum PowerShell version to the current LTS' {
+        (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).minimumPsVersion | Should -Be ([version]'7.6.0')
+    }
     AfterAll{
         Set-Location $currentPath
         Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
