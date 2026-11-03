@@ -178,6 +178,17 @@ Describe 'Invoke-MFProjectRules scanning' {
         }
         (Invoke-TestProject $project).RuleSets.Findings.ScriptName | Should -Contain 'MyClass.ps1'
     }
+    It 'Should not count parser notes about classes in other files as findings' {
+        #Each file is analysed alone, so a class from another file is reported as TypeNotFound by PSScriptAnalyzer
+        $project = New-TestProject @{
+            'PSScriptAnalyzer/rules/MyRules/MyRules.psm1' = $customRule
+            'source/classes/BaseThing.ps1' = 'class BaseThing { [string]$Name }'
+            'source/classes/ChildThing.ps1' = 'class ChildThing : BaseThing { [int]$Size }'
+        }
+        $result = Invoke-TestProject $project
+        $result.RuleSets.Findings.RuleName | Should -Not -Contain 'TypeNotFound'
+        $result.RuleSets.Findings.RuleName | Should -Contain 'Measure-NoFoo'
+    }
     It 'Should not scan test files' {
         $project = New-TestProject @{ 'PSScriptAnalyzer/rules/MyRules/MyRules.psm1' = $customRule }
         (Invoke-TestProject $project).RuleSets.Findings.ScriptName | Should -Not -Contain 'Get-Thing.Tests.ps1'

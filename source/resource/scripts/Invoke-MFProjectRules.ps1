@@ -77,10 +77,17 @@ function Get-MFChildFolder
     Get-ChildItem -LiteralPath $Path -Directory -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq $Name } | Select-Object -First 1
 }
 
+function Get-MFFindingKey
+{
+    #Identifies one finding, so the same parser note can be recognised in every rule set's results
+    PARAM([object]$Finding)
+    "$($Finding.ScriptPath)|$($Finding.Line)|$($Finding.RuleName)|$($Finding.Message)"
+}
+
 function Invoke-MFRuleSetScan
 {
     #Runs one rule set over every source file, and turns the outcome into a status
-    PARAM([hashtable]$RuleSet,[string[]]$SourceFile)
+    PARAM([hashtable]$RuleSet,[string[]]$SourceFile,[hashtable]$ParserNoise = @{})
 
     $findings = [System.Collections.Generic.List[object]]::new()
     try
@@ -89,7 +96,10 @@ function Invoke-MFRuleSetScan
         foreach($file in $SourceFile)
         {
             #-ErrorAction Stop as a rule that throws is otherwise only a printed error and zero findings
-            Invoke-ScriptAnalyzer -Path $file @splat -ErrorAction Stop | Sort-Object -Property Line | ForEach-Object { $findings.Add($_) }
+            Invoke-ScriptAnalyzer -Path $file @splat -ErrorAction Stop | Sort-Object -Property Line | Where-Object {
+                #Parser notes such as TypeNotFound come back with every rule set, but no rule set asked for them
+                !$ParserNoise.ContainsKey((Get-MFFindingKey $_))
+            } | ForEach-Object { $findings.Add($_) }
         }
     }
     catch
@@ -367,11 +377,24 @@ foreach($item in $customRules)
     })
 }
 
+#PSScriptAnalyzer reports some parser notes, such as TypeNotFound for a class defined in another file, whatever
+#rules run. A rule name that matches nothing returns only those notes, so they can be removed from each rule set
+$parserNoise = @{}
+if($ruleSets.Where{ $_.Splat })
+{
+    foreach($file in $sourceFiles)
+    {
+        Invoke-ScriptAnalyzer -Path $file -Settings @{ IncludeRules = @('MFNoRuleMatchesThisName') } -ErrorAction SilentlyContinue | ForEach-Object {
+            $parserNoise[(Get-MFFindingKey $_)] = $true
+        }
+    }
+}
+
 foreach($ruleSet in $ruleSets)
 {
     if($ruleSet.Splat)
     {
-        Invoke-MFRuleSetScan -RuleSet $ruleSet -SourceFile $sourceFiles
+        Invoke-MFRuleSetScan -RuleSet $ruleSet -SourceFile $sourceFiles -ParserNoise $parserNoise
     }
     Write-Information "$($ruleSet.Name): $($ruleSet.Status) $(if($ruleSet.Detail){"- $($ruleSet.Detail)"}else{"($(@($ruleSet.Findings).Count))"})"
     $ruleSet.Findings.ForEach{ Write-Information "  $($_.ScriptName):$($_.Line) [$($_.RuleName)] $($_.Message)" }
