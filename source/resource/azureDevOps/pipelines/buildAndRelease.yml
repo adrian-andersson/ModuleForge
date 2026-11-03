@@ -13,11 +13,16 @@ parameters:
     default: 'prerelease'
     values: [stable, prerelease]
 
-  - name: moduleforge_release_toggle
-    displayName: 'Allow use of ModuleForge prerelease version'
+  - name: dependency_source
+    displayName: 'Where to install ModuleForge and other build modules from. required-resource-file uses the versions pinned in BuildDependencies.psd1'
     type: string
-    default: 'moduleforge-latest-stable-only'
-    values: [moduleforge-latest-stable-only, moduleforge-latest-prerelease-allowed]
+    default: 'required-resource-file'
+    values: [required-resource-file, psgallery-latest, psgallery-prerelease]
+
+  - name: include_source_metadata
+    displayName: 'Add the branch and commit this was built from to the package metadata'
+    type: boolean
+    default: true
 
   # This pipeline publishes PowerShell modules to the Azure DevOps feed.
   # Default feed name is 'psPackages'. Can Override via pipeline parameters. Suggest you change if you created a different feed
@@ -54,22 +59,36 @@ jobs:
 
   - pwsh: |
       $VerbosePreference = 'Continue'
-      Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
-      $mfReleaseType = '${{ parameters.moduleforge_release_toggle }}'
-      if ($mfReleaseType -eq 'moduleforge-latest-prerelease-allowed') {
-        Write-Verbose '********WARNING: Will use latest moduleForge, even if it is a prerelease ********'
-        Install-Module -Name ModuleForge -AllowPrerelease -Force -SkipPublisherCheck
-      }else{
-        Write-Verbose 'Will use latest stable release of moduleForge'
-        Install-Module -Name ModuleForge -Force -SkipPublisherCheck
+      $source = switch('${{ parameters.dependency_source }}')
+      {
+        'psgallery-latest' { 'PSGallery' }
+        'psgallery-prerelease' { Write-Verbose '********WARNING: Will use the latest ModuleForge, even if it is a prerelease ********'; 'PSGalleryPrerelease' }
+        default { 'RequiredResourceFile' }
       }
+      $installed = ./scripts/Install-MFBuildDependencies.ps1 -Source $source -Name ModuleForge
+      $installed|Format-Table
+      #Each step is a new session, so later steps import this exact version, in case a self-hosted agent has others
+      $moduleForgeVersion = $installed.Version -replace '-.*$',''
+      Write-Output "##vso[task.setvariable variable=MODULEFORGE_VERSION]$moduleForgeVersion"
+      import-module Microsoft.PowerShell.PSResourceGet
+      import-module ModuleForge -RequiredVersion $moduleForgeVersion
       $moduleList = @('Microsoft.PowerShell.PSResourceGet','ModuleForge')
-      import-module $moduleList
       get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
     displayName: 'Install Dependencies'
 
   - pwsh: |
       $VerbosePreference = 'Continue'
+      import-module ModuleForge -RequiredVersion $env:MODULEFORGE_VERSION
+      #A rerun of a run that already tagged this commit should finish that version, not make another.
+      #Drop the local tag so the version and changelog are worked out as they were. The tag step puts it back
+      $existingTag = if([int]$env:SYSTEM_JOBATTEMPT -gt 1){ git tag --points-at HEAD | Where-Object { $_ -match '^v\d+\.\d+\.\d+' } | Select-Object -First 1 }
+      if($existingTag)
+      {
+        Write-Verbose "Rerun of a run that tagged this commit as $existingTag. Finishing that version"
+        git tag -d $existingTag
+        $nextVersion = [semver]$existingTag.TrimStart('v')
+        $changeLog = get-mfGitChangeLog -fromLastTag
+      }else{
       $latest = get-mfGitLatestVersion
       #Inputs to determine next semver
       $versionType = '${{ parameters.version_type }}'
@@ -95,6 +114,7 @@ jobs:
       }
       $changeLog = get-mfGitChangeLog -fromLastTag
       $nextVersion = Get-mfNextSemver @nextVerSplat
+      }
       Write-Verbose "NEXT VERSION SHOULD BE: $nextVersion"
       Build-mfProject -version $nextVersion -InformationAction Continue -releaseNotes $changeLog
       Write-Verbose "Push $nextVersion to pipeline variable"
@@ -103,6 +123,7 @@ jobs:
 
   - pwsh: |
       $verbosePreference = 'continue'
+      import-module ModuleForge -RequiredVersion $env:MODULEFORGE_VERSION
       write-verbose 'Step1: Getting Feed URI'
       #STEP 1 - Get all our Params in order and figure out our Repository URI to inject into the NUSPEC
       #NOTE: This is very different to Github Actions. Something like "https://dev.azure.com/$(System.TeamProject)/_git/$(Build.Repository.Name)"
@@ -157,9 +178,34 @@ jobs:
         throw 'No NUPKG found'
       }
       write-verbose 'Step4: Add Repository URI to NuSpec'
-      add-mfRepositoryXmlData -repositoryUri $escapedUri -nugetPackagePath $nuRef -force
+      $repositoryXmlSplat = @{
+        repositoryUri = $escapedUri
+        nugetPackagePath = $nuRef
+        force = $true
+      }
+      if('${{ parameters.include_source_metadata }}' -eq 'True')
+      {
+        write-verbose "Adding source metadata: branch $($env:BUILD_SOURCEBRANCHNAME), commit $($env:BUILD_SOURCEVERSION)"
+        $repositoryXmlSplat.Branch = $env:BUILD_SOURCEBRANCHNAME
+        $repositoryXmlSplat.Commit = $env:BUILD_SOURCEVERSION
+      }
+      add-mfRepositoryXmlData @repositoryXmlSplat
       Write-Output "##vso[task.setvariable variable=nuget_Package_Path]$nuRef"
     displayName: 'Publish to Local'
+
+  - pwsh: |
+      import-module ModuleForge -RequiredVersion $env:MODULEFORGE_VERSION
+      if(get-command Get-MFBuildSummary -ErrorAction SilentlyContinue)
+      {
+        $summaryPath = join-path -path $env:AGENT_TEMPDIRECTORY -childPath 'buildSummary.md'
+        (Get-MFBuildSummary -NugetPackagePath $env:NUGET_PACKAGE_PATH).Markdown|out-file -FilePath $summaryPath -encoding UTF8
+        Write-Output "##vso[task.uploadsummary]$summaryPath"
+      }else{
+        write-warning 'This ModuleForge version has no Get-MFBuildSummary, so there is no build summary'
+      }
+    displayName: 'Build summary'
+    env:
+      NUGET_PACKAGE_PATH: $(nuget_Package_Path)
 
   - pwsh: |
         $verbosePreference = 'Continue'
