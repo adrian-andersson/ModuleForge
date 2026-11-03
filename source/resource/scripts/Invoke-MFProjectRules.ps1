@@ -124,12 +124,18 @@ function ConvertTo-MFTableCell
 
 function New-MFReport
 {
-    PARAM([object[]]$RuleSet,[int]$Top,[string]$AnalyzerVersion)
+    PARAM([object[]]$RuleSet,[int]$Top,[string]$AnalyzerVersion,[string]$AnalyzerSource)
 
     #Matched by the Azure DevOps comment job to find this report's thread
     $marker = '<!-- moduleforge:project-rules -->'
     $title = '### 🧭 Project Rules'
-    $footer = "_PSScriptAnalyzer ${AnalyzerVersion}_"
+    #The same runtime details as the Pester and PSScriptAnalyzer comments
+    $footer = @(
+        '### ℹ️ Runtime Info'
+        "**PSScriptAnalyzer:** $AnalyzerVersion$(if($AnalyzerSource){" · $AnalyzerSource"})"
+        "**PSVersion:** $($PSVersionTable.PSVersion.ToString()) $($PSVersionTable.PSEdition)"
+        "**OS:** $($PSVersionTable.OS) $($PSVersionTable.Platform)"
+    ) -join "`n"
 
     if(!($RuleSet.Where{$_.Status -ne 'Clean'}))
     {
@@ -184,6 +190,7 @@ function New-MFReport
         $sections
         ''
         "_Up to $Top items per table. See the workflow output for line numbers._"
+        ''
         $footer
         ''
     ) -join "`n"
@@ -250,20 +257,42 @@ if(($settingsFiles.Count + $customRules.Count) -lt 1)
     return $noRuleSets
 }
 
+$analyzerSource = 'already installed'
+$analyzerImportVersion = $null
 if($InstallPSScriptAnalyzer)
 {
-    #Only if there is something newer. Reinstalling the version a runner already has warns that it is in use
-    $installed = Get-Module -ListAvailable -Name PSScriptAnalyzer | Sort-Object -Property Version -Descending | Select-Object -First 1
-    if(!$installed -or $installed.Version -lt [version](Find-Module -Name PSScriptAnalyzer).Version)
+    #The shared installer pins PSScriptAnalyzer to BuildDependencies.psd1, as the other workflows do
+    $sharedInstaller = Join-Path -Path $PSScriptRoot -ChildPath 'Install-MFBuildDependencies.ps1'
+    if(Test-Path -LiteralPath $sharedInstaller)
     {
-        Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+        $installed = & $sharedInstaller -ProjectPath $ProjectPath -Name PSScriptAnalyzer
+        $analyzerImportVersion = $installed.ModuleVersion
+        $analyzerSource = $installed.Description
+    }
+    else
+    {
+        #Only if there is something newer. Reinstalling the version a runner already has warns that it is in use
+        $installed = Get-Module -ListAvailable -Name PSScriptAnalyzer | Sort-Object -Property Version -Descending | Select-Object -First 1
+        if(!$installed -or $installed.Version -lt [version](Find-Module -Name PSScriptAnalyzer).Version)
+        {
+            Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+        }
+        $analyzerSource = 'latest from PSGallery'
     }
 }
 if(!(Get-Module -ListAvailable -Name PSScriptAnalyzer))
 {
     throw 'PSScriptAnalyzer must be installed to run project rules. Use -InstallPSScriptAnalyzer to install it.'
 }
-Import-Module PSScriptAnalyzer
+if($analyzerImportVersion)
+{
+    #Exactly the version the installer resolved, so a newer copy elsewhere can't take its place
+    Import-Module PSScriptAnalyzer -RequiredVersion $analyzerImportVersion -ErrorAction Stop
+}
+else
+{
+    Import-Module PSScriptAnalyzer
+}
 $analyzerVersion = (Get-Module PSScriptAnalyzer | Sort-Object -Property Version -Descending | Select-Object -First 1).Version.ToString()
 $knownRules = @((Get-ScriptAnalyzerRule).RuleName)
 
@@ -347,7 +376,7 @@ foreach($ruleSet in $ruleSets)
 }
 
 $results = @($ruleSets | Sort-Object -Property { $_.Name } | ForEach-Object { [PSCustomObject]$_ })
-$report = New-MFReport -RuleSet $results -Top $Top -AnalyzerVersion $analyzerVersion
+$report = New-MFReport -RuleSet $results -Top $Top -AnalyzerVersion $analyzerVersion -AnalyzerSource $analyzerSource
 if($ReportPath)
 {
     $report | Out-File -FilePath $ReportPath -Encoding UTF8

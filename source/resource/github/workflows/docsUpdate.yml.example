@@ -106,7 +106,10 @@ jobs:
         run: |
           $VerbosePreference = 'Continue'
           #The versions pinned in BuildDependencies.psd1. Write-MFModuleDocs needs Microsoft.PowerShell.PlatyPS 1.0 or newer, not the older platyPS
-          ./scripts/Install-MFBuildDependencies.ps1 -Name ModuleForge,Microsoft.PowerShell.PlatyPS | Format-Table
+          $installed = ./scripts/Install-MFBuildDependencies.ps1 -Name ModuleForge,Microsoft.PowerShell.PlatyPS
+          $installed|Format-Table -Property Name,Version,Description
+          #Each step is a new session, so the documentation step imports exactly these versions
+          "MF_DOCS_MODULES=$(($installed|ForEach-Object { "$($_.Name)=$($_.ModuleVersion)" }) -join ';')" >> $env:GITHUB_ENV
           Import-Module Microsoft.PowerShell.PSResourceGet, ModuleForge, Microsoft.PowerShell.PlatyPS
           Get-Module Microsoft.PowerShell.PSResourceGet, ModuleForge, Microsoft.PowerShell.PlatyPS | Select-Object Name, Version | Format-Table
 
@@ -198,6 +201,13 @@ jobs:
         run: |
           $VerbosePreference = 'Continue'
           $moduleName = $env:MODULE_NAME
+          #Exactly the versions the install step resolved, so a newer copy elsewhere on the runner can't take their place
+          foreach($entry in ($env:MF_DOCS_MODULES -split ';' | Where-Object { $_ }))
+          {
+            $name, $version = $entry -split '=', 2
+            if(!$version){ throw "$name was not installed" }
+            Import-Module -Name $name -RequiredVersion $version -ErrorAction Stop
+          }
           write-verbose "Generating docs for $moduleName"
           Write-MFModuleDocs -ModuleName $moduleName -ModulePath ./docs-branch -StampAllDocs
 

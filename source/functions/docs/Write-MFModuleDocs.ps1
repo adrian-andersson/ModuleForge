@@ -86,7 +86,12 @@ function Write-MFModuleDocs
         #Return the sent variables when running debug
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
-        $platyPs = (get-module -Name Microsoft.PowerShell.PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
+        #Use the copy already loaded if there is one, as a workflow imports the version it pinned. Otherwise the newest installed
+        $platyPs = (get-module -Name Microsoft.PowerShell.PlatyPS|Sort-Object -Property version -Descending|select-object -first 1)
+        if(!$platyPs)
+        {
+            $platyPs = (get-module -Name Microsoft.PowerShell.PlatyPS -ListAvailable|Sort-Object -Property version -Descending|select-object -first 1)
+        }
         if($platyPs -and $platyPs.Version -ge [version]'1.0.0')
         {
             write-verbose "Build Function Documentation with Microsoft.PowerShell.PlatyPS Version $($platyPs.version)"

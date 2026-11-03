@@ -11,13 +11,21 @@ jobs:
 
     - pwsh: |
         #What testDependencies in moduleForgeConfig.xml asks for: None, PesterAndScriptAnalyzer (the default) or All. Never ModuleForge
-        ./scripts/Install-MFBuildDependencies.ps1 -ForTests | Format-Table
-        $moduleList = @('Pester')
-        Import-Module $moduleList
-        Get-Module $moduleList | Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease) {"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}} | Format-Table
+        $installed = ./scripts/Install-MFBuildDependencies.ps1 -ForTests
+        $installed | Format-Table -Property Name,Version,Description
+        #Each step is a new session, so the test step imports exactly these versions, and the comment says where they came from
+        Write-Output "##vso[task.setvariable variable=MF_TEST_MODULES]$(($installed | ForEach-Object { "$($_.Name)=$($_.ModuleVersion)" }) -join ';')"
+        Write-Output "##vso[task.setvariable variable=MF_TEST_MODULE_SOURCES]$(($installed | ForEach-Object { "$($_.Name)|$($_.Version)|$($_.Description)" }) -join ';')"
       displayName: 'Install dependencies'
 
     - pwsh: |
+        #Exactly the versions the install step resolved, so a newer copy elsewhere on the agent can't take their place
+        foreach($entry in ($env:MF_TEST_MODULES -split ';' | Where-Object { $_ }))
+        {
+          $moduleName, $moduleVersion = $entry -split '=', 2
+          if(!$moduleVersion){ throw "$moduleName was not installed" }
+          Import-Module -Name $moduleName -RequiredVersion $moduleVersion -ErrorAction Stop
+        }
         $functionsPath = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'functions')"
         $privatePath = "$(Join-Path -Path (Join-Path -Path . -ChildPath 'source') -ChildPath 'private')"
         # Discover tests alongside functions AND private; if a root 'tests' folder exists (case-insensitive), also discover it. Coverage stays on source/functions only.
@@ -64,6 +72,7 @@ jobs:
           write-host "##vso[task.setvariable variable=skippedCount;isOutput=true]$($pesterCapture.SkippedCount)"
           write-host "##vso[task.setvariable variable=pesterDuration;isOutput=true]$($pesterCapture.Duration.toString())"
           write-host "##vso[task.setvariable variable=pesterVersion;isOutput=true]$($pesterCapture.Version)"
+          write-host "##vso[task.setvariable variable=toolSources;isOutput=true]$($env:MF_TEST_MODULE_SOURCES)"
         }
         if($pesterFailed){throw 'Error with Pester invocation'}
         if($pesterCapture.Result -eq 'Failed'){throw "Pester failed: $($pesterCapture.FailedCount) test(s), $($pesterCapture.FailedContainersCount) container(s)"}
@@ -91,6 +100,7 @@ jobs:
       skippedCount: $[ dependencies.ExecutePester.outputs['RunPester.skippedCount']]
       pesterDuration: $[ dependencies.ExecutePester.outputs['RunPester.pesterDuration']]
       pesterVersion: $[ dependencies.ExecutePester.outputs['RunPester.pesterVersion']]
+      toolSources: $[ dependencies.ExecutePester.outputs['RunPester.toolSources']]
     pool:
       name: 'Azure Pipelines'
       vmImage: 'ubuntu-latest'
@@ -124,6 +134,12 @@ jobs:
               $duration = $(if($env:PESTER_DURATION -match '^[0-9:.]+$'){$env:PESTER_DURATION}else{'Unknown'})
               $pesterVersion = $(if($env:PESTER_VERSION -match '^[0-9A-Za-z.\-]+$'){$env:PESTER_VERSION}else{'Unknown'})
               $midpoint = $ccp + ((100 - $ccp) / 2)
+              #One line per test module, with where it came from. Fall back to the Pester version alone
+              $moduleLines = @(($env:TOOL_SOURCES -split ';') | Where-Object { $_ -match "^[A-Za-z0-9.]+\|[0-9A-Za-z.\-]+\|[A-Za-z0-9 .,'()\[\]\-]+$" } | ForEach-Object {
+                $parts = $_ -split '\|'
+                "**$($parts[0]):** $($parts[1]) · $($parts[2])"
+              })
+              if(!$moduleLines){ $moduleLines = @("**Pester Version:** $pesterVersion") }
               $badge = $(if($cc -lt $ccp){"🔴 Failed"}elseIf($cc -lt $midpoint){"🟡 Caution"}elseIf($cc -lt 98){"🟢 Good"}else{"🟢 Perfect 🏅"})
               $comment = @(
                 "### 🧪 Pester Test Results"
@@ -136,7 +152,7 @@ jobs:
                 "**Target:** $($ccp)%"
                 "`n"
                 "### ℹ️ Runtime Info"
-                "**Pester Version:** $pesterVersion"
+                $moduleLines
                 "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                 "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                 "`n"
@@ -178,6 +194,7 @@ jobs:
           SKIPPED_COUNT: $(skippedCount)
           PESTER_DURATION: $(pesterDuration)
           PESTER_VERSION: $(pesterVersion)
+          TOOL_SOURCES: $(toolSources)
       - pwsh: |
           $verbosePreference = 'Continue'
           $actualCoverageString = $env:ACTUAL_COVERAGE

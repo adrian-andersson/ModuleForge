@@ -12,13 +12,20 @@ jobs:
 
     - pwsh: |
         #The version pinned in BuildDependencies.psd1, or the latest from PSGallery if it is not pinned
-        ./scripts/Install-MFBuildDependencies.ps1 -Name PSScriptAnalyzer | Format-Table
+        $installed = ./scripts/Install-MFBuildDependencies.ps1 -Name PSScriptAnalyzer
+        $installed | Format-Table -Property Name,Version,Description
+        #Each step is a new session, so the next step imports exactly this version, and the comment says where it came from
+        Write-Output "##vso[task.setvariable variable=MF_PSSA_VERSION]$($installed.ModuleVersion)"
+        Write-Output "##vso[task.setvariable variable=MF_PSSA_SOURCE]$($installed.Description)"
         $moduleList = @('psscriptanalyzer')
         Import-Module $moduleList
         Get-Module $moduleList | Select-Object Name,@{Name='Version';Expression={if ($_.PrivateData.PSData.Prerelease) {"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"} else {"$($_.Version)"}}} | Format-Table
       displayName: 'Install dependencies'
     - pwsh: |
         $verbosePreference = 'continue'
+        #Exactly the version the install step resolved, so a newer copy elsewhere on the agent can't take its place
+        if(!$env:MF_PSSA_VERSION){ throw 'PSScriptAnalyzer was not installed' }
+        Import-Module PSScriptAnalyzer -RequiredVersion $env:MF_PSSA_VERSION -ErrorAction Stop
         write-verbose 'Declaring PSScriptAnalyzer Params'
         $severity = @('Error','Warning','Information')
         $sourcePath = @(
@@ -164,7 +171,7 @@ jobs:
                     '- _See [the invoke-scriptAnalyzer documentation from microsoft](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer) for information on how to suppress false positives_'
                     ''
                     "### ℹ️ Runtime Info"
-                    "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSScriptAnalyzer:** $psScriptAnalyzerVer$(if($env:MF_PSSA_SOURCE){" · $($env:MF_PSSA_SOURCE)"})"
                     "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                     "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                     ''
@@ -184,7 +191,7 @@ jobs:
                     "$scanSummary"
                     ''
                     "### ℹ️ Runtime Info"
-                    "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSScriptAnalyzer:** $psScriptAnalyzerVer$(if($env:MF_PSSA_SOURCE){" · $($env:MF_PSSA_SOURCE)"})"
                     "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                     "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                     ''

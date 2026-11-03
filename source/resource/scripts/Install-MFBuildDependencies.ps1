@@ -103,6 +103,29 @@ if(!$ProjectPath)
 }
 Write-Verbose "Project root: $ProjectPath"
 
+function New-MFModuleReport
+{
+    #One line per module: the version to import, and where it came from, for the log and PR comments
+    PARAM([string]$ModuleName,[string]$From,[string]$Pin,[object]$Version,[string]$Prerelease)
+    $description = switch($From)
+    {
+        'Pinned' { "pinned $Pin in $DependencyFile" }
+        'NotPinned' { "latest from PSGallery, not pinned in $DependencyFile" }
+        'NoFile' { "latest from PSGallery, no $DependencyFile" }
+        'PSGallery' { 'latest from PSGallery' }
+        'PSGalleryPrerelease' { 'latest from PSGallery, prereleases included' }
+        'Runner' { "the runner's own copy, as testDependencies is None" }
+    }
+    [PSCustomObject]@{
+        Name = $ModuleName
+        #Import-Module -RequiredVersion takes the version without any prerelease label
+        ModuleVersion = if($Version){ "$Version" }else{ $null }
+        Version = if($Version){ "$Version$(if($Prerelease){"-$Prerelease"})" }else{ 'not found' }
+        Source = $From
+        Description = $description
+    }
+}
+
 $testsAll = $false
 if($ForTests)
 {
@@ -129,6 +152,12 @@ if($ForTests)
     {
         'None' {
             Write-Information 'testDependencies is None, so nothing is installed. Tests use the modules the runner already has' -InformationAction Continue
+            #Still report what the runner has, so the workflow imports a known version and the comment can say so
+            foreach($toolName in 'Pester','PSScriptAnalyzer')
+            {
+                $found = Get-Module -ListAvailable -Name $toolName | Sort-Object -Property Version -Descending | Select-Object -First 1
+                New-MFModuleReport -ModuleName $toolName -From 'Runner' -Version $found.Version -Prerelease $found.PrivateData.PSData.Prerelease
+            }
             return
         }
         'PesterAndScriptAnalyzer' { $Name = 'Pester','PSScriptAnalyzer' }
@@ -170,12 +199,15 @@ $dependencies.Keys.ForEach{ $fileNames[$_.ToLower()] = $_ }
 
 $fromFile = @{}
 $fromGallery = [System.Collections.Generic.List[string]]::new()
+#Why each module comes from where it does, in the order asked for
+$moduleSources = [ordered]@{}
 foreach($moduleName in $wanted)
 {
     $fileName = $fileNames[$moduleName.ToLower()]
     if($Source -eq 'RequiredResourceFile' -and $fileName)
     {
         $fromFile[$fileName] = $dependencies[$fileName]
+        $moduleSources[$fileName] = 'Pinned'
     }
     else
     {
@@ -183,7 +215,9 @@ foreach($moduleName in $wanted)
         {
             Write-Warning "$moduleName is not pinned in $DependencyFile. Installing the latest from PSGallery"
         }
-        $fromGallery.Add($(if($fileName){ $fileName }else{ $moduleName }))
+        $galleryName = if($fileName){ $fileName }else{ $moduleName }
+        $fromGallery.Add($galleryName)
+        $moduleSources[$galleryName] = if($Source -ne 'RequiredResourceFile'){ $Source }elseif($dependencyPath){ 'NotPinned' }else{ 'NoFile' }
     }
 }
 
@@ -210,12 +244,14 @@ foreach($moduleName in $fromGallery)
     Install-PSResource @gallerySplat
 }
 
-#Report what is installed, newest first, so the log shows the version each module resolved to
-foreach($moduleName in @($fromFile.Keys) + @($fromGallery))
+#Report the version each module resolved to. For a pinned module that is the newest installed copy the pin
+#allows, which may not be the newest installed copy, so workflows import it by exact version
+foreach($moduleName in $moduleSources.Keys)
 {
-    $installed = Get-InstalledPSResource -Name $moduleName -ErrorAction SilentlyContinue | Sort-Object -Property Version -Descending | Select-Object -First 1
-    [PSCustomObject]@{
-        Name = $moduleName
-        Version = if($installed){ "$($installed.Version)$(if($installed.Prerelease){"-$($installed.Prerelease)"})" }else{ 'not found' }
-    }
+    $from = $moduleSources[$moduleName]
+    $pin = if($from -eq 'Pinned'){ $fromFile[$moduleName].version }
+    $installedSplat = @{ Name = $moduleName; ErrorAction = 'SilentlyContinue' }
+    if($pin){ $installedSplat.Version = $pin }
+    $installed = Get-InstalledPSResource @installedSplat | Sort-Object -Property Version -Descending | Select-Object -First 1
+    New-MFModuleReport -ModuleName $moduleName -From $from -Pin $pin -Version $installed.Version -Prerelease $installed.Prerelease
 }

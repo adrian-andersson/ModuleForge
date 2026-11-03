@@ -11,8 +11,9 @@ jobs:
   psScriptAnalyzerReview:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write #Needed for adding comment
-      contents: read #Since we set permissions, we need to declare read to do checkout
+      contents: read #This job runs repository code, so it gets nothing else. The lintComment job posts the PR comment
+    outputs:
+      report: ${{ steps.lint_report.outputs.report }}
 
     steps:
       - name: Checkout repository
@@ -24,16 +25,20 @@ jobs:
         shell: pwsh
         run: |
           #The version pinned in BuildDependencies.psd1, or the latest from PSGallery if it is not pinned
-          ./scripts/Install-MFBuildDependencies.ps1 -Name PSScriptAnalyzer | Format-Table
-          $moduleList = @('psscriptanalyzer')
-          import-module $moduleList
-          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
+          $installed = ./scripts/Install-MFBuildDependencies.ps1 -Name PSScriptAnalyzer
+          $installed|Format-Table -Property Name,Version,Description
+          #Each step is a new session, so the next step imports exactly this version, and the comment says where it came from
+          "MF_PSSA_VERSION=$($installed.ModuleVersion)" >> $env:GITHUB_ENV
+          "MF_PSSA_SOURCE=$($installed.Description)" >> $env:GITHUB_ENV
   
       - name: Run PSScriptAnalyzer tests
         shell: pwsh
         id: psscriptanalyzer_tests
         run: |
             $verbosePreference = 'continue'
+            #Exactly the version the install step resolved, so a newer copy elsewhere on the runner can't take its place
+            if(!$env:MF_PSSA_VERSION){ throw 'PSScriptAnalyzer was not installed' }
+            Import-Module PSScriptAnalyzer -RequiredVersion $env:MF_PSSA_VERSION -ErrorAction Stop
             write-verbose 'Declaring PSScriptAnalyzer Params'
             $severity = @('Error','Warning','Information')
             $sourcePath = @(
@@ -176,7 +181,7 @@ jobs:
                     '- _See [the invoke-scriptAnalyzer documentation from microsoft](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer) for information on how to suppress false positives_'
                     ''
                     "### ℹ️ Runtime Info"
-                    "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSScriptAnalyzer:** $psScriptAnalyzerVer$(if($env:MF_PSSA_SOURCE){" · $($env:MF_PSSA_SOURCE)"})"
                     "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                     "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                     ''
@@ -196,7 +201,7 @@ jobs:
                     "$scanSummary"
                     ''
                     "### ℹ️ Runtime Info"
-                    "**PSScriptAnalyzer Version:** $psScriptAnalyzerVer"
+                    "**PSScriptAnalyzer:** $psScriptAnalyzerVer$(if($env:MF_PSSA_SOURCE){" · $($env:MF_PSSA_SOURCE)"})"
                     "**PSVersion:** $($psversiontable.PSVersion.ToString()) $($psversiontable.PSEdition)"
                     "**OS:** $($psversiontable.OS) $($psversiontable.Platform)"
                     ''
@@ -206,25 +211,41 @@ jobs:
                 $lintResultMarkdown|out-file -FilePath psInvokeResult.md -encoding UTF8
             }
 
-      - name: Add run details
+      - name: Pass report to comment job
         shell: pwsh
-        if: always() && github.event_name == 'pull_request'
-        env:
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        id: lint_report
+        if: always()
         run: |
           if(test-path psInvokeResult.md)
           {
-            #When, and from which push, as GitHub only says an edited comment changed
-            $runUrl = "$($env:GITHUB_SERVER_URL)/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)"
-            $commit = if($env:HEAD_SHA -match '^[0-9a-f]{7,40}$'){ $env:HEAD_SHA.Substring(0,7) }else{ 'unknown' }
-            $attempt = if([int]$env:GITHUB_RUN_ATTEMPT -gt 1){ ", attempt $($env:GITHUB_RUN_ATTEMPT)" }
-            "`n_Updated $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC for commit ``$commit`` · [run $($env:GITHUB_RUN_NUMBER)$attempt]($runUrl)_"|Add-Content -Path psInvokeResult.md -Encoding UTF8
+            #Base64 so nothing in a finding can break out of the job output
+            "report=$([Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path psInvokeResult.md).Path)))" >> $env:GITHUB_OUTPUT
           }
+
+  lintComment:
+    needs: psScriptAnalyzerReview
+    if: always() && github.event_name == 'pull_request' && needs.psScriptAnalyzerReview.outputs.report != ''
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      pull-requests: write #Needed for adding comment. This job must never checkout or run repository code
+
+    steps:
+      - name: Decode report
+        shell: pwsh
+        env:
+          REPORT: ${{ needs.psScriptAnalyzerReview.outputs.report }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          [IO.File]::WriteAllBytes((Join-Path (Get-Location).Path 'psInvokeResult.md'), [Convert]::FromBase64String($env:REPORT))
+          #When, and from which push, as GitHub only says an edited comment changed
+          $runUrl = "$($env:GITHUB_SERVER_URL)/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)"
+          $commit = if($env:HEAD_SHA -match '^[0-9a-f]{7,40}$'){ $env:HEAD_SHA.Substring(0,7) }else{ 'unknown' }
+          $attempt = if([int]$env:GITHUB_RUN_ATTEMPT -gt 1){ ", attempt $($env:GITHUB_RUN_ATTEMPT)" }
+          "`n_Updated $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC for commit ``$commit`` · [run $($env:GITHUB_RUN_NUMBER)$attempt]($runUrl)_"|Add-Content -Path psInvokeResult.md -Encoding UTF8
 
       - name: Add PSInvoke PR Comment
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
-        if: always() && github.event_name == 'pull_request'
         with:
           path: psInvokeResult.md
           header: psInvokeResult
-    

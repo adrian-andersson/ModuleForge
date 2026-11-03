@@ -101,6 +101,21 @@ Describe 'Install-MFBuildDependencies' {
         $result = & $scriptPath -ProjectPath (New-TestProject $pinned) -Name Pester
         $result.Name | Should -Be 'Pester'
         $result.Version | Should -Be '1.0.0'
+        $result.ModuleVersion | Should -Be '1.0.0'
+    }
+
+    It 'Should say where each module came from' {
+        $result = & $scriptPath -ProjectPath (New-TestProject $pinned) -Name 'Pester','PSScriptAnalyzer'
+        ($result | Where-Object Name -eq 'Pester').Description | Should -Be 'pinned [6.0.0, 7.0.0) in BuildDependencies.psd1'
+        ($result | Where-Object Name -eq 'PSScriptAnalyzer').Description | Should -Be 'latest from PSGallery, not pinned in BuildDependencies.psd1'
+        (& $scriptPath -ProjectPath (New-TestProject) -Name Pester).Description | Should -Be 'latest from PSGallery, no BuildDependencies.psd1'
+        (& $scriptPath -ProjectPath (New-TestProject $pinned) -Name Pester -Source PSGallery).Description | Should -Be 'latest from PSGallery'
+        (& $scriptPath -ProjectPath (New-TestProject $pinned) -Name Pester -Source PSGalleryPrerelease).Description | Should -Be 'latest from PSGallery, prereleases included'
+    }
+
+    It 'Should resolve a pinned module to the newest copy the pin allows, not the newest installed' {
+        $null = & $scriptPath -ProjectPath (New-TestProject $pinned) -Name Pester
+        Should -Invoke Get-InstalledPSResource -ParameterFilter { $Name -eq 'Pester' -and $Version -eq '[6.0.0, 7.0.0)' }
     }
 
     It 'Should bootstrap PSResourceGet only when it is missing' {
@@ -125,8 +140,11 @@ Describe 'Install-MFBuildDependencies -ForTests' {
         $project = New-TestProject $allFour
         Set-TestDependencies -Path $project -Value 'None'
         $result = & $scriptPath -ProjectPath $project -ForTests -InformationAction SilentlyContinue
-        $result | Should -BeNullOrEmpty
         Should -Invoke Install-PSResource -Times 0 -Exactly
+        #It still reports what the runner has, so the workflow can import it by exact version
+        $result.Name | Should -Be @('Pester','PSScriptAnalyzer')
+        $result.Source | Should -Be @('Runner','Runner')
+        $result[0].Description | Should -Be "the runner's own copy, as testDependencies is None"
     }
 
     It 'Should install only Pester and PSScriptAnalyzer, pinned, when testDependencies is PesterAndScriptAnalyzer' {
