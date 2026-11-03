@@ -1,4 +1,4 @@
-function Get-MFBuildSummary
+﻿function Get-MFBuildSummary
 {
 
     <#
