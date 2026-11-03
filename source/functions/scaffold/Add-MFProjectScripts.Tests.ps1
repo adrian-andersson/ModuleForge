@@ -49,6 +49,34 @@ Describe 'Add-MFProjectScripts should Copy Files' {
     It 'Should have created the Invoke-MFProjectRules script' {
         Join-Path $scriptsFolder 'Invoke-MFProjectRules.ps1' | Should -Exist
     }
+    It 'Should have created the Install-MFBuildDependencies script' {
+        Join-Path $scriptsFolder 'Install-MFBuildDependencies.ps1' | Should -Exist
+    }
+    It 'Should have added BuildDependencies.psd1 to the project root, not the scripts folder' {
+        Join-Path $testPath 'BuildDependencies.psd1' | Should -Exist
+        Join-Path $scriptsFolder 'BuildDependencies.psd1' | Should -Not -Exist
+    }
+    It 'Should leave the ModuleForge pin as the template has it when not run from the module' {
+        #Dot-sourced here, so there is no running module to pin to
+        (Import-PowerShellDataFile (Join-Path $testPath 'BuildDependencies.psd1')).ModuleForge.version | Should -Be '[1.4.0, 2.0.0)'
+    }
+}
+
+Describe 'Add-MFProjectScripts pins ModuleForge to the running version' {
+    BeforeAll{
+        #Run it from inside a throwaway module, as it would be from ModuleForge itself
+        $pinPath = Join-Path $TestDrive 'pinProject'
+        $null = New-Item -ItemType Directory -Path $pinPath -Force
+        $functionText = Get-Content -Path $PSCommandPath.Replace('.Tests.ps1','.ps1') -Raw
+        $fakeModule = New-Module -Name 'FakeModuleForge' -ScriptBlock ([scriptblock]::Create("$functionText`nExport-ModuleMember -Function Add-MFProjectScripts"))
+        $pinVersion = $fakeModule.Version
+    }
+    It 'Should pin ModuleForge from the running version up to the next major' {
+        & $fakeModule { param($root,$path) $mockPsScriptRoot = $root; Add-MFProjectScripts -ModulePath $path -WarningAction SilentlyContinue } $mockPsScriptRoot $pinPath
+        $pin = (Import-PowerShellDataFile (Join-Path $pinPath 'BuildDependencies.psd1')).ModuleForge
+        $pin.version | Should -Be "[$($pinVersion.Major).$($pinVersion.Minor).$($pinVersion.Build), $($pinVersion.Major + 1).0.0)"
+        $pin.repository | Should -Be 'PSGallery'
+    }
 }
 
 Describe 'Add-MFProjectScripts should NOT copy if files exist' {
