@@ -103,7 +103,7 @@ if(!$ProjectPath)
 }
 Write-Verbose "Project root: $ProjectPath"
 
-function New-MFModuleReport
+function Get-MFModuleReport
 {
     #One line per module: the version to import, and where it came from, for the log and PR comments
     PARAM([string]$ModuleName,[string]$From,[string]$Pin,[object]$Version,[string]$Prerelease)
@@ -156,7 +156,7 @@ if($ForTests)
             foreach($toolName in 'Pester','PSScriptAnalyzer')
             {
                 $found = Get-Module -ListAvailable -Name $toolName | Sort-Object -Property Version -Descending | Select-Object -First 1
-                New-MFModuleReport -ModuleName $toolName -From 'Runner' -Version $found.Version -Prerelease $found.PrivateData.PSData.Prerelease
+                Get-MFModuleReport -ModuleName $toolName -From 'Runner' -Version $found.Version -Prerelease $found.PrivateData.PSData.Prerelease
             }
             return
         }
@@ -253,5 +253,5 @@ foreach($moduleName in $moduleSources.Keys)
     $installedSplat = @{ Name = $moduleName; ErrorAction = 'SilentlyContinue' }
     if($pin){ $installedSplat.Version = $pin }
     $installed = Get-InstalledPSResource @installedSplat | Sort-Object -Property Version -Descending | Select-Object -First 1
-    New-MFModuleReport -ModuleName $moduleName -From $from -Pin $pin -Version $installed.Version -Prerelease $installed.Prerelease
+    Get-MFModuleReport -ModuleName $moduleName -From $from -Pin $pin -Version $installed.Version -Prerelease $installed.Prerelease
 }
