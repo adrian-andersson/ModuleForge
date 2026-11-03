@@ -94,6 +94,11 @@ jobs:
         $artifactPath = join-path -path $env:PIPELINE_WORKSPACE -childPath 'projectRules'
         $report = get-content -path (join-path -path $artifactPath -childPath 'projectRules.md') -raw
         $threadStatus = if((get-content -path (join-path -path $artifactPath -childPath 'threadStatus.txt') -raw).trim() -eq 'closed'){'closed'}else{'active'}
+        #When, and from which push, as the thread is edited in place rather than added to
+        $runUrl = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$([uri]::EscapeDataString($env:SYSTEM_TEAMPROJECT))/_build/results?buildId=$($env:BUILD_BUILDID)"
+        $commit = if($env:SYSTEM_PULLREQUEST_SOURCECOMMITID -match '^[0-9a-f]{7,40}$'){ $env:SYSTEM_PULLREQUEST_SOURCECOMMITID.Substring(0,7) }else{ 'unknown' }
+        $attempt = if([int]$env:SYSTEM_JOBATTEMPT -gt 1){ ", attempt $($env:SYSTEM_JOBATTEMPT)" }
+        $report = "$($report.TrimEnd())`n`n_Updated $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC for commit ``$commit`` · [build $($env:BUILD_BUILDNUMBER)$attempt]($runUrl)_`n"
 
         $threadProperty = 'ModuleForge.ProjectRules'
         $reportMarker = '<!-- moduleforge:project-rules -->'
