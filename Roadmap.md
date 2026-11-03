@@ -40,6 +40,8 @@ Improve SEO
 
 ## Considerations
 
+- **GitHub Environments for releases** - an `environment:` on Build and Release and the PSGallery release workflow would allow a `main`-only branch restriction (nothing stops a release from a PR branch today), required reviewers, and environment-scoped secrets such as the PSGallery key. Small change; PSGallery is the strongest case, as a publish there can't be undone
+
 - **Out of scope: integration testing, private or authenticated dependency feeds, and the secrets they need.** ModuleForge does unit testing; anything needing real or private dependencies is the user's to run, in a separate runner or repository if needed. `BuildDependencies.psd1` can name any feed already registered on the runner. Decided during 1.4.0-prev003, as an integration tier kept adding jobs, config files and secrets handling
 
 - **Configurable Pester settings** via `pesterConfig.xml` - stay opinionated for now; the fixed defaults are a feature
