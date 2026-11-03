@@ -141,7 +141,9 @@ jobs:
       write-verbose 'Step2: Creating Local Repo'
       $currentPath = get-location
       #Find the item from the build
-      $psd1Ref = $(get-childItem -path ./build/ -recurse -filter '*.psd1').fullname
+      #Find the manifest by name, as the module's resource folder can ship other .psd1 files
+      $moduleName = (Import-Clixml moduleForgeConfig.xml).moduleName
+      $psd1Ref = (Get-Item -Path (Join-Path -Path . -ChildPath "build/$moduleName/$moduleName.psd1") -ErrorAction SilentlyContinue).FullName
       if($psd1Ref)
       {
         write-verbose "Found PSD1 file: $psd1Ref"
