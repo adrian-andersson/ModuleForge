@@ -182,6 +182,7 @@ function Build-MFProject
 
         $scriptsToProcess = New-Object System.Collections.Generic.List[string]
         $functionsToExport = New-Object System.Collections.Generic.List[string]
+        $aliasesToExport = New-Object System.Collections.Generic.List[string]
         #$DscResourcesToExport = New-Object System.Collections.Generic.List[string] #No Dsc Support presently
 
     }
@@ -273,6 +274,15 @@ function Build-MFProject
                     $item.functionDetails.functionName.forEach{
                         write-verbose "Adding $_ as functionToExport"
                         $functionsToExport.add($_)
+                    }
+
+                    $item.functionDetails.aliases.forEach{
+                        write-verbose "Adding $_ as aliasToExport"
+                        $aliasesToExport.add($_)
+                    }
+
+                    $item.ScriptLevelAliases.forEach{
+                        write-warning "$($item.name) creates an alias outside a function, which will not be exported: $_. Use [Alias()] on the function instead"
                     }
 
                 }
@@ -398,6 +408,10 @@ function Build-MFProject
             Guid = $config.guid
             PowershellVersion = $config.minimumPsVersion.tostring()
             CmdletsToExport = [array]@()
+            #Explicit lists rather than New-ModuleManifest's '*', so the manifest names what it exports
+            #New-ModuleManifest writes an empty VariablesToExport as a commented line, which exports nothing
+            VariablesToExport = [string[]]@()
+            AliasesToExport = [string[]]@($aliasesToExport.ToArray() | Sort-Object -Unique)
         }
 
         if($ReleaseNotes)

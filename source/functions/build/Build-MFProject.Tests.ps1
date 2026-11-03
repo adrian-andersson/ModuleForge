@@ -88,8 +88,10 @@ Describe 'Build-MFProject' {
 describe 'Build-MFProject' {
     beforeAll {
         write-verbose 'build test module files'
+        #Lands in source/private, so its alias must not be exported
         $testFunction = @(
             'function get-text {'
+            '    [Alias("gtNotExported")]'
             '    param ('
             '        [string]$returnString = "Hello"'
             '    )'
@@ -99,8 +101,11 @@ describe 'Build-MFProject' {
             '}'
         )
 
+        #Lands in source/functions, so it and its aliases are public
         $privateFunction = @(
             'function get-textPrivate {'
+            '    [CmdletBinding()]'
+            '    [Alias("gtp","Get-TextAlias")]'
             '    param ('
             '        [string]$returnString = "Hello"'
             '    )'
@@ -235,6 +240,29 @@ describe 'Build-MFProject' {
         $privateData.ModuleForgeBuildPsd1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
         $privateData.ModuleForgeBuildPsm1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
         $privateData.ModuleForgeBuildDate | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Should export the aliases of public functions by name' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $manifest = Import-PowerShellDataFile -Path $psd
+        $manifest.AliasesToExport | Sort-Object | Should -Be @('Get-TextAlias','gtp')
+    }
+
+    It 'Should not export aliases of private functions' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        (Import-PowerShellDataFile -Path $psd).AliasesToExport | Should -Not -Contain 'gtNotExported'
+    }
+
+    It 'Should export no variables, rather than everything' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        #New-ModuleManifest writes an empty list as a commented line, so the key is absent, which exports nothing
+        (Import-PowerShellDataFile -Path $psd).VariablesToExport | Should -BeNullOrEmpty
+        Get-Content -Path $psd | Should -Not -Match "^\s*VariablesToExport\s*=\s*'\*'"
+    }
+
+    It 'Should not use a wildcard for aliases' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        Get-Content -Path $psd | Should -Not -Match "^\s*AliasesToExport\s*=\s*'\*'"
     }
 
     It 'Should include the ModuleForge version and hashes in the psm1 header' {
