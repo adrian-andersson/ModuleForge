@@ -11,7 +11,14 @@
           - PSGallery             the latest stable version of each module in the file, from PSGallery
           - PSGalleryPrerelease   the latest version of each, prereleases included, from PSGallery
 
-        Pass -Name to install only some of the file's modules, such as just Pester for a test run.
+        Pass -Name to install only some of the file's modules.
+
+        Pass -ForTests in a Pester workflow. It installs what the testDependencies setting in
+        moduleForgeConfig.xml asks for:
+          - None                     nothing, so tests use the modules the runner already has
+          - PesterAndScriptAnalyzer  Pester and PSScriptAnalyzer. The default, and used when the setting is missing
+          - All                      everything in the file except ModuleForge, which tests never need as they
+                                     load from source. Mock anything else your code depends on where you can
 
         If the file is missing, or does not list a module named in -Name, that module is installed from
         PSGallery with a warning, so a project without the file still builds.
@@ -30,6 +37,11 @@
         .\scripts\Install-MFBuildDependencies.ps1 -Name Pester
 
         Install only Pester, at the version the file pins.
+
+    .EXAMPLE
+        .\scripts\Install-MFBuildDependencies.ps1 -ForTests
+
+        Install what the project's testDependencies setting asks for, before a Pester run.
 
     .EXAMPLE
         .\scripts\Install-MFBuildDependencies.ps1 -Source PSGalleryPrerelease -Name ModuleForge
@@ -51,6 +63,9 @@ PARAM(
     #Only install these modules. Installs everything in the file by default
     [Parameter()]
     [string[]]$Name,
+    #Install what the testDependencies setting in moduleForgeConfig.xml asks for, before a Pester run
+    [Parameter()]
+    [switch]$ForTests,
     #Root path of the project. Walks up from this script's directory to moduleForgeConfig.xml by default
     [Parameter()]
     [string]$ProjectPath,
@@ -84,6 +99,41 @@ if(!$ProjectPath)
 }
 Write-Verbose "Project root: $ProjectPath"
 
+$testsExcludeModuleForge = $false
+if($ForTests)
+{
+    if($Name)
+    {
+        throw '-ForTests and -Name can not be used together. -ForTests takes its list from moduleForgeConfig.xml'
+    }
+    $testDependencies = $null
+    $configFile = Get-ChildItem -LiteralPath $ProjectPath -File | Where-Object { $_.Name -ieq 'moduleForgeConfig.xml' } | Select-Object -First 1
+    if($configFile)
+    {
+        try{
+            $testDependencies = (Import-Clixml -LiteralPath $configFile.FullName -ErrorAction Stop).testDependencies
+        }catch{
+            Write-Warning "Unable to read moduleForgeConfig.xml, so using the default testDependencies"
+        }
+    }
+    if(!$testDependencies)
+    {
+        $testDependencies = 'PesterAndScriptAnalyzer'
+    }
+    Write-Verbose "testDependencies: $testDependencies"
+    switch($testDependencies)
+    {
+        'None' {
+            Write-Information 'testDependencies is None, so nothing is installed. Tests use the modules the runner already has' -InformationAction Continue
+            return
+        }
+        'PesterAndScriptAnalyzer' { $Name = 'Pester','PSScriptAnalyzer' }
+        #Tests load from source, so they never need the ModuleForge that builds the module
+        'All' { $testsExcludeModuleForge = $true }
+        default { throw "Unknown testDependencies value '$testDependencies' in moduleForgeConfig.xml. Use None, PesterAndScriptAnalyzer or All" }
+    }
+}
+
 #PSResourceGet installs everything else, so it is bootstrapped with the older PowerShellGet
 $resourceGet = Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet | Sort-Object -Property Version -Descending | Select-Object -First 1
 if(!$resourceGet -or $resourceGet.Version -lt [version]'1.0.0')
@@ -104,6 +154,10 @@ if($dependencyPath)
 }
 
 $wanted = if($Name){ $Name }elseif($dependencies.Count){ @($dependencies.Keys) }else{ $essentialModules }
+if($testsExcludeModuleForge)
+{
+    $wanted = @($wanted | Where-Object { $_ -ne 'ModuleForge' })
+}
 
 #Match the file's module names case-insensitively, as PowerShell does
 $fileNames = @{}

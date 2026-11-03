@@ -38,6 +38,12 @@ function New-MFProject
         #Minimum PowerShell version. Defaults to 7.6 as this is the current LTS version
         [Parameter()]
         [version]$MinimumPsVersion = [version]::new('7.6.0'),
+        #What the Pester workflows install before running tests. None relies on the modules the runner already has.
+        #PesterAndScriptAnalyzer installs the versions pinned in BuildDependencies.psd1. All installs everything in
+        #BuildDependencies.psd1 except ModuleForge, which tests never need as they load from source
+        [Parameter()]
+        [ValidateSet('None','PesterAndScriptAnalyzer','All')]
+        [string]$TestDependencies = 'PesterAndScriptAnalyzer',
         #Who are the primary module authors. Can be updated later with Update-MFProject
         [Parameter()]
         [string[]]$ModuleAuthors,
@@ -132,6 +138,7 @@ function New-MFProject
             moduleName = $ModuleName
             description = $description
             minimumPsVersion = $minimumPsVersion
+            testDependencies = $TestDependencies
             moduleAuthors = [array]$moduleAuthors
             companyName = $companyName
             tags = [array]$moduleTags

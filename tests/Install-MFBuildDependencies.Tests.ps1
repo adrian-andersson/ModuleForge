@@ -26,6 +26,23 @@ BeforeAll{
         $root
     }
 
+    function Set-TestDependencies
+    {
+        PARAM([string]$Path,[string]$Value)
+        $config = [PSCustomObject]@{ moduleName = 'TestModule' }
+        if($Value){ $config | Add-Member -NotePropertyName 'testDependencies' -NotePropertyValue $Value }
+        $config | Export-Clixml -Path (join-path $Path 'moduleForgeConfig.xml')
+    }
+
+    $allFour = @"
+@{
+    'ModuleForge' = @{ version = '1.4.0'; repository = 'PSGallery' }
+    'Pester' = @{ version = '[6.0.0, 7.0.0)'; repository = 'PSGallery' }
+    'PSScriptAnalyzer' = @{ version = '[1.25.0, 2.0.0)'; repository = 'PSGallery' }
+    'Microsoft.PowerShell.PlatyPS' = @{ version = '[1.0.3, 2.0.0)'; repository = 'PSGallery' }
+}
+"@
+
     $pinned = @"
 @{
     'Pester' = @{ version = '[6.0.0, 7.0.0)'; repository = 'PSGallery' }
@@ -94,6 +111,60 @@ Describe 'Install-MFBuildDependencies' {
     It 'Should stop when an install fails' {
         Mock Install-PSResource { throw 'feed unavailable' }
         { & $scriptPath -ProjectPath (New-TestProject $pinned) -Name Pester } | Should -Throw '*feed unavailable*'
+    }
+}
+
+Describe 'Install-MFBuildDependencies -ForTests' {
+    BeforeEach{
+        Mock Install-PSResource {}
+        Mock Install-Module {}
+        Mock Get-InstalledPSResource { [PSCustomObject]@{ Name = $Name; Version = [version]'1.0.0'; Prerelease = $null } }
+    }
+
+    It 'Should install nothing when testDependencies is None' {
+        $project = New-TestProject $allFour
+        Set-TestDependencies -Path $project -Value 'None'
+        $result = & $scriptPath -ProjectPath $project -ForTests -InformationAction SilentlyContinue
+        $result | Should -BeNullOrEmpty
+        Should -Invoke Install-PSResource -Times 0 -Exactly
+    }
+
+    It 'Should install only Pester and PSScriptAnalyzer, pinned, when testDependencies is PesterAndScriptAnalyzer' {
+        $project = New-TestProject $allFour
+        Set-TestDependencies -Path $project -Value 'PesterAndScriptAnalyzer'
+        $null = & $scriptPath -ProjectPath $project -ForTests
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter {
+            $RequiredResource -and $RequiredResource.Count -eq 2 -and $RequiredResource.ContainsKey('Pester') -and $RequiredResource.ContainsKey('PSScriptAnalyzer')
+        }
+    }
+
+    It 'Should default to Pester and PSScriptAnalyzer when the setting is missing' {
+        $project = New-TestProject $allFour
+        Set-TestDependencies -Path $project
+        $null = & $scriptPath -ProjectPath $project -ForTests
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter {
+            $RequiredResource -and $RequiredResource.Count -eq 2 -and $RequiredResource.ContainsKey('Pester') -and $RequiredResource.ContainsKey('PSScriptAnalyzer')
+        }
+    }
+
+    It 'Should install everything except ModuleForge when testDependencies is All' {
+        $project = New-TestProject $allFour
+        Set-TestDependencies -Path $project -Value 'All'
+        $null = & $scriptPath -ProjectPath $project -ForTests
+        Should -Invoke Install-PSResource -Times 1 -Exactly -ParameterFilter {
+            $RequiredResource -and $RequiredResource.Count -eq 3 -and !$RequiredResource.ContainsKey('ModuleForge') -and $RequiredResource.ContainsKey('Microsoft.PowerShell.PlatyPS')
+        }
+        Should -Invoke Install-PSResource -Times 0 -Exactly -ParameterFilter { $Name -eq 'ModuleForge' }
+    }
+
+    It 'Should throw for an unknown testDependencies value' {
+        $project = New-TestProject $allFour
+        Set-TestDependencies -Path $project -Value 'Everything'
+        { & $scriptPath -ProjectPath $project -ForTests } | Should -Throw '*Unknown testDependencies value*'
+    }
+
+    It 'Should not take -Name and -ForTests together' {
+        { & $scriptPath -ProjectPath (New-TestProject $allFour) -ForTests -Name Pester } | Should -Throw '*can not be used together*'
     }
 }
 

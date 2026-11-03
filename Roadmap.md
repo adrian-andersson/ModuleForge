@@ -11,6 +11,7 @@
 - [x] Packaging - a unique, cleaned-up repack folder for persistent runners, optional branch and commit metadata, a build summary with hashes (`Get-MFBuildSummary`), and reruns that finish the version an earlier attempt tagged
 - [x] Move docs generation from the unmaintained platyPS 0.14 to Microsoft.PowerShell.PlatyPS 1.0. Drops the bogus `-ProgressAction` parameter and the front matter that changed on every run, and stops rather than publish an empty functions section when PlatyPS writes nothing. Not on MAR yet, so it installs from PSGallery
 - [x] Minimum PowerShell 7.6 LTS and Pester 6. Tests find the project root and their dependencies with `Get-MFTestDependency`, run from any folder, and keep temp files out of the repo
+- [x] `testDependencies` setting in `moduleForgeConfig.xml` decides what the Pester workflows install: `None`, `PesterAndScriptAnalyzer` (the default) or `All` (everything in `BuildDependencies.psd1` except ModuleForge). Set it with `New-MFProject` or `Update-MFProject`
 - [ ] Bring the PSGallery release workflow onto `BuildDependencies.psd1`; it still has its own ModuleForge stable or prerelease toggle
 - [ ] Project Rules installs the latest PSScriptAnalyzer itself, rather than the version pinned in `BuildDependencies.psd1`
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below.
@@ -38,6 +39,8 @@ Improve SEO
 - [ ] **Build backlinks** - PR to `awesome-powershell`, a dev.to / r/PowerShell launch post.
 
 ## Considerations
+
+- **Out of scope: integration testing, private or authenticated dependency feeds, and the secrets they need.** ModuleForge does unit testing; anything needing real or private dependencies is the user's to run, in a separate runner or repository if needed. `BuildDependencies.psd1` can name any feed already registered on the runner. Decided during 1.4.0-prev003, as an integration tier kept adding jobs, config files and secrets handling
 
 - **Configurable Pester settings** via `pesterConfig.xml` - stay opinionated for now; the fixed defaults are a feature
 

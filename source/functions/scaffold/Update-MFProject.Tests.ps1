@@ -100,6 +100,26 @@ Describe 'Update-MFProject' {
         $config.PrivateData.TestKey | Should -Be 'TestValue'
     }
 
+    It 'Should add testDependencies to a config made before the setting existed' {
+        #Strip the setting, as a config from an older ModuleForge would not have it
+        $config = Import-Clixml -Path $moduleConfig
+        $config.PSObject.Properties.Remove('testDependencies')
+        $config | Export-Clixml -Path $moduleConfig
+        (Import-Clixml -Path $moduleConfig).PSObject.Properties.Name | Should -Not -Contain 'testDependencies'
+
+        Update-MFProject -TestDependencies All
+        (Import-Clixml -Path $moduleConfig).testDependencies | Should -Be 'All'
+    }
+
+    It 'Should change an existing testDependencies setting' {
+        Update-MFProject -TestDependencies None
+        (Import-Clixml -Path $moduleConfig).testDependencies | Should -Be 'None'
+    }
+
+    It 'Should reject an unknown testDependencies value' {
+        { Update-MFProject -TestDependencies Everything } | Should -Throw
+    }
+
     AfterAll{
 
         Set-Location $currentPath

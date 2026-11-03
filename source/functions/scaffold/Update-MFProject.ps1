@@ -45,6 +45,10 @@ function Update-MFProject
         #Minimum PowerShell version for the built module
         [Parameter()]
         [version]$MinimumPsVersion,
+        #What the Pester workflows install before running tests: None, PesterAndScriptAnalyzer or All. See New-MFProject
+        [Parameter()]
+        [ValidateSet('None','PesterAndScriptAnalyzer','All')]
+        [string]$TestDependencies,
         #Who are the primary module authors. Can expand later with add-mfmoduleAuthors command
         [Parameter()]
         [string[]]$ModuleAuthors,
@@ -131,6 +135,13 @@ function Update-MFProject
         {
             write-verbose "Updating Module minimumPsVersion from: $($config.minimumPsVersion.tostring()) -> $($MinimumPsVersion.tostring())"
             $config.minimumPsVersion = $MinimumPsVersion
+        }
+
+        if($TestDependencies)
+        {
+            write-verbose "Updating Module testDependencies from: $($config.testDependencies) -> $($TestDependencies)"
+            #Configs made before this setting existed don't have the property yet
+            $config|Add-Member -NotePropertyName 'testDependencies' -NotePropertyValue $TestDependencies -Force
         }
 
         if($ModuleAuthors)

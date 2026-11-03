@@ -32,8 +32,8 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
-          #Everything in BuildDependencies.psd1, including any modules this project's own code needs
-          ./source/resource/scripts/Install-MFBuildDependencies.ps1 | Format-Table
+          #What testDependencies in moduleForgeConfig.xml asks for: None, PesterAndScriptAnalyzer (the default) or All. Never ModuleForge
+          ./source/resource/scripts/Install-MFBuildDependencies.ps1 -ForTests | Format-Table
           $moduleList = @('Pester')
           import-module $moduleList
           get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
@@ -199,6 +199,6 @@ jobs:
   #     - name: Run Pester tests
   #       shell: pwsh
   #       run: |
-  #         ./source/resource/scripts/Install-MFBuildDependencies.ps1 | Format-Table
+  #         ./source/resource/scripts/Install-MFBuildDependencies.ps1 -ForTests | Format-Table
   #         $result = ./source/resource/scripts/Invoke-MFPester.ps1 -SkipCodeCoverage -Verbosity Normal
   #         if($result.Result -ne 'Passed'){throw "Pester failed on $($env:RUNNER_OS): $($result.FailedCount) test(s)"}
