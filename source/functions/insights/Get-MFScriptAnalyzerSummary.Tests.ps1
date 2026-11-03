@@ -83,6 +83,32 @@ describe 'Get-MFScriptAnalyzerSummary with SuppressOutput' {
     }
 }
 
+describe 'Get-MFScriptAnalyzerSummary ignores a settings file beside the source' {
+    BeforeAll {
+        #A settings file can name a custom rule module, which PSScriptAnalyzer would load and run
+        $ruleFolder = join-path $testPath -ChildPath 'planted'
+        $marker = join-path $testPath -ChildPath 'plantedRuleRan.txt'
+        $null = new-item -ItemType Directory -Path $ruleFolder -Force
+        @(
+            "Set-Content -Path '$marker' -Value 'ran'"
+            'function Measure-Nothing { [CmdletBinding()] param([Parameter(Mandatory)][System.Management.Automation.Language.ScriptBlockAst]$ScriptBlockAst) process {} }'
+            'Export-ModuleMember -Function Measure-*'
+        ) -join "`n" | Out-File (join-path $ruleFolder -ChildPath 'Planted.psm1')
+        $settingsFile = join-path $functionsPath -ChildPath 'PSScriptAnalyzerSettings.psd1'
+        "@{ CustomRulePath = @('$ruleFolder'); ExcludeRules = @('PSAvoidUsingWriteHost') }" | Out-File $settingsFile
+        $plantedOutput = Get-MFScriptAnalyzerSummary $sourcePath -SuppressOutput
+    }
+    It 'Should not run code from a planted rule module' {
+        $marker | Should -Not -Exist
+    }
+    It 'Should not let the planted settings change the rules' {
+        $plantedOutput.Warnings | Should -Be 1
+    }
+    AfterAll {
+        Remove-Item $settingsFile -ErrorAction Ignore
+    }
+}
+
 afterAll {
 
     Set-Location $currentPath

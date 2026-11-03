@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         shell: pwsh
@@ -46,8 +48,11 @@ jobs:
                 'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
             )
             $psScriptAnalyzerSplat = @{
-                severity = $severity
-                ExcludeRule = $excludeRules
+                #Explicit settings, so a PSScriptAnalyzerSettings.psd1 beside a source file can't change the rules or load custom rule code
+                Settings = @{
+                    Severity = $severity
+                    ExcludeRules = $excludeRules
+                }
             }
             write-verbose 'Getting source function and private files'
             $sourceFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath

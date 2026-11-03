@@ -33,8 +33,11 @@ jobs:
             'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
         )
         $psScriptAnalyzerSplat = @{
-            severity = $severity
-            ExcludeRule = $excludeRules
+            #Explicit settings, so a PSScriptAnalyzerSettings.psd1 beside a source file can't change the rules or load custom rule code
+            Settings = @{
+                Severity = $severity
+                ExcludeRules = $excludeRules
+            }
         }
         write-verbose 'Getting source function and private files'
         $sourceFiles = Get-ChildItem -Recurse -Include '*.ps1' -Exclude '*.Tests.ps1' -Path $sourcePath
@@ -174,28 +177,54 @@ jobs:
                 ) -join "`n"
                 
             }
-            write-verbose 'Prepping for Rest Call to post Markdown'
-            $commentUri = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/git/repositories/$($env:BUILD_REPOSITORY_NAME)/pullRequests/$($env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads?api-version=7.1"
-            write-verbose "commentUri : $commentUri"
-            $accToken = $($env:SYSTEM_ACCESSTOKEN)
-            $headers = @{
-                Authorization = "Bearer $accToken"
-                Accept = 'application/json'
-            }
-            write-verbose 'Try and send comment'
-            $postBody = @{
-                comments = @(
-                    @{
-                        parentCommentId = 0
-                        content = $lintResultMarkdown
-                        commentType = 1
-                    }
-                )
-                status = 1
-            }| convertTo-Json -depth 10
-            invoke-restmethod -uri $commentUri -headers $headers -contenttype "application/json" -method Post -body $postBody
+            #The comment is posted by the PostLintComment job, so this job never holds the access token
+            $lintResultMarkdown|out-file -FilePath (join-path -path $env:BUILD_ARTIFACTSTAGINGDIRECTORY -childPath 'lintResult.md') -encoding UTF8
         }
       name: RunPSScriptAnalyzer
       displayName: 'Run PSScriptAnalyzer tests'
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: lintResult
+      displayName: 'Publish lint report'
+      condition: eq(variables['Build.Reason'], 'PullRequest')
+
+  - job: PostLintComment #This job holds the access token, so it must never checkout or run repository code
+    dependsOn: ExecutePsScriptAnalyzerReview
+    continueOnError: true
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: none
+
+    - download: current
+      artifact: lintResult
+      displayName: 'Download lint report'
+
+    - pwsh: |
+        $verbosePreference = 'continue'
+        $lintResultMarkdown = get-content -path (join-path -path $env:PIPELINE_WORKSPACE -childPath 'lintResult' -AdditionalChildPath 'lintResult.md') -raw
+        write-verbose 'Prepping for Rest Call to post Markdown'
+        $commentUri = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/git/repositories/$($env:BUILD_REPOSITORY_NAME)/pullRequests/$($env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads?api-version=7.1"
+        write-verbose "commentUri : $commentUri"
+        $accToken = $($env:SYSTEM_ACCESSTOKEN)
+        $headers = @{
+            Authorization = "Bearer $accToken"
+            Accept = 'application/json'
+        }
+        write-verbose 'Try and send comment'
+        $postBody = @{
+            comments = @(
+                @{
+                    parentCommentId = 0
+                    content = $lintResultMarkdown
+                    commentType = 1
+                }
+            )
+            status = 1
+        }| convertTo-Json -depth 10
+        invoke-restmethod -uri $commentUri -headers $headers -contenttype "application/json" -method Post -body $postBody
+      displayName: 'Post lint comment'
       env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)

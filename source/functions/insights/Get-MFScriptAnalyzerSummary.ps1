@@ -67,8 +67,11 @@ function Get-MFScriptAnalyzerSummary
         Write-Debug "BoundParams: $($MyInvocation.BoundParameters|Out-String)"
 
         $psScriptAnalyzerSplat = @{
-            severity = $Severity
-            ExcludeRule = $ExcludeRules
+            #Explicit settings, so a PSScriptAnalyzerSettings.psd1 beside a source file can't change the rules or load custom rule code
+            Settings = @{
+                Severity = $Severity
+                ExcludeRules = $ExcludeRules
+            }
         }
 
         if(!(get-module -ListAvailable 'PSScriptAnalyzer')){
