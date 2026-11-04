@@ -197,44 +197,6 @@ jobs:
           }
           Publish-PSResource @publishSplat
 
-      - name: Trigger ModuleForge.Test.Public #Build and buildTest a module with the version just published to PSGallery
-        shell: pwsh
-        if: success()
-        env:
-          TAG_NAME: ${{ steps.get_release.outputs.tag_name }}
-          #Fine-grained PAT, Actions: read and write on ModuleForge.Test.Public only (workflow_dispatch needs it)
-          DISPATCH_TOKEN: ${{ secrets.TEST_PUBLIC_DISPATCH_TOKEN }}
-        run: |
-          $VerbosePreference = 'Continue'
-          if(!$env:DISPATCH_TOKEN)
-          {
-            write-warning 'No TEST_PUBLIC_DISPATCH_TOKEN secret, so ModuleForge.Test.Public is not triggered'
-            exit 0
-          }
-          $version = $env:TAG_NAME.TrimStart('v')
-          $target = "$($env:GITHUB_REPOSITORY_OWNER)/ModuleForge.Test.Public"
-          write-verbose "Starting Build and Release in $target with ModuleForge $version from PSGallery"
-          #The same inputs as a manual run: no version increment, prerelease, this exact ModuleForge
-          $body = @{
-            ref = 'main'
-            inputs = @{
-              version_type = 'none'
-              release_type = 'prerelease'
-              moduleforge_version = $version
-            }
-          } | ConvertTo-Json
-          $headers = @{
-            Authorization = "Bearer $($env:DISPATCH_TOKEN)"
-            Accept = 'application/vnd.github+json'
-          }
-          #A failed trigger should not fail a publish that has already happened
-          try{
-            Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$target/actions/workflows/buildandrelease.yml/dispatches" -Headers $headers -Body $body -ContentType 'application/json'
-            write-host "✅ Triggered Build and Release in $target for ModuleForge $version"
-          }catch{
-            write-warning "Unable to trigger $($target): $_"
-          }
-
       - name: Hints and Extras
         if: success()
         shell: pwsh

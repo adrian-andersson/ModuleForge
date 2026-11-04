@@ -1,5 +1,9 @@
 name: PSGallery Release - No ModuleForge
 
+# ModuleForge publishes itself with this workflow. It never installs ModuleForge, so publishing a ModuleForge
+# version never depends on another ModuleForge version, and it carries its own copy of Resolve-MFModuleCase.
+# Its only dependency is PSResourceGet, which PowerShell 7.4 and newer include.
+
 on:
   workflow_dispatch:
     inputs:
@@ -26,6 +30,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false #Nothing here pushes to the repository, so keep the token off disk
 
       - name: Get release details
         id: get_release
@@ -70,11 +75,16 @@ jobs:
           Write-Output "release_name=$($release.name)" >> $env:GITHUB_OUTPUT
           Write-Output "release_isPreRelease=$($release.isPrerelease)" >> $env:GITHUB_OUTPUT
 
-      - name: Install dependencies
+      - name: Install dependencies #Only PSResourceGet, and only if the runner's is missing or too old, as Install-MFBuildDependencies does
         shell: pwsh
         run: |
           $VerbosePreference = 'Continue'
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
+          $resourceGet = Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet | Sort-Object -Property Version -Descending | Select-Object -First 1
+          if(!$resourceGet -or $resourceGet.Version -lt [version]'1.0.0')
+          {
+            write-warning 'Microsoft.PowerShell.PSResourceGet 1.0.0 or newer not found. Installing it from PSGallery'
+            Install-Module -Name Microsoft.PowerShell.PSResourceGet -Repository PSGallery -Force -SkipPublisherCheck -Scope CurrentUser
+          }
           $moduleList = @('Microsoft.PowerShell.PSResourceGet')
           import-module $moduleList
           get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
@@ -293,6 +303,44 @@ jobs:
             Path       = $moduleFound.moduleBase
           }
           Publish-PSResource @publishSplat
+
+      - name: Trigger ModuleForge.Test.Public #Build and buildTest a module with the version just published to PSGallery
+        shell: pwsh
+        if: success()
+        env:
+          TAG_NAME: ${{ steps.get_release.outputs.tag_name }}
+          #Fine-grained PAT, Actions: read and write on ModuleForge.Test.Public only (workflow_dispatch needs it)
+          DISPATCH_TOKEN: ${{ secrets.TEST_PUBLIC_DISPATCH_TOKEN }}
+        run: |
+          $VerbosePreference = 'Continue'
+          if(!$env:DISPATCH_TOKEN)
+          {
+            write-warning 'No TEST_PUBLIC_DISPATCH_TOKEN secret, so ModuleForge.Test.Public is not triggered'
+            exit 0
+          }
+          $version = $env:TAG_NAME.TrimStart('v')
+          $target = "$($env:GITHUB_REPOSITORY_OWNER)/ModuleForge.Test.Public"
+          write-verbose "Starting Build and Release in $target with ModuleForge $version from PSGallery"
+          #The same inputs as a manual run: no version increment, prerelease, this exact ModuleForge
+          $body = @{
+            ref = 'main'
+            inputs = @{
+              version_type = 'none'
+              release_type = 'prerelease'
+              moduleforge_version = $version
+            }
+          } | ConvertTo-Json
+          $headers = @{
+            Authorization = "Bearer $($env:DISPATCH_TOKEN)"
+            Accept = 'application/vnd.github+json'
+          }
+          #A failed trigger should not fail a publish that has already happened
+          try{
+            Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$target/actions/workflows/buildandrelease.yml/dispatches" -Headers $headers -Body $body -ContentType 'application/json'
+            write-host "✅ Triggered Build and Release in $target for ModuleForge $version"
+          }catch{
+            write-warning "Unable to trigger $($target): $_"
+          }
 
       - name: Hints and Extras
         if: success()
