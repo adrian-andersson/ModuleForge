@@ -24,8 +24,9 @@ parameters:
     type: boolean
     default: true
 
-  # This pipeline publishes PowerShell modules to the Azure DevOps feed.
-  # Default feed name is 'psPackages'. Can Override via pipeline parameters. Suggest you change if you created a different feed
+  # This pipeline publishes PowerShell modules to an Azure Artifacts feed, named psPackages by default.
+  # The feed can be scoped to this project or to the organization: the pipeline finds which before it builds.
+  # Change the default if your feed has another name, and the same parameter in buildTest.yml
   - name: feed_name
     displayName: 'Azure DevOps feed'
     type: string
@@ -75,6 +76,47 @@ jobs:
       $moduleList = @('Microsoft.PowerShell.PSResourceGet','ModuleForge')
       get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
     displayName: 'Install Dependencies'
+
+  - pwsh: |
+      $VerbosePreference = 'Continue'
+      #Find the feed before building, so a missing feed stops the run before it tags a version
+      $feedName = '${{ parameters.feed_name }}'
+      $project = "$(System.TeamProject)"
+      $collectionUri = "$(System.CollectionUri)".TrimEnd('/')
+      $feedsBase = if($collectionUri -match '^https://dev\.azure\.com/([^/]+)$'){
+        "https://feeds.dev.azure.com/$($Matches[1])"
+      }elseif($collectionUri -match '^https://([^.]+)\.visualstudio\.com$'){
+        "https://$($Matches[1]).feeds.visualstudio.com"
+      }else{
+        throw "Unable to work out the Azure Artifacts address from collection URI $collectionUri"
+      }
+      $headers = @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+      $feedSegment = [uri]::EscapeDataString($feedName)
+      $candidates = [ordered]@{
+        project = "$feedsBase/$([uri]::EscapeDataString($project))/_apis/packaging/feeds/$($feedSegment)?api-version=7.1"
+        organization = "$feedsBase/_apis/packaging/feeds/$($feedSegment)?api-version=7.1"
+      }
+      $scope = $null
+      foreach($candidate in $candidates.GetEnumerator())
+      {
+        try{
+          $feed = Invoke-RestMethod -Uri $candidate.Value -Headers $headers -ErrorAction Stop
+          if($feed.id){ $scope = $candidate.Key; break }
+        }catch{
+          Write-Verbose "No $($candidate.Key)-scoped feed named $($feedName): $($_.Exception.Message)"
+        }
+      }
+      if(!$scope)
+      {
+        throw "❌ No feed named '$feedName' in project '$project' or in the organization. Create it in Artifacts, or set feed_name. If it exists, give '$project Build Service' the Feed Publisher (Contributor) role on it"
+      }
+      #The push task takes <project>/<feed> for a project-scoped feed, and just the feed for an organization-scoped one
+      $publishFeed = if($scope -eq 'project'){ "$project/$feedName" }else{ $feedName }
+      Write-Host "Feed '$feedName' is $scope-scoped. Publishing to: $publishFeed"
+      Write-Output "##vso[task.setvariable variable=publishFeed]$publishFeed"
+    displayName: 'Find the Azure Artifacts feed'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - pwsh: |
       $VerbosePreference = 'Continue'
@@ -245,4 +287,4 @@ jobs:
       command: 'push'
       packagesToPush: '$(nuget_Package_Path)'
       nuGetFeedType: 'internal'
-      publishVstsFeed: '$(System.TeamProject)/${{ parameters.feed_name }}'
+      publishVstsFeed: '$(publishFeed)' #Set by 'Find the Azure Artifacts feed'

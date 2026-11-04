@@ -90,6 +90,21 @@ Describe 'Add-MFGithubScaffold should Copy Files' {
 
 }
 
+Describe 'Add-MFGithubScaffold adds the build test' {
+    It 'Should have added the buildTest workflow disabled, as .example' {
+        (join-path $workflowsFolder 'buildTest.yml.example')|Should -Exist
+        (join-path $workflowsFolder 'buildTest.yml')|Should -Not -Exist
+    }
+    It 'Should have added the generic build test' {
+        (join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1')|Should -Exist
+    }
+    It 'Should keep an edited build test when run again' {
+        $buildTestFile = join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1'
+        '#my own changes'|Out-File $buildTestFile -Append
+        Add-MFGithubScaffold
+        get-content $buildTestFile|Should -Contain '#my own changes'
+    }
+}
 Describe 'Add-MFGithubScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"

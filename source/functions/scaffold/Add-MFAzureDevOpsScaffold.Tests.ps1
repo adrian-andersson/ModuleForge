@@ -93,6 +93,37 @@ Describe 'Add-MFAzureDevOpsScaffold should Copy Files' {
 
 }
 
+Describe 'Add-MFAzureDevOpsScaffold adds the build test' {
+    It 'Should have added the buildTest pipeline disabled, as .example' {
+        (join-path $pipelinesFolder 'buildTest.yml.example')|Should -Exist
+        (join-path $pipelinesFolder 'buildTest.yml')|Should -Not -Exist
+    }
+    It 'Should have added the generic build test' {
+        (join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1')|Should -Exist
+    }
+    It 'Should keep an edited build test when run again' {
+        $buildTestFile = join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1'
+        '#my own changes'|Out-File $buildTestFile -Append
+        Add-MFAzureDevOpsScaffold
+        get-content $buildTestFile|Should -Contain '#my own changes'
+    }
+}
+Describe 'Add-MFAzureDevOpsScaffold Pester pipeline' {
+    It 'Should not fail the test run when coverage cannot be published' {
+        #Publishing coverage fails when a project's Test Plans service is off, which must not block a pull request
+        $text = Get-Content -Path $pesterTestFile -Raw
+        $text | Should -Match '(?s)- task: PublishCodeCoverageResults@\d+.*?continueOnError: true.*?displayName:'
+    }
+}
+
+Describe 'Add-MFAzureDevOpsScaffold Azure Artifacts feeds' {
+    It 'Should publish to the feed the pipeline found, so project and organization feeds both work' {
+        $text = Get-Content -Path $buildandreleaseFile -Raw
+        $text | Should -Match "publishVstsFeed: '\$\(publishFeed\)'"
+        $text | Should -Match 'variable=publishFeed'
+    }
+}
+
 Describe 'Add-MFAzureDevOpsScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"

@@ -1,0 +1,157 @@
+# =============================================================================
+# OPTIONAL PIPELINE — rename to enable
+# Build Test: check the PUBLISHED module, after Build and Release
+# =============================================================================
+#
+# Unit tests load your functions from source/, so they can't see what the build
+# changes: the manifest's export lists, the compiled .psm1, and how the package
+# installs. When the Build and Release pipeline succeeds, this installs the
+# newest version from the Azure Artifacts feed it publishes to, and runs every
+# *.Tests.ps1 in the buildTest folder against it.
+#
+# buildTest/Module.Build.Tests.ps1 checks every public function and alias in
+# source/functions is exported, and nothing else. Add your own black-box tests
+# beside it.
+#
+# TO ENABLE:
+#   1. Rename this file to buildTest.yml (remove the .example extension), and
+#      create a pipeline for it, as you did for the others. The tests it runs
+#      are already in the buildTest folder
+#   2. The trigger below names the Build and Release pipeline by its name in
+#      Azure DevOps. Rename that pipeline to 'Build and Release', or change
+#      source: below to match its name. If this pipeline then shows
+#      "Configuring the trigger failed, edit and save the pipeline again",
+#      check the name, then open this pipeline, choose Edit, and Save
+#   3. Set feed_name below if Build and Release publishes to a feed other than
+#      psPackages. The feed can be scoped to the project or the organization
+#   4. The pipeline reads the feed as the project's build service. If the feed
+#      is not found, or finding the module fails with 401 or 403, give
+#      "<Project> Build Service" the Feed Reader role in the feed's settings,
+#      under Permissions. Organization-scoped feeds often need this
+# =============================================================================
+
+trigger: none
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: buildAndRelease
+      source: 'Build and Release' #The NAME of your Build and Release pipeline in Azure DevOps
+      trigger: true #Runs when a Build and Release run succeeds
+
+parameters:
+  - name: feed_name
+    displayName: 'Azure DevOps feed Build and Release publishes to'
+    type: string
+    default: 'psPackages'
+
+jobs:
+- job: buildTest
+  pool:
+    name: 'Azure Pipelines'
+    vmImage: 'ubuntu-latest'
+  steps:
+  - checkout: self
+    displayName: 'Checkout repository'
+    persistCredentials: false
+
+  - pwsh: |
+      $VerbosePreference = 'Continue'
+      #Pester from BuildDependencies.psd1, as the other pipelines use
+      $installed = ./scripts/Install-MFBuildDependencies.ps1 -Name Pester
+      $installed | Format-Table
+      #Each step is a new session, so the test step imports this exact version
+      Write-Output "##vso[task.setvariable variable=PESTER_VERSION]$($installed.ModuleVersion)"
+    displayName: 'Install dependencies'
+
+  - pwsh: |
+      $VerbosePreference = 'Continue'
+      #The feed can be scoped to this project or to the organization, as in Build and Release, so find which
+      $feedName = '${{ parameters.feed_name }}'
+      $collectionUri = "$(System.CollectionUri)".TrimEnd('/')
+      if($collectionUri -match '^https://dev\.azure\.com/([^/]+)$'){
+        $feedsBase = "https://feeds.dev.azure.com/$($Matches[1])"
+        $packagesBase = "https://pkgs.dev.azure.com/$($Matches[1])"
+      }elseif($collectionUri -match '^https://([^.]+)\.visualstudio\.com$'){
+        $feedsBase = "https://$($Matches[1]).feeds.visualstudio.com"
+        $packagesBase = "https://$($Matches[1]).pkgs.visualstudio.com"
+      }else{
+        throw "Unable to work out the Azure Artifacts address from collection URI $collectionUri"
+      }
+      $projectSegment = [uri]::EscapeDataString("$(System.TeamProject)")
+      $feedSegment = [uri]::EscapeDataString($feedName)
+      $headers = @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+      $feedUrl = $null
+      foreach($scopeSegment in @("/$projectSegment", ''))
+      {
+        try{
+          $feed = Invoke-RestMethod -Uri "$feedsBase$scopeSegment/_apis/packaging/feeds/$($feedSegment)?api-version=7.1" -Headers $headers -ErrorAction Stop
+          if($feed.id){ $feedUrl = "$packagesBase$scopeSegment/_packaging/$feedSegment/nuget/v3/index.json"; break }
+        }catch{
+          Write-Verbose "Feed lookup failed at scope '$scopeSegment': $($_.Exception.Message)"
+        }
+      }
+      if(!$feedUrl){ throw "❌ No feed named '$feedName' in this project or the organization. Set feed_name, or see the setup notes at the top of this file" }
+      Write-Verbose "Feed: $feedUrl"
+      Register-PSResourceRepository -Name 'buildTestFeed' -Uri $feedUrl -Trusted
+      $credential = New-Object System.Management.Automation.PSCredential(
+        'azurePipelines',
+        (ConvertTo-SecureString $env:SYSTEM_ACCESSTOKEN -AsPlainText -Force)
+      )
+
+      if(-not (Test-Path ./moduleForgeConfig.xml)){
+        throw 'Unable to read moduleForgeConfig.xml'
+      }
+      $moduleName = (Import-Clixml ./moduleForgeConfig.xml).moduleName
+      Write-Verbose "Module under test: $moduleName"
+
+      #The feed can lag a few seconds behind the push, so retry the lookup
+      $selectedRelease = $null
+      for($attempt = 1; $attempt -le 6 -and -not $selectedRelease; $attempt++){
+        Write-Verbose "Find attempt $attempt for latest $moduleName"
+        $selectedRelease = Find-PSResource -Repository buildTestFeed -Name $moduleName -Credential $credential -Prerelease -ErrorAction SilentlyContinue |
+          Sort-Object -Property Version -Descending | Select-Object -First 1
+        if(-not $selectedRelease){ Start-Sleep -Seconds 10 }
+      }
+      if(-not $selectedRelease){ throw "No published $moduleName found in feed ${{ parameters.feed_name }}. If this is a 401 or 403, see the setup notes at the top of this file" }
+      $moduleVersion = if($selectedRelease.Prerelease){ "$($selectedRelease.Version)-$($selectedRelease.Prerelease)" } else { "$($selectedRelease.Version)" }
+      Write-Verbose "Latest published ${moduleName}: $moduleVersion"
+      $selectedRelease | Install-PSResource -Credential $credential -TrustRepository -Quiet -ErrorAction Stop
+
+      #A feed can lowercase the package id, which breaks Import-Module by name on case-sensitive Linux
+      ($env:PSModulePath -split [IO.Path]::PathSeparator).ForEach{
+        Get-ChildItem -Path $_ -Directory -ErrorAction Ignore | Where-Object { $_.Name -ieq $moduleName -and $_.Name -cne $moduleName } | ForEach-Object {
+          Write-Verbose "Renaming $($_.FullName) to $moduleName"
+          Rename-Item -LiteralPath $_.FullName -NewName $moduleName
+        }
+      }
+      $moduleFound = Get-Module -ListAvailable -Name $moduleName | Sort-Object Version -Descending | Select-Object -First 1
+      if(-not $moduleFound){ throw "Module $moduleName not found after install" }
+      Write-Verbose "Installed at: $($moduleFound.ModuleBase)"
+
+      #ModuleForge stamps the version it built with into the compiled .psm1 header
+      $mfBuiltVersion = 'unknown'
+      $psm1Path = Join-Path $moduleFound.ModuleBase "$moduleName.psm1"
+      if(Test-Path $psm1Path){
+        $headerLine = Get-Content $psm1Path -TotalCount 6 | Select-String -Pattern 'ModuleForge Version:' | Select-Object -First 1
+        if($headerLine){ $mfBuiltVersion = ($headerLine.ToString() -replace '.*ModuleForge Version:\s*','').Trim() }
+      }
+
+      Import-Module Pester -RequiredVersion $env:PESTER_VERSION
+      $config = New-PesterConfiguration
+      $config.Run.Path = './buildTest'
+      $config.Run.PassThru = $true
+      $config.Output.Verbosity = 'Detailed'
+      $result = Invoke-Pester -Configuration $config
+      if($result.FailedCount -gt 0 -or $result.Result -ne 'Passed'){
+        throw "buildTest: $($result.FailedCount) test(s) failed against the published module"
+      }
+      Write-Host ''
+      Write-Host '================ buildTest summary ================'
+      Write-Host "Passed: $($result.PassedCount) test(s)"
+      Write-Host "   Module under test : $moduleName $moduleVersion"
+      Write-Host "   Built with        : ModuleForge $mfBuiltVersion"
+      Write-Host '=================================================='
+    displayName: 'Install published module and run build tests'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)

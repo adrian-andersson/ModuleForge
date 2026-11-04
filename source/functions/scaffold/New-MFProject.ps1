@@ -20,7 +20,17 @@ function New-MFProject
             #### OUTPUT
             The function will create the directory structure and essential files for the new module "MyModule" in the current working directory. 
             It will also set up the specified metadata and dependencies.
-            
+
+        .EXAMPLE
+            New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -Scaffold GitHub
+
+            #### DESCRIPTION
+            Creates the project, then adds the GitHub Actions workflows and pull request template in the same step,
+            as Add-MFGithubScaffold does. Use AzureDevOps for Azure DevOps pipelines, or both.
+
+            #### OUTPUT
+            The project scaffold, plus a .github folder with workflows and a pull request template.
+
         .NOTES
             Author: Adrian Andersson
             
@@ -62,7 +72,7 @@ function New-MFProject
         #A URL to an icon representing this module
         [Parameter()]
         [string]$IconUri,
-        #URI to use for your project's license. Will try and use the license file if a projectUri is found
+        #URI to use for your project's license. If not passed, and the project root has a LICENSE file and the project URI is a GitHub or Azure DevOps repository, links to that file
         [Parameter()]
         [string]$LicenseUri,
         #Name of the ModuleForge config file. Defaults to 'moduleForgeConfig.xml'
@@ -79,7 +89,11 @@ function New-MFProject
         [String]$DefaultCommandPrefix,
         #Additional private data to include in the module manifest PrivateData section. Must be a hashtable - it is forwarded directly to New-ModuleManifest, which requires a hashtable
         [Parameter()]
-        [hashtable]$PrivateData
+        [hashtable]$PrivateData,
+        #Add the CI scaffold too. GitHub runs Add-MFGithubScaffold, AzureDevOps runs Add-MFAzureDevOpsScaffold. Pass both for both
+        [Parameter()]
+        [ValidateSet('GitHub','AzureDevOps')]
+        [string[]]$Scaffold
 
     )
     begin{
@@ -117,6 +131,15 @@ function New-MFProject
         if(test-path $configPath)
         {
             throw "Config already found at: $configPath"
+        }
+
+        if(!$LicenseUri)
+        {
+            $LicenseUri = Get-MFLicenseUri -ProjectUri $ProjectUri -ModulePath $ModulePath
+            if($LicenseUri)
+            {
+                write-verbose "Using the project's license file for LicenseUri: $LicenseUri"
+            }
         }
 
 
@@ -176,6 +199,16 @@ function New-MFProject
             Write-Host "  Docs: $docsUri" -ForegroundColor Gray
             Write-Host '  Happy forging PowerShell.' -ForegroundColor Yellow
             Write-Host ''
+
+            #The scaffold commands need the config file, so they run after it is written
+            foreach($platform in @($Scaffold | Select-Object -Unique))
+            {
+                switch($platform)
+                {
+                    'GitHub' { Add-MFGithubScaffold -ModulePath $ModulePath }
+                    'AzureDevOps' { Add-MFAzureDevOpsScaffold -ModulePath $ModulePath }
+                }
+            }
         }
     }
 }

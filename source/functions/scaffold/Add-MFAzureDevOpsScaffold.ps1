@@ -8,9 +8,11 @@ function Add-MFAzureDevOpsScaffold
             
         .DESCRIPTION
             This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
-            It will create 2 Azure DevOps Pipelines files, 1 for Pester testing, 1 for buildAndRelease
+            It will create Azure DevOps pipeline files for Pester testing, linting and Build and Release, plus optional
+            .example pipelines you rename to enable. One is Build Test, which installs the published module and checks it
+            exports what source/functions declares.
             It will create 1 Pull Request template.
-            It will also add any missing project scripts, as some pipeline templates call them.
+            It will also add any missing project scripts, as some pipeline templates call them, and the buildTest folder.
 
             The buildAndRelease pipeline will use Git Tags to mark versions. If you stick with this template you should refrain from
             using tags for other purposes.
@@ -132,6 +134,24 @@ function Add-MFAzureDevOpsScaffold
         }
         #Pipeline templates call the project scripts, and existing projects may not have them. Skips existing files
         Add-MFProjectScripts -ModulePath $ModulePath -WarningAction SilentlyContinue
+        #The Build Test pipeline runs the tests in buildTest/
+        $resourceBuildTest = join-path $resourceFolder 'buildTest'
+        $moduleBuildTest = join-path $ModulePath 'buildTest'
+        if(test-path $resourceBuildTest)
+        {
+            if(!(test-path $moduleBuildTest)){ $null = new-item -ItemType Directory -Path $moduleBuildTest }
+            get-childitem $resourceBuildTest -File | ForEach-Object {
+                #Stored as .template so ModuleForge's own test runs never pick it up
+                $destinationPath = join-path $moduleBuildTest ($_.Name -replace '\.template$','')
+                if((test-path $destinationPath) -and !$Force)
+                {
+                    write-warning "Skipping $destinationPath as it exists"
+                }else{
+                    write-verbose "Copying $($_.Name) to $destinationPath"
+                    copy-item -Path $_.FullName -Destination $destinationPath -Force
+                }
+            }
+        }
         $warning = "We've added the pipeline YAML files to your repo, however Azure DevOps will not automatically create the pipelines.`n`nYou will need to create the pipelines manually and point them to the provided YAML files.`n`nSee https://learn.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline or `nhttps://adrian-andersson.github.io/ModuleForge/ for guidance, examples and tutorials"
         Write-Warning $warning 
 

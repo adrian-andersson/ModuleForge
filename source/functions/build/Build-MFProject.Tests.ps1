@@ -19,6 +19,7 @@ BeforeAll{
         'Get-MFFolderItems.ps1'
         'Get-MFDependencyTree.ps1'
         'Get-MFFolderItemDetails.ps1'
+        'Get-MFLicenseUri.ps1'
         'New-MFProject.ps1'
         'Register-MFLocalPsResourceRepository.ps1'
         'Remove-MFLocalPsResourceRepository.ps1'
