@@ -21,6 +21,8 @@
 - [x] `Add-MFProjectRules` adds the example rule sets (CLM compatibility, help examples) and enables the Project Rules workflow
 - [x] Build test in the scaffold - after Build and Release, install the published package and check it exports every function in `source/functions` and every alias declared there, and nothing else. Catches packaging and export bugs unit tests can't see. GitHub reads the repository's own Packages feed with no secrets; Azure DevOps reads the project feed with the pipeline token
 
+- [x] Azure DevOps pipelines find whether the feed is scoped to the project or the organization, and Build and Release checks before it builds, so a missing feed stops the run before it tags a version. Publishing code coverage warns rather than fails when the project's Test Plans service is off
+
 ## v1.5.0
 
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below. Moved from 1.4.0: it needs to be done well, not quickly

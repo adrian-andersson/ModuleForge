@@ -115,6 +115,15 @@ Describe 'Add-MFAzureDevOpsScaffold Pester pipeline' {
         $text | Should -Match '(?s)- task: PublishCodeCoverageResults@\d+.*?continueOnError: true.*?displayName:'
     }
 }
+
+Describe 'Add-MFAzureDevOpsScaffold Azure Artifacts feeds' {
+    It 'Should publish to the feed the pipeline found, so project and organization feeds both work' {
+        $text = Get-Content -Path $buildandreleaseFile -Raw
+        $text | Should -Match "publishVstsFeed: '\$\(publishFeed\)'"
+        $text | Should -Match 'variable=publishFeed'
+    }
+}
+
 Describe 'Add-MFAzureDevOpsScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"
