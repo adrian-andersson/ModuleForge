@@ -72,7 +72,7 @@ function New-MFProject
         #A URL to an icon representing this module
         [Parameter()]
         [string]$IconUri,
-        #URI to use for your project's license. Will try and use the license file if a projectUri is found
+        #URI to use for your project's license. If not passed, and the project root has a LICENSE file and the project URI is a GitHub or Azure DevOps repository, links to that file
         [Parameter()]
         [string]$LicenseUri,
         #Name of the ModuleForge config file. Defaults to 'moduleForgeConfig.xml'
@@ -131,6 +131,15 @@ function New-MFProject
         if(test-path $configPath)
         {
             throw "Config already found at: $configPath"
+        }
+
+        if(!$LicenseUri)
+        {
+            $LicenseUri = Get-MFLicenseUri -ProjectUri $ProjectUri -ModulePath $ModulePath
+            if($LicenseUri)
+            {
+                write-verbose "Using the project's license file for LicenseUri: $LicenseUri"
+            }
         }
 
 

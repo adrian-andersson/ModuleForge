@@ -14,6 +14,7 @@ BeforeAll{
     #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
     $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'ConvertTo-MFSafeUri.ps1'
+        'Get-MFLicenseUri.ps1'
         'Update-MFProject.ps1'
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
@@ -179,6 +180,20 @@ Describe 'New-MFProject trims a trailing path separator' {
         $null = new-item -ItemType Directory -Path $tokenPath -Force
         New-MFProject -ModuleName 'TokenModule' -description 'Token test' -ModulePath $tokenPath -ProjectUri 'https://org:pat123@dev.azure.com/org/project/_git/repo'
         (Import-Clixml -Path (join-path $tokenPath -ChildPath 'moduleForgeConfig.xml')).projectUri | Should -Be 'https://dev.azure.com/org/project/_git/repo'
+    }
+    It 'Should link the license file when LicenseUri is not passed' {
+        $licensePath = join-path $testPath -ChildPath 'licenseProject'
+        $null = new-item -ItemType Directory -Path $licensePath -Force
+        'MIT' | Set-Content -Path (join-path $licensePath 'LICENSE')
+        New-MFProject -ModuleName 'LicenseModule' -description 'License test' -ModulePath $licensePath -ProjectUri 'git@github.com:owner/repo.git'
+        (Import-Clixml -Path (join-path $licensePath -ChildPath 'moduleForgeConfig.xml')).licenseUri | Should -Be 'https://github.com/owner/repo/blob/HEAD/LICENSE'
+    }
+    It 'Should keep a LicenseUri that is passed' {
+        $passedPath = join-path $testPath -ChildPath 'licensePassed'
+        $null = new-item -ItemType Directory -Path $passedPath -Force
+        'MIT' | Set-Content -Path (join-path $passedPath 'LICENSE')
+        New-MFProject -ModuleName 'PassedModule' -description 'License test' -ModulePath $passedPath -ProjectUri 'https://github.com/owner/repo' -LicenseUri 'https://example.com/license'
+        (Import-Clixml -Path (join-path $passedPath -ChildPath 'moduleForgeConfig.xml')).licenseUri | Should -Be 'https://example.com/license'
     }
     It 'Should default testDependencies to Pester and PSScriptAnalyzer' {
         (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).testDependencies | Should -Be 'PesterAndScriptAnalyzer'

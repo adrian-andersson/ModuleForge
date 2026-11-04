@@ -14,6 +14,7 @@ BeforeAll{
     #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
     $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'ConvertTo-MFSafeUri.ps1'
+        'Get-MFLicenseUri.ps1'
         'New-MFProject.ps1'
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
