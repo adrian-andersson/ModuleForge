@@ -17,8 +17,12 @@ BeforeAll{
         'Update-MFProject.ps1'
         'Add-MFProjectScripts.ps1'
         'Add-MFFilesAndFolders.ps1'
+        'Add-MFGithubScaffold.ps1'
+        'Add-MFAzureDevOpsScaffold.ps1'
     )
     $dependencies.ForEach{ . $_ }
+    #The scaffold commands read their templates from source/resource when not running from the module
+    $mockPsScriptRoot = $sourcePath
     
     #Load This File
     . ($PSCommandPath -replace '\.tests\.ps1$','.ps1')
@@ -113,6 +117,49 @@ Describe 'New-MFProject' {
         start-sleep -Seconds 2 #Give it 2 seconds to remove the folder
     }
 
+}
+
+Describe 'New-MFProject -Scaffold' {
+    BeforeAll{
+        $null = new-item -ItemType Directory -path $testPath -force
+        Set-Location $currentPath
+    }
+    It 'Should add no CI scaffold when -Scaffold is not passed' {
+        $plainPath = join-path $testPath -ChildPath 'plain'
+        $null = new-item -ItemType Directory -Path $plainPath -Force
+        New-MFProject -ModuleName 'PlainModule' -description 'No scaffold' -ModulePath $plainPath
+        Test-Path (join-path $plainPath '.github') | Should -Be $false
+        Test-Path (join-path $plainPath '.azuredevops') | Should -Be $false
+    }
+    It 'Should add the GitHub and Azure DevOps scaffolds when both are asked for' {
+        $bothPath = join-path $testPath -ChildPath 'both'
+        $null = new-item -ItemType Directory -Path $bothPath -Force
+        New-MFProject -ModuleName 'BothModule' -description 'Both scaffolds' -ModulePath $bothPath -Scaffold GitHub,AzureDevOps
+        Test-Path (join-path $bothPath '.github' -AdditionalChildPath 'workflows','buildandrelease.yml') | Should -Be $true
+        Test-Path (join-path $bothPath '.azuredevops' -AdditionalChildPath 'pipelines','buildAndRelease.yml') | Should -Be $true
+    }
+    It 'Should add only the scaffold asked for' {
+        $githubPath = join-path $testPath -ChildPath 'githubOnly'
+        $null = new-item -ItemType Directory -Path $githubPath -Force
+        New-MFProject -ModuleName 'GithubModule' -description 'GitHub only' -ModulePath $githubPath -Scaffold GitHub
+        Test-Path (join-path $githubPath '.github' -AdditionalChildPath 'workflows','pesterTest.yml') | Should -Be $true
+        Test-Path (join-path $githubPath '.azuredevops') | Should -Be $false
+    }
+    It 'Should add no scaffold with -WhatIf' {
+        $whatIfPath = join-path $testPath -ChildPath 'whatIf'
+        $null = new-item -ItemType Directory -Path $whatIfPath -Force
+        New-MFProject -ModuleName 'WhatIfModule' -description 'WhatIf' -ModulePath $whatIfPath -Scaffold GitHub -WhatIf
+        Test-Path (join-path $whatIfPath 'moduleForgeConfig.xml') | Should -Be $false
+        Test-Path (join-path $whatIfPath '.github') | Should -Be $false
+    }
+    It 'Should reject an unknown scaffold' {
+        { New-MFProject -ModuleName 'BadModule' -description 'Bad' -ModulePath $testPath -Scaffold GitLab } | Should -Throw
+    }
+    AfterAll{
+        Set-Location $currentPath
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
+        start-sleep -Seconds 2
+    }
 }
 
 Describe 'New-MFProject trims a trailing path separator' {

@@ -16,7 +16,7 @@
 - [x] Project Rules installs PSScriptAnalyzer through `Install-MFBuildDependencies`, so it uses the version pinned in `BuildDependencies.psd1`
 - [x] Workflows import exactly the version they resolved, so a newer copy elsewhere on a runner can't replace a pinned one, and the Pester, PSScriptAnalyzer and Project Rules comments say where each module came from (pinned, latest from PSGallery and why, or the runner's own)
 - [x] Aliases made with `Set-Alias` or `New-Alias` outside a function are exported by name too, as the docs tutorial uses them
-- [ ] `New-MFProject -Scaffold GitHub,AzureDevOps` adds the CI scaffold in the same step
+- [x] `New-MFProject -Scaffold GitHub,AzureDevOps` adds the CI scaffold in the same step
 - [ ] `New-MFProject` fills in `LicenseUri` from a `LICENSE` file for GitHub and Azure DevOps projects, as its help always said it did
 - [ ] `Add-MFProjectRules` adds the example rule sets (CLM compatibility, help examples) and enables the Project Rules workflow
 - [ ] Build test in the scaffold - after Build and Release, install the published package and check every function and alias in the manifest exists. Catches packaging and export bugs unit tests can't see
