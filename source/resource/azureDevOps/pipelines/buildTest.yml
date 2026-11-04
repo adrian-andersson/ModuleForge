@@ -16,7 +16,9 @@
 #   1. Create a pipeline for this file, as you did for the others
 #   2. The trigger below names the Build and Release pipeline by its name in
 #      Azure DevOps. Rename that pipeline to 'Build and Release', or change
-#      source: below to match its name
+#      source: below to match its name. If this pipeline then shows
+#      "Configuring the trigger failed, edit and save the pipeline again",
+#      check the name, then open this pipeline, choose Edit, and Save
 #   3. Set feed_name below if Build and Release publishes to a feed other than
 #      psPackages. The feed can be scoped to the project or the organization
 #   4. The pipeline reads the feed as the project's build service. If the feed

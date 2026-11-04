@@ -395,3 +395,54 @@ jobs:
           }catch{
             write-warning "Unable to trigger $($target): $_"
           }
+
+      - name: Trigger ModuleForge.AZDTest.Private #Build the Azure DevOps test module with this exact version, then buildTest it
+        shell: pwsh
+        if: success()
+        env:
+          NEXT_VERSION: ${{ steps.generate_tag.outputs.next_version }}
+          #Azure DevOps PAT with only Build: Read & execute. Azure DevOps PATs can't be limited to one project or pipeline
+          AZD_TOKEN: ${{ secrets.AZDTEST_DISPATCH_TOKEN }}
+          AZD_ORGANIZATION: anderss
+          AZD_PROJECT: ModuleForge
+          AZD_PIPELINE: Build and Release
+        run: |
+          $VerbosePreference = 'Continue'
+          if(!$env:AZD_TOKEN)
+          {
+            write-warning 'No AZDTEST_DISPATCH_TOKEN secret, so ModuleForge.AZDTest.Private is not triggered'
+            exit 0
+          }
+          $basicAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($env:AZD_TOKEN)"))
+          write-output "::add-mask::$basicAuth"
+          $headers = @{ Authorization = "Basic $basicAuth" }
+          $pipelinesUri = "https://dev.azure.com/$($env:AZD_ORGANIZATION)/$([uri]::EscapeDataString($env:AZD_PROJECT))/_apis/pipelines"
+          #A failed trigger should not fail a release that is already published
+          try{
+            #Find the pipeline by name, so no pipeline id needs storing. A rejected token gets a sign-in page, not an error
+            $pipelines = Invoke-RestMethod -Uri "$($pipelinesUri)?api-version=7.1" -Headers $headers -ErrorAction Stop
+            if($pipelines -isnot [PSCustomObject] -or $null -eq $pipelines.value)
+            {
+              write-warning 'Azure DevOps did not accept the AZDTEST_DISPATCH_TOKEN secret. It may have expired, or lack Build: Read & execute'
+              exit 0
+            }
+            $pipeline = $pipelines.value | Where-Object { $_.name -eq $env:AZD_PIPELINE } | Select-Object -First 1
+            if(!$pipeline)
+            {
+              write-warning "No pipeline named '$($env:AZD_PIPELINE)' in $($env:AZD_ORGANIZATION)/$($env:AZD_PROJECT)"
+              exit 0
+            }
+            #The same parameters as a manual run: main, no version increment, prerelease, this exact ModuleForge
+            $body = @{
+              resources = @{ repositories = @{ self = @{ refName = 'refs/heads/main' } } }
+              templateParameters = @{
+                moduleforge_version = $env:NEXT_VERSION
+                version_type = 'none'
+                release_type = 'prerelease'
+              }
+            } | ConvertTo-Json -Depth 5
+            $run = Invoke-RestMethod -Method Post -Uri "$pipelinesUri/$($pipeline.id)/runs?api-version=7.1" -Headers $headers -Body $body -ContentType 'application/json' -ErrorAction Stop
+            write-host "✅ Started $($env:AZD_PIPELINE) run $($run.id) in $($env:AZD_ORGANIZATION)/$($env:AZD_PROJECT) for ModuleForge $($env:NEXT_VERSION): $($run._links.web.href)"
+          }catch{
+            write-warning "Unable to trigger $($env:AZD_ORGANIZATION)/$($env:AZD_PROJECT): $_"
+          }
