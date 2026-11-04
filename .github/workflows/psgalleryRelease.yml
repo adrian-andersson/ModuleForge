@@ -12,14 +12,15 @@ on:
           - latest-release
           - latest-stable
           - latest-prerelease
-      moduleforge_release_toggle:
-        description: 'Select ModuleForge Release Type'
+      dependency_source:
+        description: 'Where to install ModuleForge from. required-resource-file uses the version pinned in BuildDependencies.psd1'
         required: false
-        default: 'moduleforge-latest-stable-only'
+        default: 'required-resource-file'
         type: choice
         options:
-          - moduleforge-latest-stable-only
-          - moduleforge-latest-prerelease-allowed
+          - required-resource-file
+          - psgallery-latest
+          - psgallery-prerelease
 
 jobs:
   psgalleryDeploy:
@@ -34,6 +35,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false #This workflow runs repository code, so keep the token off disk
 
       - name: Get release details
         id: get_release
@@ -78,25 +80,27 @@ jobs:
           Write-Output "release_name=$($release.name)" >> $env:GITHUB_OUTPUT
           Write-Output "release_isPreRelease=$($release.isPrerelease)" >> $env:GITHUB_OUTPUT
 
-      - name: Install dependencies
+      - name: Install dependencies #Install ModuleForge from BuildDependencies.psd1 unless asked otherwise
         shell: pwsh
+        env:
+          DEPENDENCY_SOURCE: ${{ github.event.inputs.dependency_source }}
         run: |
           $VerbosePreference = 'Continue'
-          Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force -SkipPublisherCheck
-          $mfReleaseType = '${{ github.event.inputs.moduleforge_release_toggle }}'
-          if($mfReleaseType -eq 'moduleforge-latest-prerelease-allowed')
+          $source = switch($env:DEPENDENCY_SOURCE)
           {
-            write-verbose '⚠️  Will use latest ModuleForge including prereleases'
-            Install-Module -Name ModuleForge -AllowPrerelease -Force -SkipPublisherCheck
+            'psgallery-latest' { 'PSGallery' }
+            'psgallery-prerelease' { write-verbose '********WARNING: Will use the latest ModuleForge, even if it is a prerelease ********'; 'PSGalleryPrerelease' }
+            default { 'RequiredResourceFile' }
           }
-          else
-          {
-            write-verbose 'Will use latest stable ModuleForge'
-            Install-Module -Name ModuleForge -Force -SkipPublisherCheck
-          }
-          $moduleList = @('Microsoft.PowerShell.PSResourceGet', 'ModuleForge')
-          Import-Module $moduleList
-          Get-Module $moduleList | Select-Object Name, @{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}} | Format-Table
+          $installed = ./source/resource/scripts/Install-MFBuildDependencies.ps1 -Source $source -Name ModuleForge
+          $installed|Format-Table
+          #Each step is a new session, so later steps import this exact version, in case a persistent runner has others
+          $moduleForgeVersion = $installed.Version -replace '-.*$',''
+          "MODULEFORGE_VERSION=$moduleForgeVersion" >> $env:GITHUB_ENV
+          import-module Microsoft.PowerShell.PSResourceGet
+          import-module ModuleForge -RequiredVersion $moduleForgeVersion
+          $moduleList = @('Microsoft.PowerShell.PSResourceGet','ModuleForge')
+          get-module $moduleList|Select-object Name,@{name='version';expression={if($_.PrivateData.PSData.Prerelease){"$($_.Version)-$($_.PrivateData.PSData.Prerelease)"}else{"$($_.Version)"}}}|Format-Table
 
       - name: Register GitHub Packages repository
         shell: pwsh
@@ -124,6 +128,7 @@ jobs:
         if: success()
         run: |
           $VerbosePreference = 'Continue'
+          import-module ModuleForge -RequiredVersion $env:MODULEFORGE_VERSION
           if(!(Test-Path .\moduleForgeConfig.xml))
           {
             throw 'Error reading ModuleForge Config'

@@ -12,7 +12,7 @@
 - [x] Move docs generation from the unmaintained platyPS 0.14 to Microsoft.PowerShell.PlatyPS 1.0. Drops the bogus `-ProgressAction` parameter and the front matter that changed on every run, and stops rather than publish an empty functions section when PlatyPS writes nothing. Not on MAR yet, so it installs from PSGallery
 - [x] Minimum PowerShell 7.6 LTS and Pester 6. Tests find the project root and their dependencies with `Get-MFTestDependency`, run from any folder, and keep temp files out of the repo
 - [x] `testDependencies` setting in `moduleForgeConfig.xml` decides what the Pester workflows install: `None`, `PesterAndScriptAnalyzer` (the default) or `All` (everything in `BuildDependencies.psd1` except ModuleForge). Set it with `New-MFProject` or `Update-MFProject`
-- [ ] Bring the PSGallery release workflow onto `BuildDependencies.psd1`; it still has its own ModuleForge stable or prerelease toggle
+- [x] Bring the PSGallery release workflow onto `BuildDependencies.psd1`. Its `moduleforge_release_toggle` input is replaced by the same `dependency_source` choice Build and Release has
 - [x] Project Rules installs PSScriptAnalyzer through `Install-MFBuildDependencies`, so it uses the version pinned in `BuildDependencies.psd1`
 - [x] Workflows import exactly the version they resolved, so a newer copy elsewhere on a runner can't replace a pinned one, and the Pester, PSScriptAnalyzer and Project Rules comments say where each module came from (pinned, latest from PSGallery and why, or the runner's own)
 - [x] Aliases made with `Set-Alias` or `New-Alias` outside a function are exported by name too, as the docs tutorial uses them
