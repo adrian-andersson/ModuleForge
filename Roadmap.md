@@ -15,10 +15,15 @@
 - [ ] Bring the PSGallery release workflow onto `BuildDependencies.psd1`; it still has its own ModuleForge stable or prerelease toggle
 - [x] Project Rules installs PSScriptAnalyzer through `Install-MFBuildDependencies`, so it uses the version pinned in `BuildDependencies.psd1`
 - [x] Workflows import exactly the version they resolved, so a newer copy elsewhere on a runner can't replace a pinned one, and the Pester, PSScriptAnalyzer and Project Rules comments say where each module came from (pinned, latest from PSGallery and why, or the runner's own)
-- [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below.
+- [x] Aliases made with `Set-Alias` or `New-Alias` outside a function are exported by name too, as the docs tutorial uses them
+- [ ] `New-MFProject -Scaffold GitHub,AzureDevOps` adds the CI scaffold in the same step
+- [ ] `New-MFProject` fills in `LicenseUri` from a `LICENSE` file for GitHub and Azure DevOps projects, as its help always said it did
+- [ ] `Add-MFProjectRules` adds the example rule sets (CLM compatibility, help examples) and enables the Project Rules workflow
+- [ ] Build test in the scaffold - after Build and Release, install the published package and check every function and alias in the manifest exists. Catches packaging and export bugs unit tests can't see
 
 ## v1.5.0
 
+- [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below. Moved from 1.4.0: it needs to be done well, not quickly
 - [ ] Support multi-line commit messages - parse subject line and body separately, include body in changelog output. Rethink `BREAKING CHANGE:` here: the docs say to add it to the commit body, but nothing reads the body yet
 - [ ] Configurable changelog prefixes - let a project define its own prefix map in `moduleForgeConfig.xml`, so `Get-MFGitChangeLog`, `Write-MFModuleDocs` and `Get-MFGitPrefixHelp` all use it without pipeline edits. Editing the `Get-MFGitChangeLog` call in a pipeline is the only project-wide option today, it does not reach the docs changelog, and `Add-MF*Scaffold -Force` overwrites it. Keep the defaults in one place when doing this, as `Get-MFGitChangeLog` and `Get-MFGitPrefixHelp` each hold a copy (kept in step by a test)
 - [ ] Support commit scoping - `feat(FunctionName): description` with scope parsed and surfaced in changelog
