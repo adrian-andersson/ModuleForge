@@ -1,8 +1,20 @@
 name: PSGallery Release - No ModuleForge
 
-# ModuleForge publishes itself with this workflow. It never installs ModuleForge, so publishing a ModuleForge
-# version never depends on another ModuleForge version, and it carries its own copy of Resolve-MFModuleCase.
+# =============================================================================
+# ModuleForge publishes itself to PSGallery with THIS workflow
+# =============================================================================
+#
+# It differs from the PSGallery Release workflow ModuleForge projects get from
+# Add-MFGithubScaffold (psgalleryRelease.yml.example here, for reference) in one
+# way that matters: it never installs ModuleForge. The scaffolded one installs
+# ModuleForge to use Resolve-MFModuleCase, which would make publishing ModuleForge
+# depend on an already-published ModuleForge. This one carries its own copy of
+# Resolve-MFModuleCase instead.
+#
 # Its only dependency is PSResourceGet, which PowerShell 7.4 and newer include.
+# After publishing, it starts ModuleForge.Test.Public's Build and Release with the
+# version it published, so a project built from PSGallery tests it.
+# =============================================================================
 
 on:
   workflow_dispatch:

@@ -1,3 +1,20 @@
+# =============================================================================
+# REFERENCE ONLY — ModuleForge does not publish itself with this workflow
+# =============================================================================
+#
+# This is the PSGallery Release workflow ModuleForge projects get from
+# Add-MFGithubScaffold (source/resource/github/workflows/psgalleryRelease.yml.example),
+# kept here as .example so it can't be run, and so the difference below stays visible.
+#
+# It installs ModuleForge, from BuildDependencies.psd1, to use Resolve-MFModuleCase.
+# That is fine for any other module, but ModuleForge publishing itself would then
+# depend on an already-published ModuleForge.
+#
+# ModuleForge publishes itself with psgalleryRelease_NoModuleForge.yml instead,
+# which carries its own copy of Resolve-MFModuleCase. Change how ModuleForge
+# publishes there. Change what users get in the template under source/resource.
+# =============================================================================
+
 name: PSGallery Release
 
 on:
