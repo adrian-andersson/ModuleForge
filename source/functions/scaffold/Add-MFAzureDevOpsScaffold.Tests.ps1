@@ -93,6 +93,21 @@ Describe 'Add-MFAzureDevOpsScaffold should Copy Files' {
 
 }
 
+Describe 'Add-MFAzureDevOpsScaffold adds the build test' {
+    It 'Should have added an active buildTest pipeline' {
+        (join-path $pipelinesFolder 'buildTest.yml')|Should -Exist
+        (join-path $pipelinesFolder 'buildTest.yml.example')|Should -Not -Exist
+    }
+    It 'Should have added the generic build test' {
+        (join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1')|Should -Exist
+    }
+    It 'Should keep an edited build test when run again' {
+        $buildTestFile = join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1'
+        '#my own changes'|Out-File $buildTestFile -Append
+        Add-MFAzureDevOpsScaffold
+        get-content $buildTestFile|Should -Contain '#my own changes'
+    }
+}
 Describe 'Add-MFAzureDevOpsScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"

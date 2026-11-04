@@ -19,7 +19,7 @@
 - [x] `New-MFProject -Scaffold GitHub,AzureDevOps` adds the CI scaffold in the same step
 - [x] `New-MFProject` fills in `LicenseUri` from a `LICENSE` file for GitHub and Azure DevOps projects, as its help always said it did
 - [x] `Add-MFProjectRules` adds the example rule sets (CLM compatibility, help examples) and enables the Project Rules workflow
-- [ ] Build test in the scaffold - after Build and Release, install the published package and check every function and alias in the manifest exists. Catches packaging and export bugs unit tests can't see
+- [x] Build test in the scaffold - after Build and Release, install the published package and check it exports every function in `source/functions` and every alias declared there, and nothing else. Catches packaging and export bugs unit tests can't see. GitHub reads the repository's own Packages feed with no secrets; Azure DevOps reads the project feed with the pipeline token
 
 ## v1.5.0
 
