@@ -8,9 +8,9 @@ function Add-MFGithubScaffold
             
         .DESCRIPTION
             This function will create a '.github' folder in the moduleforge root (if one does not exist).
-            It will create GitHub Actions workflows for Pester testing, linting, Build and Release, and a Build Test
-            that installs the published module and checks it exports what source/functions declares, plus optional
-            .example workflows you rename to enable.
+            It will create GitHub Actions workflows for Pester testing, linting and Build and Release, plus optional
+            .example workflows you rename to enable. One is Build Test, which installs the published module and checks it
+            exports what source/functions declares.
             It will create 1 Pull Request template.
             It will also add any missing project scripts, as some workflow templates call them, and the buildTest folder.
 

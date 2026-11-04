@@ -94,9 +94,9 @@ Describe 'Add-MFAzureDevOpsScaffold should Copy Files' {
 }
 
 Describe 'Add-MFAzureDevOpsScaffold adds the build test' {
-    It 'Should have added an active buildTest pipeline' {
-        (join-path $pipelinesFolder 'buildTest.yml')|Should -Exist
-        (join-path $pipelinesFolder 'buildTest.yml.example')|Should -Not -Exist
+    It 'Should have added the buildTest pipeline disabled, as .example' {
+        (join-path $pipelinesFolder 'buildTest.yml.example')|Should -Exist
+        (join-path $pipelinesFolder 'buildTest.yml')|Should -Not -Exist
     }
     It 'Should have added the generic build test' {
         (join-path $testPath 'buildTest' -AdditionalChildPath 'Module.Build.Tests.ps1')|Should -Exist

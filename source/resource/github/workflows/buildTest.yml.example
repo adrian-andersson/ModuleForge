@@ -1,6 +1,10 @@
 # =============================================================================
+# OPTIONAL WORKFLOW — rename to enable
 # Build Test: check the PUBLISHED module, after Build and Release
 # =============================================================================
+#
+# TO ENABLE: rename this file to buildTest.yml (remove the .example extension).
+# The tests it runs are already in the buildTest folder.
 #
 # Unit tests load your functions from source/, so they can't see what the build
 # changes: the manifest's export lists, the compiled .psm1, and how the package
