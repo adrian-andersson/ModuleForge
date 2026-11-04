@@ -107,6 +107,12 @@ describe 'Build-MFProject' {
             '        return $returnString'
             '    }'
             '}'
+            #Script-level aliases, the pattern the docs tutorial uses. Literal names are exported
+            'Set-Alias -Name gtpSet -Value get-textPrivate'
+            'New-Alias gtpNew get-textPrivate'
+            #A runtime name can not go in the manifest, so it is warned about and left out
+            '$dynamicAlias = "gtpDynamic"'
+            'Set-Alias -Name $dynamicAlias -Value get-textPrivate'
         )
 
         $classDefinition = @(
@@ -239,7 +245,30 @@ describe 'Build-MFProject' {
     It 'Should export the aliases of public functions by name' {
         $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
         $manifest = Import-PowerShellDataFile -Path $psd
-        $manifest.AliasesToExport | Sort-Object | Should -Be @('Get-TextAlias','gtp')
+        $manifest.AliasesToExport | Sort-Object | Should -Be @('Get-TextAlias','gtp','gtpNew','gtpSet')
+    }
+
+    It 'Should leave out a script-level alias whose name is only known at runtime' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        $aliases = (Import-PowerShellDataFile -Path $psd).AliasesToExport
+        $aliases | Should -Not -Contain 'gtpDynamic'
+        $aliases | Should -Not -Contain '$dynamicAlias'
+        $aliases | Should -Not -Contain ''
+    }
+
+    It 'Should make script-level aliases available when the built module is imported' {
+        $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
+        #ScriptsToProcess (the validators file) is loaded as a module too, so -PassThru returns more than one
+        $imported = Import-Module $psd -PassThru -Force
+        try{
+            $module = $imported | Where-Object { $_.Name -eq 'TestModule' }
+            $module.ExportedAliases.Keys | Should -Contain 'gtpSet'
+            $module.ExportedAliases.Keys | Should -Contain 'gtpNew'
+            #Definition, not ResolvedCommandName: the test project's DefaultCommandPrefix renames the function outside the module
+            $module.ExportedAliases['gtpSet'].Definition | Should -Be 'get-textPrivate'
+        }finally{
+            $imported | Remove-Module -Force
+        }
     }
 
     It 'Should not export aliases of private functions' {

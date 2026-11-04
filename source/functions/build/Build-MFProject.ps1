@@ -281,8 +281,15 @@ function Build-MFProject
                         $aliasesToExport.add($_)
                     }
 
+                    #Set-Alias or New-Alias at the top of the file, which the psm1 runs at load time
                     $item.ScriptLevelAliases.forEach{
-                        write-warning "$($item.name) creates an alias outside a function, which will not be exported: $_. Use [Alias()] on the function instead"
+                        if($_.Name)
+                        {
+                            write-verbose "Adding $($_.Name) as aliasToExport, from $($_.Text)"
+                            $aliasesToExport.add($_.Name)
+                        }else{
+                            write-warning "$($item.name) creates an alias whose name is only known at runtime, so it will not be exported: $($_.Text). Use a literal name, or [Alias()] on the function"
+                        }
                     }
 
                 }
