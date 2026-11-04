@@ -83,9 +83,18 @@ jobs:
 
     - task: PublishCodeCoverageResults@2
       condition: succeededOrFailed() #Still publish coverage when tests fail
+      #This only fills in the run's Code Coverage tab. The CheckCodeCoverage job checks the target, so a failure here
+      #warns rather than failing tests that passed. It fails when the project's Test Plans service is turned off
+      continueOnError: true
       inputs:
         summaryFileLocation: '$(Build.SourcesDirectory)/codeCoverage.xml'
       displayName: 'Publish Code Coverage Results'
+
+    - pwsh: |
+        Write-Host "##vso[task.logissue type=warning]Code coverage could not be published to this run's Code Coverage tab. The tests and the coverage check are not affected. If the log above says 'Could not find dataspace with category TestManagement', the project's Test Plans service is turned off: turn it on in Project settings > Overview > Azure DevOps services, or ignore this warning"
+      #Only after a step that continued on error, which here can only be the coverage publish
+      condition: and(succeededOrFailed(), eq(variables['Agent.JobStatus'], 'SucceededWithIssues'))
+      displayName: 'Explain why coverage was not published'
 
   - job: CheckCodeCoverage
     dependsOn: ExecutePester

@@ -108,6 +108,13 @@ Describe 'Add-MFAzureDevOpsScaffold adds the build test' {
         get-content $buildTestFile|Should -Contain '#my own changes'
     }
 }
+Describe 'Add-MFAzureDevOpsScaffold Pester pipeline' {
+    It 'Should not fail the test run when coverage cannot be published' {
+        #Publishing coverage fails when a project's Test Plans service is off, which must not block a pull request
+        $text = Get-Content -Path $pesterTestFile -Raw
+        $text | Should -Match '(?s)- task: PublishCodeCoverageResults@\d+.*?continueOnError: true.*?displayName:'
+    }
+}
 Describe 'Add-MFAzureDevOpsScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"
