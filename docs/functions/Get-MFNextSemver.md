@@ -2,49 +2,58 @@
 layout: default
 title: Get-MFNextSemver
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Get-MFNextSemver
 
 ## SYNOPSIS
+
 Increments the version of a Semantic Version (SemVer) object.
 
 ## SYNTAX
 
 ### default (Default)
+
 ```
-Get-MFNextSemver -Version <SemanticVersion> [-Increment <String>] [-StableRelease]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFNextSemver -Version <semver> [-Increment <string>] [-StableRelease]
 ```
 
 ### preRelease
+
 ```
-Get-MFNextSemver -Version <SemanticVersion> [-Increment <String>] [-PreRelease] [-PreReleaseLabel <String>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFNextSemver -Version <semver> [-Increment <string>] [-PreRelease] [-PreReleaseLabel <string>]
 ```
 
 ### Initial
+
 ```
-Get-MFNextSemver [-PreReleaseLabel <String>] [-InitialPreRelease] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+Get-MFNextSemver [-PreReleaseLabel <string>] [-InitialPreRelease]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
-The \`Get-MFNextSemver\` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter. 
-It can handle major, minor, and patch increments. 
+
+The `Get-MFNextSemver` function takes a Semantic Version (SemVer) object as input and increments the version based on the 'increment' parameter.
+
+It can handle major, minor, and patch increments.
+
 The function also handles pre-release versions and allows the user to optionally override the pre-release label.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 $Version = [SemVer]::new('1.0.0')
 Get-MFNextSemver -Version $Version -Increment 'Minor' -PreRelease
-```
 
 #### DESCRIPTION
 This example takes a SemVer object with version '1.0.0', increments the minor version, and adds a pre-release tag.
@@ -54,10 +63,9 @@ With no -PreReleaseLabel supplied it uses the default 'pre' label and a zero-pad
 '1.1.0-prev001'
 
 ### EXAMPLE 2
-```
+
 $Version = [SemVer]::new('2.0.0-prerelease.1')
 Get-MFNextSemver -Version $Version -Increment 'Major'
-```
 
 #### DESCRIPTION
 This example takes a SemVer object with version '2.0.0-prerelease.1', increments the major version, and removes the pre-release tag because the 'prerelease' switch is not set.
@@ -68,108 +76,185 @@ The output will be '3.0.0'.
 
 ## PARAMETERS
 
-### -Version
-Semver Version
-
-```yaml
-Type: SemanticVersion
-Parameter Sets: default, preRelease
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName, ByValue)
-Accept wildcard characters: False
-```
-
 ### -Increment
+
 What are we incrementing
 
 ```yaml
-Type: String
-Parameter Sets: default, preRelease
-Aliases:
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: preRelease
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: default
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+### -InitialPreRelease
+
+Is this the initial prerelease
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Initial
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -PreRelease
+
 Is this a prerelease
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: preRelease
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -StableRelease
-Is this a stable release - drops the prerelease tag from a prerelease version
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: default
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: preRelease
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -PreReleaseLabel
+
 Optional override the prerelease label.
 If not supplied will use 'prerelease'
 
 ```yaml
-Type: String
-Parameter Sets: preRelease, Initial
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Initial
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: preRelease
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
-### -InitialPreRelease
-Is this the initial prerelease
+### -StableRelease
+
+Is this a stable release - drops the prerelease tag from a prerelease version
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: Initial
-Aliases:
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: default
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
+### -Version
+
+Semver Version
+
+```yaml
+Type: System.Management.Automation.SemanticVersion
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: preRelease
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+- Name: default
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### [semver] - Will accept a Semver from pipeline or via direct assignment
+
+{{ Fill in the Description }}
+
+### System.Management.Automation.SemanticVersion
+
+{{ Fill in the Description }}
+
 ## OUTPUTS
 
-### [semver] - Returns a Semantic Version object incremented from the input semver, based on the other parameters
+### [semver] - Returns a Semantic Version object incremented from the input semver
+
+{{ Fill in the Description }}
+
+### System.Management.Automation.SemanticVersion
+
+{{ Fill in the Description }}
+
 ## NOTES
+
 Author: Adrian Andersson
 
+
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 
