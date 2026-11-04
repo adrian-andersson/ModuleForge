@@ -98,12 +98,26 @@ function Get-MFScriptDetails {
                     aliases        = $aliasList.ToArray()
                 }
             }
-            #Set-Alias or New-Alias outside a function makes an alias the manifest can't find by name
+            #Set-Alias or New-Alias outside a function runs at module load, so the manifest has to name its alias too.
+            #Bind the parameters statically to read the name, whether passed as -Name, positionally or abbreviated.
+            #Name is null when it is only known at runtime, such as a variable, so the build can warn about it
             $scriptLevelAliases = $AST.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -in 'Set-Alias','New-Alias','sal','nal' }, $true) | Where-Object {
                 $parent = $_.Parent
                 while($parent -and $parent -isnot [System.Management.Automation.Language.FunctionDefinitionAst]){ $parent = $parent.Parent }
                 !$parent
-            } | ForEach-Object { $_.Extent.Text }
+            } | ForEach-Object {
+                $aliasName = $null
+                $binding = [System.Management.Automation.Language.StaticParameterBinder]::BindCommand($_, $true)
+                $nameArgument = $binding.BoundParameters['Name']
+                if($nameArgument -and $nameArgument.ConstantValue -is [string])
+                {
+                    $aliasName = $nameArgument.ConstantValue
+                }
+                [psCustomObject]@{
+                    Name = $aliasName
+                    Text = $_.Extent.Text
+                }
+            }
         }
         if($Type -eq 'all' -or $Type -eq 'Class')
         {

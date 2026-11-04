@@ -363,3 +363,35 @@ jobs:
           }
           #A rerun keeps the package an earlier attempt published
           dotnet nuget push $nuRef -k $env:GITHUB_TOKEN -s $repoUri --skip-duplicate
+
+      - name: Trigger ModuleForge.Test.Private #Build the test module with this exact version, then buildTest it
+        shell: pwsh
+        if: success()
+        env:
+          NEXT_VERSION: ${{ steps.generate_tag.outputs.next_version }}
+          #Fine-grained PAT, Contents: read and write on ModuleForge.Test.Private only (repository_dispatch needs it)
+          DISPATCH_TOKEN: ${{ secrets.TEST_PRIVATE_DISPATCH_TOKEN }}
+        run: |
+          $VerbosePreference = 'Continue'
+          if(!$env:DISPATCH_TOKEN)
+          {
+            write-warning 'No TEST_PRIVATE_DISPATCH_TOKEN secret, so ModuleForge.Test.Private is not triggered'
+            exit 0
+          }
+          $target = "$($env:GITHUB_REPOSITORY_OWNER)/ModuleForge.Test.Private"
+          write-verbose "Sending moduleforge-build for $($env:NEXT_VERSION) to $target"
+          $body = @{
+            event_type = 'moduleforge-build'
+            client_payload = @{ version = $env:NEXT_VERSION; commit = $env:GITHUB_SHA }
+          } | ConvertTo-Json
+          $headers = @{
+            Authorization = "Bearer $($env:DISPATCH_TOKEN)"
+            Accept = 'application/vnd.github+json'
+          }
+          #A failed trigger should not fail a release that is already published
+          try{
+            Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$target/dispatches" -Headers $headers -Body $body -ContentType 'application/json'
+            write-host "✅ Triggered Build and Release in $target"
+          }catch{
+            write-warning "Unable to trigger $($target): $_"
+          }
