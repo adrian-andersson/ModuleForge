@@ -2,25 +2,35 @@
 layout: default
 title: Get-MFLatestSemverFromBuildManifest
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Get-MFLatestSemverFromBuildManifest
 
 ## SYNOPSIS
+
 Read the current module version from the compiled manifest in the build folder, returned as a semver object
 
 ## SYNTAX
 
+### All parameter sets
+
 ```
-Get-MFLatestSemverFromBuildManifest [[-ModulePath] <String>] [[-ConfigFile] <String>]
- [[-ModuleNameOverride] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFLatestSemverFromBuildManifest [[-ModulePath] <string>] [[-ConfigFile] <string>]
+ [[-ModuleNameOverride] <string>]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
+
 Reads the compiled module manifest from the build folder and returns the current version as a semver object.
 Useful when building locally and needing to determine the current version before calculating the next one.
 Supports an optional module name override for cases where the config file is unavailable.
@@ -30,9 +40,8 @@ Supports an optional module name override for cases where the config file is una
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 Get-MFLatestSemverFromBuildManifest
-```
 
 #### DESCRIPTION
 Import build\module\modulemanifest.psd1
@@ -48,64 +57,103 @@ Major  Minor  Patch  PreReleaseLabel BuildLabel
 
 ## PARAMETERS
 
-### -ModulePath
-Root path of the module.
-Uses the current working directory by default
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases: Path
-
-Required: False
-Position: 1
-Default value: $(get-location).path
-Accept pipeline input: True (ByPropertyName, ByValue)
-Accept wildcard characters: False
-```
-
 ### -ConfigFile
+
 Name of the ModuleForge config file.
 Defaults to 'moduleForgeConfig.xml'
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 2
-Default value: ModuleForgeConfig.xml
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: moduleForgeConfig.xml
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 1
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -ModuleNameOverride
+
 Override the module name from config.
 Useful when the config file is unavailable and the module name is already known
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: 3
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+### -ModulePath
+
+Root path of the module.
+Uses the current working directory by default
+
+```yaml
+Type: System.String
+DefaultValue: $(get-location).path
+SupportsWildcards: false
+Aliases:
+- Path
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
+
+### System.String
+
+{{ Fill in the Description }}
 
 ## OUTPUTS
 
 ### [semver] - Returns a Semantic Version object
+
+{{ Fill in the Description }}
+
+### System.Management.Automation.SemanticVersion
+
+{{ Fill in the Description }}
+
 ## NOTES
+
 Author: Adrian Andersson
 
+
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 

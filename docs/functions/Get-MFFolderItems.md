@@ -2,37 +2,46 @@
 layout: default
 title: Get-MFFolderItems
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Get-MFFolderItems
 
 ## SYNOPSIS
+
 Retrieves a filtered list of files from a specified folder, processing '.mfignore' and '.mforder' rules.
 
 ## SYNTAX
 
 ### Default (Default)
+
 ```
-Get-MFFolderItems -Path <String> [-PSScriptsOnly] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFFolderItems -Path <string> [-PSScriptsOnly]
 ```
 
 ### Copy
+
 ```
-Get-MFFolderItems -Path <String> [-PSScriptsOnly] [-Destination <String>] [-Copy]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFFolderItems -Path <string> [-PSScriptsOnly] [-Destination <string>] [-Copy]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
+
 The 'Get-MFFolderItems' function scans a folder and applies filtering rules to return a curated list of files.
 It offers additional filtering logic, such as:
-- Ignoring entries specified in \`.mfignore\`.
-- Filtering out non-PS1 files using a switch (\`-psScriptsOnly\`).
-- Excluding test-related files (\`*.test.ps1\`, \`*.tests.ps1\`, \`*.skip.ps1\`).
-- Handling optional file copying (\`-destination\` and \`-copy\` parameters).
+- Ignoring entries specified in `.mfignore`.
+- Filtering out non-PS1 files using a switch (`-psScriptsOnly`).
+- Excluding test-related files (`*.test.ps1`, `*.tests.ps1`, `*.skip.ps1`).
+- Handling optional file copying (`-destination` and `-copy` parameters).
 
 The function ensures all returned paths are fully qualified.
 This function is primarily used to assist the get-mfFolderItemDetails as well as build-mfProject.
@@ -41,101 +50,154 @@ The -copy switch is added to cleanly copy resources and binaries with build-mfPr
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 Get-MFFolderItems -Path '.\source\functions' -PSScriptsOnly
-```
 
 #### DESCRIPTION
-Scans \`.\source\functions\`, retrieves only \`.ps1\` files, and excludes files matching \`.mfignore\` rules.
+Scans `.\source\functions`, retrieves only `.ps1` files, and excludes files matching `.mfignore` rules.
 
 ### EXAMPLE 2
-```
+
 Get-MFFolderItems -Path '.\source\functions' -Destination '.\build\functions' -Copy
-```
 
 #### DESCRIPTION
-Scans \`.\source\functions\`, retrieves filtered files, and copies them to \`.\build\functions\`.
+Scans `.\source\functions`, retrieves filtered files, and copies them to `.\build\functions`.
 
 ## PARAMETERS
 
-### -Path
-Path to get items from
+### -Copy
+
+Flag to actually copy files and not just output
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName, ByValue)
-Accept wildcard characters: False
-```
-
-### -PSScriptsOnly
-Flag to copy scripts only
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Copy
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -Destination
+
 Destination path to copy files to.
 Used in conjunction with the -Copy switch
 
 ```yaml
-Type: String
-Parameter Sets: Copy
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Copy
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
-### -Copy
-Flag to actually copy files and not just output
+### -Path
+
+Path to get items from
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: Copy
-Aliases:
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Copy
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+- Name: Default
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
+### -PSScriptsOnly
+
+Flag to copy scripts only
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Copy
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Default
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### [String] - Accepts a folder path via parameter or pipeline (`ValueFromPipelineByPropertyName`).
+
+{{ Fill in the Description }}
+
+### System.String
+
+{{ Fill in the Description }}
+
 ## OUTPUTS
 
 ### [Object[]] - Returns an array of objects containing:
-###     - **Name** (`[String]`) - Name of the file.
-###     - **Path** (`[String]`) - Full file path.
-###     - **RelativePath** (`[String]`) - Path relative to the source folder.
-###     - **Folder** (`[String]`) - Name of the source folder.
-###     - **(Optional) newPath** (`[String]`) - Destination path if copying.
-###     - **(Optional) newFolder** (`[String]`) - Destination folder name if copying.
+    - **Name** (`[String]`) - Name of the file.
+    - **Path** (`[String]`) - Full file path.
+    - **RelativePath** (`[String]`) - Path relative to the source folder.
+    - **Folder** (`[String]`) - Name of the source folder.
+    - **(Optional) newPath** (`[String]`) - Destination path if copying.
+    - **(Optional) newFolder** (`[String]`) - Destination folder name if copying.
+
+{{ Fill in the Description }}
+
 ## NOTES
+
 Author: Adrian Andersson
 
+
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 
