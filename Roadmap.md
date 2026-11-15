@@ -23,6 +23,11 @@
 
 - [x] Azure DevOps pipelines find whether the feed is scoped to the project or the organization, and Build and Release checks before it builds, so a missing feed stops the run before it tags a version. Publishing code coverage warns rather than fails when the project's Test Plans service is off
 
+## v1.4.1
+
+- [ ] Fix `Get-MFNextSemver` ignoring the increment for a stable release. With `-StableRelease` it works from the version passed in, not the incremented one: from a prerelease, `minor` + stable gives `1.2.3-prev002 → 1.2.3` rather than `1.3.0`, and from a stable version any increment + stable throws `version supplied does not contain a prerelease`. So Build and Release can't ship directly without a prerelease, though the Build and Release Guide documents it. Use the incremented version when there is one, and only require a prerelease when there isn't. Add tests for every increment and release type, from both a prerelease and a stable version
+- [ ] Review the Build and Release form, on GitHub and Azure DevOps, so it's easier to understand. Newcomers don't know most runs should stay at `version_type: none`, or when `release_type` matters. Consider clearer input names and descriptions, defaults, ordering, and a short summary of what the chosen inputs will produce, such as the next version, before anything is tagged. Keep [Making the Most of Releases](https://adrian-andersson.github.io/ModuleForge/tutorials/releases.html) and the Build and Release Guide in step with it
+
 ## v1.5.0
 
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below. Moved from 1.4.0: it needs to be done well, not quickly
