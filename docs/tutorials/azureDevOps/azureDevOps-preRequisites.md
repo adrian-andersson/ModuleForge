@@ -21,7 +21,7 @@ If you have an existing feed, you can skip this process
         - If you change the name of the default feed, you should also take care to update the Pipeline files after scaffolding.
     - Set the visibility to `Members of {projectName}`
     - You can disable _Upstream sources_
-    - Set the scope to the project level
+    - Set the scope to the project level. An organization-scoped feed works too: the pipelines find which kind it is. If you use one, make sure you complete Part 2 for it, as organization feeds often don't include your project's build service by default
 
 ![Azure DevOps Artifacts new feed creation form](./img/pre_newFeed.png)
 
@@ -59,4 +59,8 @@ This step allows the Build Service agent to post comments to PRs within workflow
      - (Required for the BuildAndRelease process to correctly tag)
 
 ![Azure DevOps repository security settings for Build Service account](./img/pre_repoPerms.png)
+
+## A note on Test Plans and code coverage
+
+The Pester pipeline publishes code coverage to each run's **Code Coverage** tab. That needs the project's **Test Plans** service, under **Project settings → Overview → Azure DevOps services**. If it's turned off, the publish step warns, with _Could not find dataspace with category TestManagement_, and the run shows as partially succeeded. Your tests, the coverage check and the PR comment are not affected, so you can turn Test Plans on, or ignore the warning.
 

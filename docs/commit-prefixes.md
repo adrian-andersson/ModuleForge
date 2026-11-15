@@ -10,6 +10,8 @@ Commit messages in ModuleForge follow a prefix convention that drives two things
 
 A well-prefixed commit history produces accurate, zero-effort release notes on every tag - no manual changelog writing required.
 
+> **Quick reference in your terminal:** run `Get-MFGitPrefixHelp` for the prefixes, an example of each, and the common gotchas. `Get-MFGitPrefixHelp -Section Gotchas` shows just the gotchas.
+
 ---
 
 ## Prefix Reference

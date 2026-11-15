@@ -12,25 +12,21 @@ This tutorial will demonstrate how to create a simple, single-function module us
 ## Part 0 - Local Environment Setup
 
 1. Setup your local workspace. You will need to have installed
-    - PowerShell 7+
+    - PowerShell 7.6+
     - VSCode (or your IDE of choice)
         - If you use an IDE other than VSCode, you will need to correct the instructions in this tutorial accordingly
     - GIT commandline
 2. Install PowerShell module dependencies. You will need the following modules from the PSGallery:
-    - `Pester` 5.6+
-    - `PSScriptAnalyzer` 1.24+
-    - `Microsoft.PowerShell.PSResourceGet` 1.1.1+
-    - `ModuleForge` 1.2.0+
+    - `Pester` 6.0+
+    - `PSScriptAnalyzer` 1.25+
+    - `Microsoft.PowerShell.PSResourceGet` 1.1.1+ (included with PowerShell 7.4 and newer)
+    - `ModuleForge` 1.4.0+
 
 > Note: All the required modules are cross-platform compatible. Your OS of choice does not matter.
 
 Here is a code-snippet to help get you started
 
 ```powershell
-#Use the legacy PowerShell Get command to get PSResourceGet
-Install-Module Microsoft.PowerShell.PSResourceGet
-
-#Switch to PSResourceGet for the remainder
 Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleForge
 ```
 
@@ -49,17 +45,19 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 
 ## Part 2 - Create a new ModuleForge Project
 
-1. From your repository directory, run the `New-MFProject` function to build the files out, as per the example below
-2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory shoud have a number of subfolders
-3. Run the `Add-MFGithubScaffold` function to add 2 github workflow files and a PR template to the `.github` directory of your module folder
-4. Check the files were created
-5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
+1. From your repository directory, run `New-MFProject` with `-Scaffold GitHub`, as per the example below. This builds the project files, and adds the GitHub Actions workflows and a PR template to the `.github` directory, in one step
+2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory should have a number of subfolders
+3. Check the `.github` directory was created. The active workflows run Pester, lint your code, and build and release your module. The files ending `.example` are optional extras you can enable later by renaming them
+4. With your filestructure created and workflows added, commit and sync your repository back to origin\main
    - You should use a proper commit message, something like `chore: Initialised ModuleForge project with scaffolding & workflows'
   
 ```powershell
-New-MFProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
-Add-MFGithubScaffold
+New-MFProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module' -Scaffold GitHub
 ```
+
+> Adding ModuleForge to an existing project, or already ran `New-MFProject` without `-Scaffold`? Run `Add-MFGithubScaffold` to add the workflows on their own.
+
+> **Optional: Project Rules.** Run `Add-MFProjectRules` before committing to add two ready-made rule sets, and enable the Project Rules workflow. On every pull request it then checks your code runs under Constrained Language Mode, and that every public function has a help example, as an advisory comment beside the lint results. See [Project Rules](../../Concepts/ProjectRules.md).
 
 ## Part 3 - Create a Function and a Test
 
@@ -231,78 +229,24 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 
 ## Part 5 - Install locally with PSresourceGet
 
-In your PowerShell terminal with PSResourceGet ready to go, you can register a new repository. You will only need to register the repository once, as github package feeds are unique to the user or organisation, not the repository.
-
-1. Create a Git Classic Personal Access Token.
-   - It only needs Package Read access. 
-   - This will form the _password_ part of our credential object and allow us to use the Github Packages feed.
-2. In a PowerShell Terminal, register your github packages feed as a repository
-   - There are two ways to register, 
-       - With a Credential Object, 
-       - With a special CredentialInfo class (If you are using `Microsoft.PowerShell.SecretManagement` module). This is the recommended approach
-
-#### Using Github Package Feed with Credentials
-To register with a credential, see the example code below
+Your module is now in your GitHub Packages feed. To install it, you need a **classic** personal access token with only the `read:packages` scope, and to register the feed once on your machine:
 
 ```powershell
-### Create a credential object
-### Your username will be your github email
-### The password will be the github PAT you created
+# Swap in your GitHub username or organization
+Register-PSResourceRepository -Name 'myGithubPackages' -Uri 'https://nuget.pkg.github.com/<githubaccount>/index.json' -Trusted
+
+# Your GitHub username, with the token as the password
 $githubCredential = Get-Credential
 
-#use the Register-PSResourceRepository commandlet to register
-#This is easier to do with splatting
-#Don't forget to swap out the githubaccount with your actual github account
-$splat = @{
-    Name = 'myGithubPackages'
-    Uri = 'https://nuget.pkg.github.com/{githubaccount}/index.json'
-    Trusted = $true
-}
-#Splat it in
-Register-PSResourceRepository @splat
-
-#Once registered, you can use it in a similar fashion to PSGallery
-#Don't forget to specify the -PreRelease flag
-Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages -Credential $githubCredential
-
+# Your first build is a prerelease, so -Prerelease is needed to see it
+Install-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages -Credential $githubCredential
 ```
 
-#### Using Github Package Feed with a Secret Vault (Recommended)
-
-To register with  `Microsoft.PowerShell.SecretManagement`, first, create a new secret in your secret vault. The username should be your github email, and the password the PAT you created
-
-```powershell
-### Create a pointer to your secret and vault
-### Your username will be your github email
-### The password will be the github PAT you created
-#You will need to make sure that PSResourceGet module is imported first
-$credentialInfo = [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialInfo]::new('VaultName', 'SecretName')
-
-#use the Register-PSResourceRepository commandlet to register
-#This is easier to do with splatting
-#Don't forget to swap out the githubaccount with your actual github account
-#
-$splat = @{
-    Name = 'myGithubPackages'
-    Uri = 'https://nuget.pkg.github.com/{githubaccount}/index.json'
-    Trusted = $true
-    CredentialInfo = $credentialInfo
-}
-#Splat it in
-Register-PSResourceRepository @splat
-
-#Once registered, you can use it in a similar fashion to PSGallery
-#Don't forget to specify the -PreRelease flag
-#Because we supplied a CredentialInfo pointer, Find-PSResource will automatically open our vault to retrieve the secret when required
-Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myGithubPackages
-
-```
-
-> A note on V3 nuget feeds and PSResourceGet. Wildcard searching is not supported, you will need to know the exact name of your module for find and install commands to work.
+[Using Private Package Feeds](../private-package-feeds.md) covers the rest: storing the credential in a secret vault so you don't pass it each time, and the quirks worth knowing, such as no wildcard searches and lowercase install folders on Linux and macOS.
 
 ## Wrapping up
 
 In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Github Packages repository for consumption. We effectively made a CI/CD PowerShell Pipeline using Github Actions + ModuleForge, and published a single-function module.
 
-Ready to go further? The [Advanced ModuleForge Tutorial](./github-tutorial-02-full-ModuleForge-Featureset.md) covers the full source folder structure - enums, validation classes, classes with inheritance, private functions, and resource files.
+Ready to go further? The [Advanced ModuleForge Tutorial](./github-tutorial-02-full-ModuleForge-Featureset.md) covers the full source folder structure - enums, validation classes, classes with inheritance, private functions, and resource files. [Making the Most of Releases](../releases.md) explains which Build and Release options to pick as your module grows.
 

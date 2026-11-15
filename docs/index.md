@@ -21,3 +21,4 @@ Takes the grunt work out of PowerShell module development. Scaffolds project str
 | [Concepts](./Concepts/) | Design decisions, patterns, workflow guides, and the project backstory. |
 | [Commit Prefixes](./commit-prefixes.md) | Quick reference for all recognised commit message prefixes. |
 | [FAQ and Troubleshooting](./faq.md) | Common questions and fixes. |
+| [What's New](./whats-new.md) | Headline features of each release, with links to the full release notes. |

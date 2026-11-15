@@ -6,9 +6,9 @@ nav_order: 5
 
 # Build and Release Guide
 
-The **Build and Release** workflow is triggered manually from GitHub Actions (`Actions → Build and Release → Run workflow`). It versions, builds, and publishes your module to your Artifacts feed - and optionally creates a stable GitHub Release.
+The **Build and Release** workflow is triggered manually from GitHub Actions (`Actions → Build and Release → Run workflow`), or by running the Build and Release pipeline in Azure DevOps. It versions, builds, and publishes your module to your package feed, and on GitHub creates a release with notes built from your commits.
 
-This guide helps you choose the right inputs every time.
+This guide is the full reference for its inputs. For the practical version, what to pick from one run to the next, start with [Making the Most of Releases](./tutorials/releases.md). The short answer: **most runs use `version_type: none` and `release_type: prerelease`, the defaults.**
 
 ---
 
@@ -20,7 +20,15 @@ The workflow checks a safety gate before it does anything else: the most recent 
 
 ---
 
-## The Two Inputs
+## The Inputs
+
+Two inputs decide the version: `release_type` and `version_type`, below. The others rarely change:
+
+| Input | Default | What it does |
+| --- | --- | --- |
+| `dependency_source` | `required-resource-file` | Where ModuleForge itself is installed from for the build: the version pinned in `BuildDependencies.psd1`, or the latest (`psgallery-latest`) or latest prerelease (`psgallery-prerelease`) from PSGallery. See [Build Dependencies](./Concepts/BuildDependencies.md) |
+| `include_source_metadata` | On | Adds the branch and commit the build came from to the package metadata |
+| `feed_name` *(Azure DevOps only)* | `psPackages` | The Azure Artifacts feed to publish to. It can be scoped to the project or the organization |
 
 ### `release_type` - Are you testing or shipping?
 
@@ -35,7 +43,7 @@ Prereleases are published to your Artifacts feed but are hidden from `Find-PSRes
 
 | Value | What it does | Driven by |
 | --- | --- | --- |
-| `none` | Keeps current `MAJOR.MINOR.PATCH`, increments prerelease counter only | Iterating on an existing prerelease, or promoting a prerelease to stable |
+| `none` | Keeps current `MAJOR.MINOR.PATCH` and increments the prerelease counter. After a stable release, starts a new patch prerelease (`1.2.3 → 1.2.4-prev001`) | Iterating on an existing prerelease, starting a bug fix series, or promoting a prerelease to stable |
 | `patch` | Increments `PATCH` (`1.2.3 → 1.2.4`) | Bug fixes, refactors, performance changes - no API change |
 | `minor` | Increments `MINOR`, resets `PATCH` (`1.2.3 → 1.3.0`) | New functions or optional parameters - backwards compatible |
 | `major` | Increments `MAJOR`, resets `MINOR` and `PATCH` (`1.2.3 → 2.0.0`) | Breaking changes - existing scripts may need updating |
@@ -95,7 +103,7 @@ version_type: none
 release_type: prerelease
 ```
 
-Result: `0.0.1-prev001` (or whichever starting version is configured). Lets you validate the build pipeline before shipping anything.
+Result: `1.0.1-prev001`. With no version tags yet, ModuleForge treats the current version as `1.0.0`. Lets you validate the build pipeline before shipping anything.
 
 ---
 

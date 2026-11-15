@@ -2,7 +2,7 @@
 layout: default
 title: PowerShell Style Recommendations
 parent: Concepts
-nav_order: 10
+nav_order: 14
 ---
 # PowerShell Style Recommendations
 

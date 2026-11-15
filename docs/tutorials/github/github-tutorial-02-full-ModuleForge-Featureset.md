@@ -16,17 +16,17 @@ By the end you will have a module that uses enums, custom validation attributes,
 ## Prerequisites
 
 - Familiarity with the basic ModuleForge GitHub tutorial
-- PowerShell 7.2+
+- PowerShell 7.6+
 - VSCode
 - Git CLI
 
 Required modules:
 
 ```powershell
-Install-PSResource -Name 'Pester'                             -Version '[5.6.0,)'
-Install-PSResource -Name 'PSScriptAnalyzer'                   -Version '[1.24.0,)'
+Install-PSResource -Name 'Pester'                             -Version '[6.0.0,)'
+Install-PSResource -Name 'PSScriptAnalyzer'                   -Version '[1.25.0,)'
 Install-PSResource -Name 'Microsoft.PowerShell.PSResourceGet' -Version '[1.1.1,)'
-Install-PSResource -Name 'ModuleForge'                        -Version '[1.2.0,)'
+Install-PSResource -Name 'ModuleForge'                        -Version '[1.4.0,)'
 ```
 
 ---
@@ -40,9 +40,10 @@ Log in to GitHub and create a new **private** repository named **AstroCmdlets**.
 Clone the repository locally, then initialise the ModuleForge project and add GitHub scaffolding:
 
 ```powershell
-New-MFProject -ModuleName 'AstroCmdlets' -description 'A space-themed demonstration module' -moduleAuthors 'YourName' -moduleTags @('Demo','ModuleForge')
-Add-MFGithubScaffold
+New-MFProject -ModuleName 'AstroCmdlets' -description 'A space-themed demonstration module' -moduleAuthors 'YourName' -moduleTags @('Demo','ModuleForge') -Scaffold GitHub
 ```
+
+`-Scaffold GitHub` adds the GitHub Actions workflows in the same step. Optionally, run `Add-MFProjectRules` too, to add the [Project Rules](../../Concepts/ProjectRules.md) checks. This module's functions all have help examples, so the HelpExamples rule is a good one to watch stay clean.
 
 Commit and **push this directly to `main`**:
 
@@ -303,7 +304,7 @@ feat: Added resource file
 
 ### Start-Blastoff
 
-Create `source/functions/Launch/Start-Blastoff.ps1`. Note the `[SpaceSuitType]` typed parameter and the `Set-Alias` call at the bottom - `Set-Alias` at module scope is compiled into the psm1 verbatim and runs at module load time:
+Create `source/functions/Launch/Start-Blastoff.ps1`. Note the `[SpaceSuitType]` typed parameter and the `Set-Alias` call at the bottom - `Set-Alias` at module scope is compiled into the psm1 verbatim and runs at module load time. ModuleForge also reads its literal name, `blastOff`, and lists it in the manifest's `AliasesToExport`, so the alias is exported. An alias whose name is a variable can't be listed, so use a literal name, or `[Alias()]` on the function:
 
 ```powershell
 function Start-Blastoff
@@ -1133,54 +1134,60 @@ Open a pull request. Two GitHub Actions workflows run automatically as PR checks
 - **PSScriptAnalyzer** - analyses your function source files and posts a lint report as a PR comment
 - **Pester** - runs your test suite and posts results as a PR comment
 
-After merging to `main`, dispatch the **Build and Release** workflow from the Actions tab. Choose your version increment type and whether this is a stable or prerelease build.
+After merging to `main`, dispatch the **Build and Release** workflow from the Actions tab. For a first build, choose version type `none` and release type `prerelease`. [Making the Most of Releases](../releases.md) explains what to pick after that.
 
 The build automatically derives the next version from git tags, generates a changelog from your commit history (this is why small, well-prefixed commits matter), compiles the module, copies the `resource/` folder to the output, appends SHA256 checksums to the release notes, and publishes the module to your repository's **GitHub Packages** feed.
 
 ---
 
-## Part 12: Install from GitHub Packages
+## Part 12: Test the Published Module
 
-Your module is published as a NuGet package to GitHub Packages, which is private to your repository. To install it using PSResourceGet you need a **Classic Personal Access Token** with `read:packages` scope, generated from your GitHub account settings.
+Your unit tests load functions from `source/`, so they can't see what the build does to them. This module has classes, an enum, a validation class, a resource file and an alias, which is exactly where a build can go wrong, so it's a good one for [Build Test](../build-test.md).
 
-Register the GitHub Packages feed as a PSResource repository using the credential of your choice. The two common approaches are an inline credential or SecretManagement:
-
-**Inline credential:**
+Enable it by renaming the workflow, then commit to `main` through a pull request as usual:
 
 ```powershell
-$token      = 'your-github-pat'
-$credential = [System.Management.Automation.PSCredential]::new(
-    'your-github-username',
-    (ConvertTo-SecureString $token -AsPlainText -Force)
-)
-
-Register-PSResourceRepository `
-    -Name       'MyGitHubPackages' `
-    -Uri        'https://nuget.pkg.github.com/your-github-username/index.json' `
-    -Trusted    $true `
-    -Credential $credential
+Rename-Item .github/workflows/buildTest.yml.example buildTest.yml
 ```
 
-**SecretManagement:**
+From the next Build and Release on, Build Test installs the version just published and runs `buildTest/Module.Build.Tests.ps1` against it: it checks all five public functions and the `blastOff` alias are exported, and that `Get-AlienVisitorWelcome` stays private.
+
+Add a test file of your own beside it, using the module the way a user would:
 
 ```powershell
-$credentialInfo = [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialInfo]::new(
-    'VaultName',
-    'SecretName'
-)
+# buildTest/AstroCmdlets.Build.Tests.ps1
+BeforeAll {
+    Import-Module AstroCmdlets -Force
+}
 
-Register-PSResourceRepository `
-    -Name           'MyGitHubPackages' `
-    -Uri            'https://nuget.pkg.github.com/your-github-username/index.json' `
-    -Trusted        $true `
-    -CredentialInfo $credentialInfo
+Describe 'Published AstroCmdlets' {
+    It 'blastOff runs Start-Blastoff' {
+        (Get-Alias -Name 'blastOff').ResolvedCommandName | Should -Be 'Start-Blastoff'
+    }
+    It 'rejects an unapproved food through the validation class' {
+        { New-AlienVisitor -Name 'Zog' -HomePlanet 'Xenon-9' -FavoriteFood 'Gravel' } | Should -Throw
+    }
+    It 'reads the bundled resource file from the installed location' {
+        Get-WelcomeMessage | Should -Not -BeNullOrEmpty
+    }
+}
 ```
 
-Once registered, install the module:
+This is the same module, and the same kind of test, that ModuleForge uses to [test itself](../../Concepts/IntegrationTesting.md).
+
+---
+
+## Part 13: Install from GitHub Packages
+
+Your module is published to your GitHub Packages feed. To install it, you need a **classic** personal access token with only the `read:packages` scope, and to register the feed once:
 
 ```powershell
-Install-PSResource -Name 'AstroCmdlets' -Repository 'MyGitHubPackages'
+Register-PSResourceRepository -Name 'MyGitHubPackages' -Uri 'https://nuget.pkg.github.com/your-github-username/index.json' -Trusted
+
+# Your GitHub username, with the token as the password
+$credential = Get-Credential
+
+Install-PSResource -Name 'AstroCmdlets' -Repository 'MyGitHubPackages' -Prerelease -Credential $credential
 ```
 
-> **Note:** PSResourceGet does not support wildcard searching from NuGet v3 APIs. You must know the exact module name. `Find-PSResource -Repository 'MyGitHubPackages'` will not return results.
-
+`Register-PSResourceRepository` doesn't take a credential: you pass it to each install, or store it in a secret vault. [Using Private Package Feeds](../private-package-feeds.md) covers the vault, and the quirks worth knowing, including no wildcard searches, and lowercase install folders on Linux and macOS.

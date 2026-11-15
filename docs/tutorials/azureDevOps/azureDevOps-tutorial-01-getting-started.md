@@ -13,25 +13,21 @@ This tutorial will demonstrate how to create a simple, single-function module us
 
 1. Make sure you have completed the [prerequisit](./azureDevOps-preRequisites.md)
 2. Setup your local workspace. You will need to have installed
-    - PowerShell 7+
+    - PowerShell 7.6+
     - VSCode (or your IDE of choice)
         - If you use an IDE other than VSCode, you will need to correct the instructions in this tutorial accordingly
     - GIT commandline
 3. Install PowerShell module dependencies. You will need the following modules from the PSGallery:
-    - `Pester` 5.6+
-    - `PSScriptAnalyzer` 1.24+
-    - `Microsoft.PowerShell.PSResourceGet` 1.1.1+
-    - `ModuleForge` 1.2.0+
+    - `Pester` 6.0+
+    - `PSScriptAnalyzer` 1.25+
+    - `Microsoft.PowerShell.PSResourceGet` 1.1.1+ (included with PowerShell 7.4 and newer)
+    - `ModuleForge` 1.4.0+
 
 > Note: All the required modules are cross-platform compatible. Your OS of choice does not matter.
 
 Here is a code-snippet to help get you started
 
 ```powershell
-#Use the legacy PowerShell Get command to get PSResourceGet
-Install-Module Microsoft.PowerShell.PSResourceGet
-
-#Switch to PSResourceGet for the remainder
 Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleForge
 ```
 
@@ -50,17 +46,19 @@ Install-PSResource -repository PSGallery -Name Pester,PSScriptAnalyzer,ModuleFor
 
 ## Part 2 - Create a new ModuleForge Project
 
-1. From your repository directory, run the `New-MFProject` function to build the files out, as per the example below
+1. From your repository directory, run `New-MFProject` with `-Scaffold AzureDevOps`, as per the example below. This builds the project files, and adds the Azure Pipelines YAML files and a PR template to the `.azuredevops` directory, in one step
 2. Check you have created a `source` directory and a module config file `moduleForgeConfig.xml`. The source directory should have a number of subfolders
-3. Run the `Add-MFAzureDevOpsScaffold` function to add 3 Azure Pipeline YML files, and a PR template to the `.azuredevops` directory of your module folder
-4. Check the files were created
-5. With your filestructure created and workflows added, commit and sync your repository back to origin\main
+3. Check the `.azuredevops/pipelines` directory was created. It has three active pipelines, for Pester testing, linting, and Build and Release. The files ending `.example` are optional extras you can enable later by renaming them
+4. With your filestructure created and pipelines added, commit and sync your repository back to origin\main
    - You should use a proper commit message, something like `chore: Initialised ModuleForge project with scaffolding & workflows'
 
 ```powershell
-New-MFProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module'
-Add-MFAzureDevOpsScaffold
+New-MFProject -ModuleName 'psGetHelloWorld' -description 'Another Hello World module' -Scaffold AzureDevOps
 ```
+
+> Adding ModuleForge to an existing project, or already ran `New-MFProject` without `-Scaffold`? Run `Add-MFAzureDevOpsScaffold` to add the pipelines on their own.
+
+> **Optional: Project Rules.** Run `Add-MFProjectRules` before committing to add two ready-made rule sets, and enable the Project Rules pipeline (`projectRules.yml`). It checks your code runs under Constrained Language Mode, and that every public function has a help example, and posts its findings as an advisory PR comment. If you enable it, add it alongside the others in Part 3, as an _Optional_ build policy. See [Project Rules](../../Concepts/ProjectRules.md).
 
 ## Part 3 - Add our Azure Pipelines and Build Policies
 
@@ -87,6 +85,8 @@ Add-MFAzureDevOpsScaffold
     - ![Azure DevOps pipeline rename dialog with name and folder fields](./img/tut_renMove2.png)
 10. Repeat steps 2 through to 9 for `buildAndRelease` and `pesterTesting`
     - ![All three pipelines organised into repository folder](./img/tut_pipelineOrganisation.png)
+    - Name the `buildAndRelease` pipeline **Build and Release**. The optional Build Test pipeline finds it by that name, so naming it now saves a step if you enable Build Test later. See [Testing the Published Module](../build-test.md)
+    - If you enabled Project Rules, repeat the steps for `projectRules` too
 
 ### Adding Branch Build Policies
 
@@ -278,79 +278,24 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 
 ## Part 6 - Install locally with PSresourceGet
 
-In your PowerShell terminal with PSResourceGet ready to go, you can register a new repository. You will only need to register the repository once.
-
-1. Create a Azure DevOps Personal Access Token.
-    - You can find the Personal Access Tokens setting in the small `User Settings` menu next to your Profile headshot in the top right of Azure DevOps
-    - The Personal Access Token only requires `Packages: Read` access
-    - The Personal Access Token value will form the _password_ part of our credential object and allow us to use our Azure Devops feed.
-2. In a PowerShell Terminal, register your Azure Devops feed as a repository
-   - There are two ways to register
-       - With a Credential Object, 
-       - With a special CredentialInfo class (If you are using `Microsoft.PowerShell.SecretManagement` module). This is the recommended approach
-
-You can read more about the next steps [here](https://learn.microsoft.com/en-us/azure/devops/artifacts/tutorials/private-powershell-library?view=azure-devops&pivots=psresourceget)
-
-#### Using Azure DevOps Package Feed with Credentials
-To register with a credential, see the example code below
+Your module is now in your Azure Artifacts feed. To install it, you need a personal access token with only **Packaging: Read**, from **User settings → Personal access tokens** in Azure DevOps, and to register the feed once on your machine:
 
 ```powershell
-### Create a credential object
-### Your username will be your Azure DevOps account email
-### The password will be the PAT you created
+# Swap in your organization, project and feed. For an organization-scoped feed, leave out /<PROJECT_NAME>
+Register-PSResourceRepository -Name 'myAzureDevopsFeed' -Uri 'https://pkgs.dev.azure.com/<ORGANIZATION_NAME>/<PROJECT_NAME>/_packaging/<FEED_NAME>/nuget/v3/index.json' -Trusted
+
+# Any username, with the token as the password
 $azdCredential = Get-Credential
 
-#use the register-psResourceRepository commandlet to register
-#This is easier to do with splatting
-#Don't forget to swap out the azdCredential with your actual Azure account
-$splat = @{
-    Name = 'myAzureDevopsFeed'
-    Uri = 'https://pkgs.dev.azure.com/<ORGANIZATION_NAME>/<PROJECT_NAME>/_packaging/<FEED_NAME>/nuget/v3/index.json'
-    Trusted = $true
-}
-#Splat it in
-Register-PSResourceRepository @splat
-
-#Once registered, you can use it in a similar fashion to PSGallery
-#Don't forget to specify the -PreRelease flag
-Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed -Credential $azdCredential
-
+# Your first build is a prerelease, so -Prerelease is needed to see it
+Install-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed -Credential $azdCredential
 ```
 
-#### Using Azure DevOps Feed with a Secret Vault (Recommended)
-
-To register with  `Microsoft.PowerShell.SecretManagement`, first, create a new secret in your secret vault. The username should be your Azure DevOps account email, and the password the PAT you created
-
-```powershell
-### Create a pointer to your secret and vault
-### Your username will be your AZD email
-### The password will be the AZD PAT you created
-#You will need to make sure that PSResourceGet module is imported first
-$credentialInfo = [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialInfo]::new('VaultName', 'SecretName')
-
-#use the register-psResourceRepository commandlet to register
-#This is easier to do with splatting
-#Don't forget to swap out the azdCredential with your actual azure account
-#
-$splat = @{
-    Name = 'myAzureDevopsFeed'
-    Uri = 'https://pkgs.dev.azure.com/<ORGANIZATION_NAME>/<PROJECT_NAME>/_packaging/<FEED_NAME>/nuget/v3/index.json'
-    Trusted = $true
-    CredentialInfo = $credentialInfo
-}
-#Splat it in
-Register-PSResourceRepository @splat
-
-#Once registered, you can use it in a similar fashion to PSGallery
-#Don't forget to specify the -PreRelease flag
-#Because we supplied a CredentialInfo pointer, Find-PSResource will automatically open our vault to retrieve the secret when required
-Find-PSResource -Name psGetHelloWorld -Prerelease -Repository myAzureDevopsFeed
-
-```
-
-> A note on V3 nuget feeds and PSResourceGet. Wildcard searching is not supported at this time, you will need to know the exact name of your module for find and install commands to work.
+[Using Private Package Feeds](../private-package-feeds.md) covers the rest: storing the credential in a secret vault so you don't pass it each time, and the quirks worth knowing, such as no wildcard searches. Microsoft's [private PowerShell library tutorial](https://learn.microsoft.com/en-us/azure/devops/artifacts/tutorials/private-powershell-library?view=azure-devops&pivots=psresourceget) has more on Azure Artifacts itself.
 
 ## Wrapping up
 
 In this tutorial, we created a new repository, added our ModuleForge scaffolding, created a new PowerShell function + test, performed a review and unit test, and released it as a PreRelease into our private Azure DevOps Packages feed for consumption. We effectively made a CI/CD PowerShell Pipeline using Azure DevOps Pipelines + ModuleForge, and published a single-function module.
+
+Next, [Making the Most of Releases](../releases.md) explains which Build and Release options to pick as your module grows.
 
