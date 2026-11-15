@@ -64,7 +64,7 @@ Two things make `none` the right default:
 ## Mistakes worth avoiding
 
 - **Choosing `minor` on every build.** Each `minor` starts a *new* minor version: `1.3.0-prev001`, then `1.4.0-prev001`, then `1.5.0-prev001`. Choose it once, on the first build with the new feature, then go back to `none`.
-- **Choosing a version type when you ship.** When the latest version is a prerelease, a stable build promotes it as it is: `1.3.0-prev002` becomes `1.3.0`, whatever version type you pick. Leave it at `none`, and choose the version type earlier, while building prereleases.
+- **Choosing a version type when you ship a prerelease.** The version was decided when the series started, so promoting it is always `none` + `stable`: `1.3.0-prev002` becomes `1.3.0`. Choose the version type earlier, on the first prerelease of the series.
 - **Running Build and Release before Pester has finished.** Build and Release first checks the latest Pester run passed, for the commit you're building. Merge, wait for Pester, then run it. If you merged several pull requests in a row, run Pester on `main` by hand first. See [the FAQ](../faq.md).
 - **Starting a new run after a failure.** If a run fails partway, use **Re-run failed jobs** on the same run instead. It finishes the version that run started, rather than using up another one.
 
