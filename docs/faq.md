@@ -113,6 +113,25 @@ If the workflow throws `❌ No match on PR or primary commit`, the most common c
 - The Pester workflow has not run yet since the last commit - wait for it to complete
 - The last Pester run was against a different branch - trigger a Pester run against `main` first
 - A merge commit shifted HEAD - this is handled automatically; if it still fails, re-run Pester manually via the Actions tab
+- **You merged more than one pull request since the last Build and Release.** The check only looks at the two newest commits on `main`, so after several merges it can't find the commit Pester last tested. Run the Pester workflow by hand on `main`, then run Build and Release
+
+---
+
+### Azure DevOps: *TF1600011: The feed with ID 'psPackages' doesn't exist*
+
+Build and Release can't find your feed. Either it has a different name, so set the `feed_name` parameter, or the build service can't see it. Give `<Project> Build Service (<Organization>)` the **Feed Publisher (Contributor)** role in the feed's **Permissions**. Organization-scoped feeds often need this adding by hand. Project and organization feeds both work: the pipeline finds which, before it builds, so this stops the run before it uses up a version number.
+
+---
+
+### Azure DevOps: *Configuring the trigger failed, edit and save the pipeline again*
+
+This shows on the optional Build Test pipeline when its trigger can't find the Build and Release pipeline by name. Check the Build and Release pipeline is named exactly **Build and Release**, or change `source:` in `buildTest.yml` to match, including its folder. Then open the Build Test pipeline, choose **Edit**, and **Save**. See [Testing the Published Module](./tutorials/build-test.md).
+
+---
+
+### Azure DevOps: *Could not find dataspace with category TestManagement*
+
+The Pester pipeline couldn't publish code coverage to the run's Code Coverage tab, because the project's **Test Plans** service is off. It's a warning, not a failure: your tests, the coverage check and the PR comment are unaffected. Turn Test Plans on under **Project settings → Overview → Azure DevOps services**, or ignore it.
 
 ---
 
@@ -138,7 +157,9 @@ Add-MFAzureDevOpsScaffold -Force   # Azure DevOps pipelines (if you use Azure De
 Add-MFProjectScripts      -Force   # scripts/ (Invoke-MFPester.ps1, etc.)
 ```
 
-> **`-Force` overwrites and will clobber local edits.** By default these commands **skip** any file that already exists, so without `-Force` you keep your current (older) files and gain nothing. With `-Force` they overwrite the existing files outright: if you have customised a workflow, the PR template, or a script, your changes are replaced with the stock template and lost. This can lead to unexpected outcomes, for example a reverted `runs-on`/`pool`, removed custom steps, or undone secrets wiring.
+> **Run them without `-Force` first.** By default these commands **skip** any file that already exists and add only what's missing. That's how you pick up new files, such as `BuildDependencies.psd1`, new scripts and new `.example` templates, without touching anything you have. It doesn't update files you already have.
+
+> **`-Force` overwrites and will clobber local edits, and resets your pins.** With `-Force` they overwrite the existing files outright, including `BuildDependencies.psd1`, which goes back to the default versions: if you have customised a workflow, the PR template, or a script, your changes are replaced with the stock template and lost. This can lead to unexpected outcomes, for example a reverted `runs-on`/`pool`, removed custom steps, or undone secrets wiring.
 
 Recommended upgrade process:
 
@@ -149,6 +170,8 @@ Recommended upgrade process:
 5. Run `.\scripts\Invoke-MFPester.ps1` and open the PR so the refreshed workflows validate themselves before merge.
 
 If you have heavily customised your files, upgrade selectively instead of using `-Force` over your live copies: re-scaffold into a separate clean clone of the repository (or any folder containing a `moduleForgeConfig.xml`, via the `-Path` parameter), then hand-merge only the changes you actually want.
+
+Upgrading across a minor version? [What's New](./whats-new.md) lists anything to check, such as new minimum versions.
 
 ---
 
@@ -238,6 +261,14 @@ Find-PSResource -Name 'ExactModuleName' -Repository 'MyRepo'
 ```
 
 `Find-PSResource -Name '*'` or partial name patterns will not work against NuGet v3 feeds. This is a protocol limitation, not a ModuleForge issue.
+
+If you're looking for a prerelease, add `-Prerelease`. For private feeds, see [Using Private Package Feeds](./tutorials/private-package-feeds.md).
+
+---
+
+### My alias isn't exported from the built module
+
+Manifests list exported aliases by name. ModuleForge finds them in two places in `source/functions`: `[Alias()]` on a function, and `Set-Alias` or `New-Alias` at the top level of a file with a **literal** name. An alias whose name comes from a variable, such as `Set-Alias -Name $name ...`, can't be listed, and the build warns that it won't be exported. Use a literal name, or `[Alias()]`. Aliases in `source/private` are never exported.
 
 ---
 

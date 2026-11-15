@@ -2,26 +2,36 @@
 layout: default
 title: Get-MFScriptAnalyzerSummary
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Get-MFScriptAnalyzerSummary
 
 ## SYNOPSIS
+
 Runs, and then summarises the results of PSScriptAnalyzer across a set of PowerShell function files.
 
 ## SYNTAX
 
+### All parameter sets
+
 ```
-Get-MFScriptAnalyzerSummary [[-SourcePath] <String>] [[-Severity] <String[]>] [[-Weights] <Hashtable>]
- [-SuppressOutput] [[-ExcludeRules] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-MFScriptAnalyzerSummary [[-SourcePath] <string>] [[-Severity] <string[]>]
+ [[-Weights] <hashtable>] [[-ExcludeRules] <string[]>] [-SuppressOutput]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
-This function scans \`.ps1\` files using PSScriptAnalyzer and returns grouped summaries of errors, warnings, and informational findings.
+
+This function scans `.ps1` files using PSScriptAnalyzer and returns grouped summaries of errors, warnings, and informational findings.
 
 
 ------------
@@ -29,9 +39,8 @@ This function scans \`.ps1\` files using PSScriptAnalyzer and returns grouped su
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 Get-MFScriptAnalyzerSummary -SourcePath '.\source\functions'
-```
 
 #### DESCRIPTION
 Runs PSScriptAnalyzer over all function files in the specified path and returns a summary object.
@@ -47,99 +56,151 @@ TopFlaggedFiles  : {@{ScriptName=Build-MFProject.ps1; Counter=E:0 W:2 I:4; Weigh
 
 ## PARAMETERS
 
-### -SourcePath
-Source Path for function files
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
-Default value: $(join-path $(join-path '.' -childPath 'source') -childPath functions)
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -Severity
-What severities should we scan for
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 2
-Default value: @('Error','Warning','Information')
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Weights
-What weights to provide each severity
-
-```yaml
-Type: Hashtable
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 3
-Default value: @{
-            Error = 50
-            Warning = 15
-            Information = 1
-        }
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -SuppressOutput
-Set this switch to only get the summary
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ExcludeRules
+
 Set this for what rules to exclude.
 Noisy rule.
 Preference script readability over strict whitespace adherence
 
 ```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
+Type: System.String[]
+DefaultValue: >-
+  @(
+              'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
+          )
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 3
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: 4
-Default value: @(
-            'PSAvoidTrailingWhitespace' #Noisy rule. Preference script readability over strict whitespace adherence
-        )
-Accept pipeline input: False
-Accept wildcard characters: False
+### -Severity
+
+What severities should we scan for
+
+```yaml
+Type: System.String[]
+DefaultValue: "@('Error','Warning','Information')"
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 1
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -SourcePath
+
+Source Path for function files
+
+```yaml
+Type: System.String
+DefaultValue: $(join-path $(join-path '.' -childPath 'source') -childPath functions)
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -SuppressOutput
+
+Set this switch to only get the summary
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Weights
+
+What weights to provide each severity
+
+```yaml
+Type: System.Collections.Hashtable
+DefaultValue: >-
+  @{
+              Error = 50
+              Warning = 15
+              Information = 1
+          }
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
+### System.String
+
+{{ Fill in the Description }}
+
 ## OUTPUTS
 
-### [PSCustomObject] - Returns a summary object containing Errors, Warnings, Informational counts, top-flagged rules, and top-flagged files
+### [PSCustomObject] - Returns a summary object containing Errors
+
+{{ Fill in the Description }}
+
+### System.Management.Automation.PSObject
+
+{{ Fill in the Description }}
+
 ## NOTES
+
 Author: Adrian Andersson
 
+
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 

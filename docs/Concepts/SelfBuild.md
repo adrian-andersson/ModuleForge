@@ -2,7 +2,7 @@
 layout: default
 title: ModuleForge Builds Itself
 parent: Concepts
-nav_order: 8
+nav_order: 10
 ---
 
 # ModuleForge Builds Itself
@@ -13,14 +13,14 @@ One of the original design goals for ModuleForge was that it should use itself t
 
 ## How It Works
 
-The version that does the building is always the **last stable release of ModuleForge, installed from PSGallery**. The version being built is whatever is in the current source. Every release walks through the same loop:
+The version that does the building is, by default, the **last stable release of ModuleForge, installed from PSGallery**, as pinned in ModuleForge's own `BuildDependencies.psd1`. The version being built is whatever is in the current source. Every release walks through the same loop:
 
 1. **Edit ModuleForge** - make source changes on a branch.
 2. **Open a PR** - the Pester and PSScriptAnalyzer (lint) workflows run automatically: tests are a hard-fail gate, linting and coverage are advisory.
 3. **Build a prerelease to the private repo** - once merged, ModuleForge builds a prerelease of itself and publishes it to a private PSResource feed.
-4. **User acceptance testing** - install that prerelease from the private feed and confirm it actually does what the change intended.
-5. **Promote the prerelease to PSGallery** - the validated prerelease is published to the public gallery.
-6. **Build a new prerelease *from* the promoted prerelease** - ModuleForge now rebuilds itself using the just-promoted version as the builder. This is the real bootstrap check: if a newer ModuleForge can be built cleanly by the promoted one, the promoted version is sound.
+4. **Integration and user acceptance testing** - the new prerelease automatically starts builds in separate test repositories, on GitHub and Azure DevOps, which build a module with it and test the installed result. See [How ModuleForge Tests Itself](./IntegrationTesting.md). Then install the prerelease and confirm it does what the change intended.
+5. **Promote the prerelease to PSGallery** - the validated prerelease is published to the public gallery, which in turn starts a test repository that installs it from there.
+6. **Build a new prerelease *from* the promoted prerelease** - ModuleForge now rebuilds itself using the just-promoted version as the builder, by running Build and Release with `dependency_source: psgallery-prerelease`. This is the real bootstrap check: if a newer ModuleForge can be built cleanly by the promoted one, the promoted version is sound.
 7. **No build issues → cut a stable release to the private repo.**
 8. **Push the stable release to PSGallery.**
 
@@ -32,7 +32,7 @@ The loop in short:
 Edit source
   → PR: Pester + lint
   → Build prerelease → private feed
-  → User acceptance testing
+  → Integration testing (automatic) + user acceptance testing
   → Promote prerelease → PSGallery
   → Build next prerelease *using* the promoted version (bootstrap check)
   → No issues → stable release → private feed

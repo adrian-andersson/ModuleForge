@@ -2,132 +2,151 @@
 layout: default
 title: Add-MFAzureDevOpsScaffold
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Add-MFAzureDevOpsScaffold
 
 ## SYNOPSIS
-Initialises a \`.azuredevops\` scaffold in a PowerShell module, including YAML Azure DevOps Pipelines for pester testing and build and release
+
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
+### All parameter sets
+
 ```
-Add-MFAzureDevOpsScaffold [[-ModulePath] <String>] [[-ConfigFile] <String>] [[-AzdFolder] <String>] [-Force]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Add-MFAzureDevOpsScaffold [[-ModulePath] <string>] [[-ConfigFile] <string>] [[-AzdFolder] <string>]
+ [-Force]
 ```
+
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
 
 ## DESCRIPTION
-This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
-It will create 2 Azure DevOps Pipelines files, 1 for Pester testing, 1 for buildAndRelease
-It will create 1 Pull Request template.
 
-The buildAndRelease pipeline will use Git Tags to mark versions.
-If you stick with this template you should refrain from
-using tags for other purposes.
-
-The purpose of these workflows and templates is to get you started, creating a quick and easy workflow scaffold. 
-Please feel free to change the workflows and template to your own needs and preferences.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### EXAMPLE 1
-```
-Add-MFAzureDevOpsScaffold
-```
+### Example 1
 
-#### DESCRIPTION
-Copies the \`.azuredevops\` folder from the module's \`resource\` directory to the current module, skipping existing files.
-
-#### OUTPUT
-Should have a .azuredevops folder, with pipelines and a PR template
-
-### EXAMPLE 2
-```
-Add-MFAzureDevOpsScaffold -Force
-```
-
-#### DESCRIPTION
-Copies the \`.azuredevops\` scaffold and overwrites existing files in \`.azuredevops\` directory
-
-#### OUTPUT
-Should have a .azuredevops folder, with pipelines and a PR template
+{{ Add example description here }}
 
 ## PARAMETERS
 
-### -ModulePath
-Root path of the module.
-Uses the current working directory by default
+### -AzdFolder
+
+{{ Fill AzdFolder Description }}
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases: Path
-
-Required: False
-Position: 1
-Default value: $(get-location).path
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -ConfigFile
-Module Config reference
+
+{{ Fill ConfigFile Description }}
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 2
-Default value: ModuleForgeConfig.xml
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -AzdFolder
-Azure DevOps folder
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 3
-Default value: .azuredevops
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 1
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -Force
-Should we overwrite if files exist?
+
+{{ Fill Force Description }}
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
+### -ModulePath
+
+{{ Fill ModulePath Description }}
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- Path
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ## OUTPUTS
 
+### System.Object
+
+{{ Fill in the Description }}
+
 ## NOTES
-Author: Adrian Andersson
+
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 

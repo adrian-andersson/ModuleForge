@@ -16,11 +16,13 @@ ModuleForge scaffolds a production-ready PowerShell module structure - including
 
 | Requirement | Minimum Version |
 | --- | --- |
-| PowerShell | 7.0+ |
+| PowerShell | 7.6+ (the current LTS) |
 | Git | Any recent version |
-| Pester | 5.6+ |
-| PSScriptAnalyzer | 1.24+ |
-| Microsoft.PowerShell.PSResourceGet | 1.1.1+ |
+| Pester | 6.0+ |
+| PSScriptAnalyzer | 1.25+ |
+| Microsoft.PowerShell.PSResourceGet | 1.1.1+ (included with PowerShell 7.4 and newer) |
+
+Your pipelines don't depend on what you have installed locally: they install the versions pinned in your project's `BuildDependencies.psd1`. See [Build Dependencies](./Concepts/BuildDependencies.md).
 
 A terminal and any text editor will do, but VSCode is assumed in the step-by-step tutorials.
 
@@ -42,10 +44,9 @@ A terminal and any text editor will do, but VSCode is assumed in the step-by-ste
 ## Install ModuleForge
 
 ```powershell
-# Bootstrap PSResourceGet first if you don't have it
-Install-Module Microsoft.PowerShell.PSResourceGet -Force
+# PowerShell 7.4 and newer include PSResourceGet. On anything older, bootstrap it first:
+# Install-Module Microsoft.PowerShell.PSResourceGet -Force
 
-# Install everything you need
 Install-PSResource -Name Pester, PSScriptAnalyzer, ModuleForge
 ```
 
@@ -56,21 +57,19 @@ Install-PSResource -Name Pester, PSScriptAnalyzer, ModuleForge
 From your (already-initialised) git repository root:
 
 ```powershell
-# Create the folder structure and build config
-New-MFProject -ModuleName 'MyModule' -Description 'What my module does'
+# Create the folder structure, build config and CI/CD workflows in one step
+New-MFProject -ModuleName 'MyModule' -Description 'What my module does' -Scaffold GitHub
 ```
 
-Then add CI/CD workflows for your platform:
+Use `-Scaffold AzureDevOps` for Azure DevOps pipelines, or `-Scaffold GitHub,AzureDevOps` for both. You can also add the CI scaffold later, or to an existing project, with `Add-MFGithubScaffold` or `Add-MFAzureDevOpsScaffold`.
 
-**GitHub Actions**
+**Optional: Project Rules.** To check your code against your own standards as well as the default lint, add the ready-made rule sets. One checks for Constrained Language Mode compatibility, the other that every public function has a help example:
+
 ```powershell
-Add-MFGithubScaffold
+Add-MFProjectRules
 ```
 
-**Azure DevOps**
-```powershell
-Add-MFAzureDevOpsScaffold
-```
+See [Project Rules](./Concepts/ProjectRules.md) for what they do, and how to add your own.
 
 Commit the scaffolding back to `main` before doing anything else - the CI workflows need to exist on the default branch before they can run.
 
@@ -91,9 +90,14 @@ MyModule/
 │   ├── enums/              ← enum definitions
 │   ├── validationClasses/  ← custom [ValidateScript] types
 │   └── resource/           ← non-code files bundled with the module
+├── scripts/                ← scripts the pipelines run, which you can run locally too
+├── buildTest/              ← tests of the published module, for the optional Build Test
+├── BuildDependencies.psd1  ← the module versions your pipelines install
 ├── moduleForgeConfig.xml   ← build and publish configuration
-└── .github/workflows/      ← CI/CD pipelines (GitHub) or azure-pipelines.yml
+└── .github/workflows/      ← CI/CD workflows (GitHub), or .azuredevops/pipelines/ (Azure DevOps)
 ```
+
+Files ending `.example` in the workflows or pipelines folder are optional extras, such as [Build Test](./tutorials/build-test.md) and Project Rules. Rename one to remove `.example` and enable it.
 
 Each function gets its own file. Each function file gets its own `FunctionName.Tests.ps1` alongside it - Pester picks these up automatically.
 
@@ -196,7 +200,10 @@ test: add Pester tests for Get-Greeting
 | Full walkthrough - GitHub setup | [GitHub Getting Started Tutorial](./tutorials/github/github-tutorial-01-getting-started.md) |
 | Advanced features - enums, classes, private functions | [AstroCmdlets: An Advanced Tutorial](./tutorials/github/github-tutorial-02-full-ModuleForge-Featureset.md) |
 | Azure DevOps setup | [Azure DevOps Tutorial](./tutorials/azureDevOps/azureDevOps-tutorial-01-getting-started.md) |
+| Your release rhythm, in practice | [Making the Most of Releases](./tutorials/releases.md) |
 | Choosing version and release options | [Build and Release Guide](./build-and-release.md) |
+| Installing from your private feed | [Using Private Package Feeds](./tutorials/private-package-feeds.md) |
+| Checking the module you published | [Testing the Published Module](./tutorials/build-test.md) |
 | All commit prefixes and their effects | [Commit Prefixes](./commit-prefixes.md) |
 | Optional code style conventions | [PowerShell Style Recommendations](./Concepts/PowerShellStyle.md) |
 | Full function reference | [Functions](./functions/) |

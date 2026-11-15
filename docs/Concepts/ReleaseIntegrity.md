@@ -2,12 +2,12 @@
 layout: default
 title: Release Integrity and Checksums
 parent: Concepts
-nav_order: 9
+nav_order: 12
 ---
 
 # Release Integrity and Checksums
 
-Every module built with the ModuleForge Github Actions workflows (Including ModuleForge itslef) publishes SHA256 checksums for the two files that make up the installed module; the manifest (`.psd1`) and the module script (`.psm1`). These checksums appear in the GitHub release notes alongside the `.nupkg` artifact for each Build and Release.
+Every module built with the ModuleForge Github Actions workflows (Including ModuleForge itself) publishes SHA256 checksums for the two files that make up the installed module; the manifest (`.psd1`) and the module script (`.psm1`). These checksums appear in the GitHub release notes alongside the `.nupkg` artifact for each Build and Release.
 
 ---
 
@@ -53,3 +53,19 @@ Get-FileHash -Path (Join-Path $modulePath 'ModuleName.psm1') -Algorithm SHA256
 ```
 
 Compare the output against the checksums in the corresponding GitHub release. A match confirms the installed files are unmodified from what was built and released.
+
+---
+
+## The Build Summary
+
+Build and Release also shows a **build summary** on the run's summary page: the version, the functions and aliases it exports, the package size, and the SHA256 hashes. On GitHub it's the run's **Summary** tab; on Azure DevOps, the run's **Extensions** tab. You can produce the same summary yourself from any built package with [`Get-MFBuildSummary`](../functions/Get-MFBuildSummary.md).
+
+---
+
+## Which ModuleForge Built It
+
+Every built module also records the ModuleForge build that produced it: in the comment header at the top of the `.psm1`, and in the manifest's `PrivateData` as `ModuleForgeBuildVersion`, with the SHA256 hashes of that ModuleForge's own `.psd1` and `.psm1`. You can compare those against ModuleForge's own release checksums, to confirm which build of ModuleForge your module was built with.
+
+```powershell
+(Import-PowerShellDataFile -Path (Join-Path $modulePath 'ModuleName.psd1')).PrivateData.ModuleForgeBuildVersion
+```

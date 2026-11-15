@@ -2,25 +2,34 @@
 layout: default
 title: Resolve-MFModuleCase
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Resolve-MFModuleCase
 
 ## SYNOPSIS
+
 Fix module folder casing after a NuGet install so Get-Module and Import-Module can discover the module again
 
 ## SYNTAX
 
+### All parameter sets
+
 ```
-Resolve-MFModuleCase [-ModuleName] <String> [[-ModuleFolder] <String[]>] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+Resolve-MFModuleCase [-ModuleName] <string> [[-ModuleFolder] <string[]>]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
+
 NuGet package IDs are enforced as all-lowercase, but PowerShell convention is PascalCase module names.
 When a module is installed from a NuGet v2+ feed on a case-sensitive (*NIX) filesystem, the folder is
 created in lowercase while the manifest keeps its PascalCase name.
@@ -43,9 +52,8 @@ On rename, sleep for 4 seconds, then proceed to other found locations and repeat
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 Resolve-MFModuleCase -ModuleName moduleforgecasetest -Verbose
-```
 
 #### DESCRIPTION
 VERBOSE: ===========Executing Resolve-MFModuleCase===========
@@ -60,47 +68,79 @@ VERBOSE: Folder Rename attempted
 
 ## PARAMETERS
 
-### -ModuleName
-Name of the Module to resolve
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 1
-Default value: None
-Accept pipeline input: True (ByPropertyName, ByValue)
-Accept wildcard characters: False
-```
-
 ### -ModuleFolder
+
 ModuleFolder to use.
 If you want to override the module locations manually, use this
 
 ```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 1
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: 2
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+### -ModuleName
+
+Name of the Module to resolve
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
+### System.String
+
+{{ Fill in the Description }}
+
 ## OUTPUTS
 
-### [PSCustomObject] - Returns a result object per module location found, containing FolderFullName, FolderBaseName, ManifestName, RenameAttempt, and ManifestAndFolderMatch
+### [PSCustomObject] - Returns a result object per module location found
+
+{{ Fill in the Description }}
+
+### System.Management.Automation.PSObject
+
+{{ Fill in the Description }}
+
 ## NOTES
+
 Author: Adrian Andersson
 
+
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 

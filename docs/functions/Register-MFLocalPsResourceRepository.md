@@ -2,82 +2,111 @@
 layout: default
 title: Register-MFLocalPsResourceRepository
 parent: Functions
-external help file: ModuleForge-help.xml
+document type: cmdlet
+external help file: ModuleForge-Help.xml
+HelpUri: ''
 Module Name: ModuleForge
-online version:
-schema: 2.0.0
+PlatyPS schema version: 2024-05-01
 ---
 
 # Register-MFLocalPsResourceRepository
 
 ## SYNOPSIS
+
 Add a local file-based PowerShell repository into the systems temp location
 
 ## SYNTAX
 
+### All parameter sets
+
 ```
-Register-MFLocalPsResourceRepository [[-RepositoryName] <String>] [[-Path] <String>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Register-MFLocalPsResourceRepository [[-RepositoryName] <string>] [[-Path] <string>]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
+
 Allows you to test psresourceGet, as well as directly manipulate the nuget package,
 for example, to add git data to the nuspec
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 Register-MFLocalPsResourceRepository      
 #### DESCRIPTION
 Create a powershell file repository using default values.
-```
 
 Repository will be called: LocalTestRepository
-Path will be where-ever \[System.IO.Path\]::GetTempPath() points
+Path will be where-ever [System.IO.Path]::GetTempPath() points
 
 ## PARAMETERS
 
-### -RepositoryName
-Name of the repository
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
-Default value: LocalTestRepository
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Path
+
 Root path of the module.
 Uses Temp Path by default
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
+Type: System.String
+DefaultValue: '[System.IO.Path]::GetTempPath()'
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 1
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
-Required: False
-Position: 2
-Default value: [System.IO.Path]::GetTempPath()
-Accept pipeline input: False
-Accept wildcard characters: False
+### -RepositoryName
+
+Name of the repository
+
+```yaml
+Type: System.String
+DefaultValue: LocalTestRepository
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ## OUTPUTS
 
 ## NOTES
+
 Author: Adrian Andersson
 
+
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
 

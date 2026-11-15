@@ -2,7 +2,7 @@
 layout: default
 title: From Bartender to ModuleForge
 parent: Concepts
-nav_order: 7
+nav_order: 9
 ---
 
 # From Bartender to ModuleForge
