@@ -69,16 +69,24 @@ Controls which tagged release is published. The workflow fetches your full relea
 
 > If you publish a prerelease version to PSGallery, it will appear there as a prerelease - hidden from `Find-PSResource` / `Find-Module` unless `-AllowPrerelease` is passed. Use `latest-stable` unless you specifically intend to publish a prerelease to PSGallery.
 
-#### `moduleforge_release_toggle` (optional)
+#### `dependency_source` (optional)
 
-Controls which version of ModuleForge is used internally by the workflow itself. Leave this at the default (`moduleforge-latest-stable-only`) unless you are testing a ModuleForge prerelease build.
+Controls which version of ModuleForge the workflow itself uses, the same choice the Build and Release workflow has.
+
+| Option | What it installs |
+| --- | --- |
+| `required-resource-file` *(default)* | The version pinned in your project's `BuildDependencies.psd1` |
+| `psgallery-latest` | The latest stable ModuleForge from PSGallery |
+| `psgallery-prerelease` | The latest ModuleForge from PSGallery, prereleases included |
+
+Leave it at the default unless you are testing a ModuleForge prerelease. Before ModuleForge 1.4.0 this input was `moduleforge_release_toggle`.
 
 ---
 
 ## What the workflow does
 
 1. **Reads the release list** - uses the `gh` CLI to list releases and selects one based on your `release_selector` choice
-2. **Installs ModuleForge and PSResourceGet**
+2. **Installs ModuleForge and PSResourceGet** - ModuleForge at the version `dependency_source` chooses, through `scripts/Install-MFBuildDependencies.ps1`
 3. **Registers your GitHub Packages feed** as a PSResource repository using the built-in `GITHUB_TOKEN`
 4. **Finds the specific version** in GitHub Packages by matching the release tag
 5. **Installs the module** from GitHub Packages locally on the runner
