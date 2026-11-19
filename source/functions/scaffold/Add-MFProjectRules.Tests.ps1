@@ -37,11 +37,19 @@ Describe 'Check Clean Environment' {
 }
 
 Describe 'Add-MFProjectRules rule sets' {
-    It 'Should add both rule sets by default' {
+    It 'Should add every rule set by default' {
         $path = New-TestProject -Name 'both'
         Add-MFProjectRules -ModulePath $path
         Test-Path (Join-Path $path 'PSScriptAnalyzer/clm.psd1') | Should -Be $true
         Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1') | Should -Be $true
+        Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1') | Should -Be $true
+    }
+    It 'Should add an ArrayAddition rule module that exports its rule' {
+        $path = New-TestProject -Name 'arrayContent'
+        Add-MFProjectRules -ModulePath $path -RuleSet ArrayAddition
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $path 'PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1'), [ref]$null, [ref]$null)
+        $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true).Name | Should -Contain 'Measure-MFArrayAddition'
+        Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/HelpExamples') | Should -Be $false
     }
     It 'Should add only the rule set asked for' {
         $path = New-TestProject -Name 'clmOnly'
@@ -128,5 +136,83 @@ Describe 'Add-MFProjectRules rules run with Project Rules' {
         'function Get-NoExample { param() 1 }' | Set-Content (Join-Path $path 'source/functions/Get-NoExample.ps1')
         $findings = Invoke-ScriptAnalyzer -Path (Join-Path $path 'source') -Recurse -CustomRulePath (Join-Path $path 'PSScriptAnalyzer/rules/HelpExamples') -IncludeRule 'Measure-MFHelpExample'
         $findings.RuleName | Should -Contain 'Measure-MFHelpExample'
+    }
+}
+
+Describe 'ArrayAddition rule' -Skip:(!(Get-Module -ListAvailable PSScriptAnalyzer)) {
+    BeforeAll {
+        $path = New-TestProject -Name 'arrayAddition' -Folders 'source/functions'
+        Add-MFProjectRules -ModulePath $path -RuleSet ArrayAddition
+        $fixture = @'
+function Get-LoopAdd {
+    $results = @()
+    foreach($item in 1..3){ $results += $item }
+    $results
+}
+function Get-PipelineAdd {
+    $piped = @()
+    1..3 | ForEach-Object { $piped += $_ }
+    $piped
+}
+function Get-TypedParamAdd {
+    param([string[]]$Names)
+    $Names += 'extra'
+    $Names
+}
+function Get-TypedAdd {
+    [array]$typed = Get-Item .
+    while($false){ $typed += 1 }
+}
+function Get-NumberAdd {
+    $count = 0
+    foreach($item in 1..3){ $count += $item }
+    $text = ''
+    $text += 'a'
+    $count
+}
+function Get-ListAdd {
+    $list = [System.Collections.Generic.List[int]]::new()
+    foreach($item in 1..3){ $list.Add($item) }
+    $list
+}
+function Get-OtherScope {
+    $elsewhere += 1
+}
+function Get-Collected {
+    $elsewhere = @()
+    $elsewhere = foreach($item in 1..3){ $item }
+    $elsewhere
+}
+'@
+        $fixturePath = Join-Path $path 'source/functions/Fixture.ps1'
+        $fixture | Set-Content $fixturePath
+        $findings = @(Invoke-ScriptAnalyzer -Path $fixturePath -CustomRulePath (Join-Path $path 'PSScriptAnalyzer/rules/ArrayAddition') -IncludeRule 'Measure-MFArrayAddition')
+        $lines = ($fixture -split "`r?`n")
+        $findingFor = { param($text) $findings | Where-Object { $lines[$_.Line - 1] -like "*$text*" } }
+    }
+    It 'Should warn about += on an array in a foreach loop' {
+        $finding = & $findingFor '$results += $item'
+        $finding | Should -HaveCount 1
+        "$($finding.Severity)" | Should -Be 'Warning'
+        $finding.Message | Should -Match 'Generic\.List'
+    }
+    It 'Should warn about += on an array in a ForEach-Object block' {
+        "$((& $findingFor '$piped += $_').Severity)" | Should -Be 'Warning'
+    }
+    It 'Should report += on an array parameter outside a loop as Information' {
+        "$((& $findingFor "`$Names += 'extra'").Severity)" | Should -Be 'Information'
+    }
+    It 'Should warn about += on an [array] typed variable in a while loop' {
+        "$((& $findingFor '$typed += 1').Severity)" | Should -Be 'Warning'
+    }
+    It 'Should not report += on a number or a string' {
+        & $findingFor '$count +=' | Should -BeNullOrEmpty
+        & $findingFor '$text +=' | Should -BeNullOrEmpty
+    }
+    It 'Should not report a variable that only another function sets up as an array' {
+        & $findingFor '$elsewhere += 1' | Should -BeNullOrEmpty
+    }
+    It 'Should report only the four array additions' {
+        $findings | Should -HaveCount 4
     }
 }
