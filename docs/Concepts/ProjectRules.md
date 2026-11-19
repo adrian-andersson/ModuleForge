@@ -25,6 +25,12 @@ Add-MFProjectRules
 
 This adds the ready-made rule sets to a `PSScriptAnalyzer` folder in your project root, and enables the Project Rules workflow (GitHub) or pipeline (Azure DevOps) in whichever CI folders your project has, by renaming `projectRules.yml.example` to `projectRules.yml`. On Azure DevOps you still need to create a pipeline for the file, and add it to your branch policy, as with the others.
 
+Starting a new project? `New-MFProject -ProjectRules` does the same as part of creating it. Pass `-Scaffold` too, and the Project Rules workflow is enabled in the CI scaffold it adds, so one command sets up everything:
+
+```powershell
+New-MFProject -ModuleName 'MyModule' -Description 'My module' -Scaffold GitHub,AzureDevOps -ProjectRules
+```
+
 Pick rule sets with `-RuleSet`:
 
 ```powershell
