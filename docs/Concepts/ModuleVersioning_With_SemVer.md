@@ -49,7 +49,7 @@ No change to parameters or outputs, only code fixes and optimizations.
 
 ### Prerelease
 
-A prerelease is a test build of a Major, Minor, or Patch change - used to validate changes before committing to a stable release. In the PR template this maps to the **PreRelease series** release intent.
+A prerelease is a test build of a Major, Minor, or Patch change - used to validate changes before committing to a stable release. In the PR template and the Build and Release form, a series starts with **New Prerelease Series** and continues with **Next Prerelease**.
 
 Use prerelease versions when:
 

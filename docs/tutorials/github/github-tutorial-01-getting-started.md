@@ -194,8 +194,8 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 2. Click the option to create a Pull Request
 3. Fill in the Pull Request template
    - Type in a decent description
-   - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
-   - ![Pull request template showing change type and release intent checkboxes](./img/prForm.png)
+   - Tick the **Type of change**, and the **Release** choice that should follow the merge. They stay on the pull request as a record, and tell whoever runs Build and Release which choice to pick.
+   - ![Pull request template showing the type of change and release checkboxes](./img/prForm.png)
 4. Once you have completed the PR template, create the Pull Request
 5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
    - ![Automated Pester and PSScriptAnalyzer results posted as pull request comments](./img/prComments.png)
