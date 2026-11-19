@@ -25,7 +25,7 @@ New-MFProject [-ModuleName] <string> [-Description] <string> [[-MinimumPsVersion
  [[-ModuleTags] <string[]>] [[-ModulePath] <string>] [[-ProjectUri] <string>] [[-IconUri] <string>]
  [[-LicenseUri] <string>] [[-ConfigFile] <string>] [[-RequiredModules] <Object[]>]
  [[-ExternalModuleDependencies] <string[]>] [[-DefaultCommandPrefix] <string>]
- [[-PrivateData] <hashtable>] [[-Scaffold] <string[]>] [-WhatIf] [-Confirm]
+ [[-PrivateData] <hashtable>] [[-Scaffold] <string[]>] [-ProjectRules] [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -68,6 +68,19 @@ Use AzureDevOps for Azure DevOps pipelines, or both.
 
 #### OUTPUT
 The project scaffold, plus a .github folder with workflows and a pull request template.
+
+### EXAMPLE 3
+
+New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -Scaffold GitHub,AzureDevOps -ProjectRules
+
+#### DESCRIPTION
+Sets up everything in one step: the project, the GitHub and Azure DevOps scaffolds, and every Project Rules
+rule set with the Project Rules workflow enabled, as Add-MFProjectRules does.
+Azure DevOps still needs a
+pipeline creating for each pipeline file.
+
+#### OUTPUT
+The project scaffold, .github and .azuredevops folders, and a PSScriptAnalyzer folder of Project Rules.
 
 ## PARAMETERS
 
@@ -367,6 +380,28 @@ Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 15
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ProjectRules
+
+Add every Project Rules rule set too, as Add-MFProjectRules does, and enable the Project Rules workflow in the CI scaffold.
+For only some rule sets, use Add-MFProjectRules -RuleSet afterwards
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false

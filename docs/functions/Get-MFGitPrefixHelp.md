@@ -30,7 +30,7 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Returns a short plain text summary of the commit prefix convention used by Get-MFGitChangeLog, including the commit format, the prefix list, examples, how to pick a version increment, and common gotchas.
+Returns a short plain text summary of the commit prefix convention used by Get-MFGitChangeLog, including the commit format, the prefix list and the type of change each one is, examples, which Build and Release choice to pick, and common gotchas.
 Output is limited to ASCII and 80 columns so it reads well in any terminal.
 The full guide is at https://adrian-andersson.github.io/ModuleForge/commit-prefixes.html
 
@@ -72,6 +72,7 @@ GOTCHAS
 
 Section to display.
 Displays every section by default
+Increments is the old name for Release, kept so existing calls still work
 
 ```yaml
 Type: System.String

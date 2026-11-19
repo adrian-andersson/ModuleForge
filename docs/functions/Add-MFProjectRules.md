@@ -40,6 +40,9 @@ This copies ready-made rule sets into that folder:
 Needs PSScriptAnalyzer 1.25.0 or newer
   - HelpExamples  A custom rule that warns when a public function has no .EXAMPLE in its help,
                   as the docs are generated from it
+  - ArrayAddition A custom rule that flags += on an array, which copies the whole array each time,
+                  and recommends a generic list instead.
+A Warning in a loop, Information elsewhere
 
 It then enables the Project Rules workflow in .github and the pipeline in .azuredevops, whichever exist,
 by renaming projectRules.yml.example to projectRules.yml, or adding it if it is missing.
@@ -57,11 +60,12 @@ Existing files are skipped unless -Force is used.
 Add-MFProjectRules
 
 #### DESCRIPTION
-Adds both rule sets to the PSScriptAnalyzer folder, and enables Project Rules in the CI folders that exist.
+Adds every rule set to the PSScriptAnalyzer folder, and enables Project Rules in the CI folders that exist.
 
 #### OUTPUT
-PSScriptAnalyzer/clm.psd1, PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1, and an enabled
-projectRules.yml in .github/workflows or .azuredevops/pipelines.
+PSScriptAnalyzer/clm.psd1, PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1,
+PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1, and an enabled projectRules.yml in
+.github/workflows or .azuredevops/pipelines.
 
 ### EXAMPLE 2
 
@@ -151,7 +155,7 @@ Adds all of them by default
 
 ```yaml
 Type: System.String[]
-DefaultValue: "@('CLM','HelpExamples')"
+DefaultValue: "@('CLM','HelpExamples','ArrayAddition')"
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
