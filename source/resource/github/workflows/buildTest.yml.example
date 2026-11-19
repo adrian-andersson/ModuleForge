@@ -37,8 +37,9 @@ on:
 
 jobs:
   buildTest:
-    # Auto-run only when the upstream build succeeded; always run on manual dispatch.
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Auto-run only when the upstream build succeeded and published something; always run on manual dispatch.
+    # A dry run of Build and Release succeeds without publishing, and says DRY RUN in its run name
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.display_title, 'DRY RUN')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read   # checkout

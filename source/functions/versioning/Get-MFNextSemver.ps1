@@ -30,6 +30,15 @@ function Get-MFNextSemver
         #### OUTPUT
         '3.0.0'
 
+    .EXAMPLE
+        Get-MFNextSemver -Version '1.2.3' -Increment 'Minor' -StableRelease
+
+        #### DESCRIPTION
+        Releases a new stable version directly, without a prerelease series first. Without -Increment, -StableRelease only promotes a prerelease, so it throws for a version that is already stable.
+
+        #### OUTPUT
+        '1.3.0'
+
     .INPUTS
         [semver] - Will accept a Semver from pipeline or via direct assignment
 
@@ -58,11 +67,11 @@ function Get-MFNextSemver
         [Parameter(ParameterSetName='preRelease')]
         [switch]$PreRelease,
 
-        #Is this a stable release - drops the prerelease tag from a prerelease version
+        #Is this a stable release. With -Increment, returns the incremented stable version. Without, drops the prerelease tag from a prerelease version
         [Parameter(ParameterSetName='default')]
         [switch]$StableRelease,
 
-        #Optional override the prerelease label. If not supplied will use 'prerelease'
+        #Optional override the prerelease label. If not supplied will use 'pre', giving prev001, prev002 and so on
         [Parameter(ParameterSetName='preRelease')]
         [Parameter(ParameterSetName='Initial')]
         [string]$PreReleaseLabel,
@@ -108,26 +117,32 @@ function Get-MFNextSemver
         {
             #This scenario indicates version supplied is already a prerelease, and what we want to do is increment the prerelease version
             write-verbose 'Incrementing Prerelease Version'
-            $currentPreReleaseSplit = $Version.PreReleaseLabel.Split('v')
-            $currentpreReleaseLabel = $currentPreReleaseSplit[0]
-            write-verbose "Current PreRelease Label: $currentpreReleaseLabel"
-            if(!$PreReleaseLabel -or ($currentpreReleaseLabel -ceq $PreReleaseLabel)){
-                if($currentpreReleaseLabel -eq $PreReleaseLabel)
-                {
-                    write-warning 'It appears the prerelease casing has changed, but the label has not. This may cause unexpected ordering results.'
+            #ModuleForge prereleases are <label>v<number>, e.g. prev003. The label can itself contain a v, e.g. devv003, so match the last v<number>
+            if($Version.PreReleaseLabel -match '^(?<label>.+)v(?<counter>\d+)$')
+            {
+                $currentPreReleaseLabel = $Matches.label
+                $currentPreReleaseCounter = [int]$Matches.counter
+                write-verbose "Current PreRelease Label: $currentPreReleaseLabel, counter: $currentPreReleaseCounter"
+                if(!$PreReleaseLabel -or ($currentPreReleaseLabel -ceq $PreReleaseLabel)){
+                    write-verbose 'No change to prerelease label'
+                    $nextPreReleaseLabel = $currentPreReleaseLabel
+                    $nextPrerelease = $currentPreReleaseCounter+1
+                }elseif($currentPreReleaseLabel -eq $PreReleaseLabel){
+                    write-warning "The prerelease label casing has changed from '$currentPreReleaseLabel' to '$PreReleaseLabel'. Prerelease labels sort by case, so this may cause unexpected ordering results."
+                    $nextPreReleaseLabel = $PreReleaseLabel
+                    $nextPrerelease = $currentPreReleaseCounter+1
+                }else{
+                    write-verbose 'Prerelease label changed. Resetting prerelease version to 1'
+                    $nextPreReleaseLabel = $PreReleaseLabel
+                    $nextPreRelease = 1
                 }
-                write-verbose 'No change to prerelease label'
-                $nextPreReleaseLabel = $currentpreReleaseLabel
-                $currentPreReleaseInt = [int]$currentPreReleaseSplit[1]
-                $nextPrerelease = $currentPreReleaseInt+1
-                
-
             }else{
-                write-verbose 'Prerelease label changed. Resetting prerelease version to 1'
-                $nextPreReleaseLabel = $PreReleaseLabel
+                #Not a ModuleForge prerelease, e.g. beta.1, so there is no counter to continue
+                $nextPreReleaseLabel = if($PreReleaseLabel){$PreReleaseLabel}else{$defaultPrereleaseLabel}
                 $nextPreRelease = 1
+                write-warning "Prerelease '$($Version.PreReleaseLabel)' is not in the <label>v<number> format, so starting again at $($nextPreReleaseLabel)v001"
             }
-            
+
             $nextVersionString = "$($Version.major).$($Version.minor).$($Version.patch)-$($nextPreReleaseLabel)v$('{0:d3}' -f $nextPrerelease)"
             $nextVersion = [semver]::New($nextVersionString)
             write-verbose "Next Prerelease will be: $($nextVersion.ToString())"
@@ -152,7 +167,7 @@ function Get-MFNextSemver
             #throw 'Unsure on version scenario. Prerelease wanted but version provided was not a pre-release. Please provide a version with existing prerelease, or include an increment'
             
             #I think what we do, is we increment patch by 1 and then tag as pre-release
-            write-warning 'Unspecified version increment. Will increment Patch. If this is not what you meant, please try again'
+            write-warning "Version $Version is not a prerelease and no increment was given, so starting a patch prerelease series. If this is not what you meant, supply -Increment"
 
             if(!$PreReleaseLabel){
                 $nextPreReleaseLabel = $defaultPrereleaseLabel
@@ -174,15 +189,18 @@ function Get-MFNextSemver
         }elseIf($StableRelease)
         {
             write-verbose 'Mark release as stable'
-            #This scenario is for when we have a pre-release tag and we want to drop it for a stable release version
-            if(!($Version.PreReleaseLabel))
+            if($nextVersion)
             {
-                throw 'version supplied does not contain a prerelease'
+                #An increment was given, so the incremented version is already the stable release
+                write-verbose "Stable Release Version: $($nextVersion.tostring())"
+            }elseif($Version.PreReleaseLabel){
+                #Promote the prerelease, dropping its tag
+                $nextVersionString = "$($Version.major).$($Version.minor).$($Version.patch)"
+                $nextVersion = [semver]::New($nextVersionString)
+                write-verbose "Stable Release Version: $($nextVersion.tostring())"
+            }else{
+                throw "Version $Version is already stable, so there is no prerelease to promote. Supply -Increment to release a new stable version, or use -PreRelease to start a prerelease series"
             }
-
-            $nextVersionString = "$($Version.major).$($Version.minor).$($Version.patch)"
-            $nextVersion = [semver]::New($nextVersionString)
-            write-verbose "Stable Release Version: $($nextVersion.tostring())"
 
         }
 

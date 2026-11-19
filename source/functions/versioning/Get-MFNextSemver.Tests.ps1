@@ -52,8 +52,33 @@ Describe 'Get-MFNextSemver Error Handling' {
     It 'Should throw when no increment or switch is provided' {
         { Get-MFNextSemver -Version ([semver]::new('1.0.0')) } | Should -Throw
     }
-    It 'Should throw when StableRelease is used on a non-prerelease version' {
-        { Get-MFNextSemver -Version ([semver]::new('1.0.0')) -StableRelease } | Should -Throw
+    It 'Should throw a clear message when promoting a version that is already stable' {
+        { Get-MFNextSemver -Version ([semver]::new('1.0.0')) -StableRelease } | Should -Throw '*already stable*'
+    }
+}
+
+Describe 'Get-MFNextSemver release matrix' {
+    #Every increment and release type, from a prerelease and from a stable version. As Build and Release calls it
+    It 'From <From>, increment <Increment>, <Release> gives <Expected>' -ForEach @(
+        @{ From = '1.2.3-prev002'; Increment = $null;   Release = 'PreRelease';    Expected = '1.2.3-prev003' }
+        @{ From = '1.2.3-prev002'; Increment = 'Patch'; Release = 'PreRelease';    Expected = '1.2.4-prev001' }
+        @{ From = '1.2.3-prev002'; Increment = 'Minor'; Release = 'PreRelease';    Expected = '1.3.0-prev001' }
+        @{ From = '1.2.3-prev002'; Increment = 'Major'; Release = 'PreRelease';    Expected = '2.0.0-prev001' }
+        @{ From = '1.2.3-prev002'; Increment = $null;   Release = 'StableRelease'; Expected = '1.2.3' }
+        @{ From = '1.2.3-prev002'; Increment = 'Patch'; Release = 'StableRelease'; Expected = '1.2.4' }
+        @{ From = '1.2.3-prev002'; Increment = 'Minor'; Release = 'StableRelease'; Expected = '1.3.0' }
+        @{ From = '1.2.3-prev002'; Increment = 'Major'; Release = 'StableRelease'; Expected = '2.0.0' }
+        @{ From = '1.2.3';         Increment = $null;   Release = 'PreRelease';    Expected = '1.2.4-prev001' }
+        @{ From = '1.2.3';         Increment = 'Patch'; Release = 'PreRelease';    Expected = '1.2.4-prev001' }
+        @{ From = '1.2.3';         Increment = 'Minor'; Release = 'PreRelease';    Expected = '1.3.0-prev001' }
+        @{ From = '1.2.3';         Increment = 'Major'; Release = 'PreRelease';    Expected = '2.0.0-prev001' }
+        @{ From = '1.2.3';         Increment = 'Patch'; Release = 'StableRelease'; Expected = '1.2.4' }
+        @{ From = '1.2.3';         Increment = 'Minor'; Release = 'StableRelease'; Expected = '1.3.0' }
+        @{ From = '1.2.3';         Increment = 'Major'; Release = 'StableRelease'; Expected = '2.0.0' }
+    ) {
+        $splat = @{ Version = [semver]$From; $Release = $true }
+        if($Increment){ $splat.Increment = $Increment }
+        (Get-MFNextSemver @splat).ToString() | Should -BeExactly $Expected
     }
 }
 
@@ -62,5 +87,28 @@ Describe 'Get-MFNextSemver Prerelease Label Change' {
         $preReleaseVersion = [semver]::new('1.0.0-prev003')
         $result = Get-MFNextSemver -Version $preReleaseVersion -PreRelease -PreReleaseLabel 'stage'
         $result.ToString() | Should -BeExactly '1.0.0-stagev001'
+    }
+    It 'Should continue the counter for a label containing a v' {
+        $result = Get-MFNextSemver -Version ([semver]'1.0.0-devv003') -PreRelease
+        $result.ToString() | Should -BeExactly '1.0.0-devv004'
+    }
+    It 'Should continue the counter for a label ending in v' {
+        $result = Get-MFNextSemver -Version ([semver]'1.0.0-previewv009') -PreRelease
+        $result.ToString() | Should -BeExactly '1.0.0-previewv010'
+    }
+    It 'Should continue the counter, without a warning, when the same label is supplied' {
+        $result = Get-MFNextSemver -Version ([semver]'1.0.0-prev003') -PreRelease -PreReleaseLabel 'pre' -WarningVariable warned -WarningAction SilentlyContinue
+        $result.ToString() | Should -BeExactly '1.0.0-prev004'
+        $warned | Should -BeNullOrEmpty
+    }
+    It 'Should warn and continue the counter when only the label casing changes' {
+        $result = Get-MFNextSemver -Version ([semver]'1.0.0-prev003') -PreRelease -PreReleaseLabel 'Pre' -WarningVariable warned -WarningAction SilentlyContinue
+        $result.ToString() | Should -BeExactly '1.0.0-Prev004'
+        $warned | Should -Not -BeNullOrEmpty
+    }
+    It 'Should start again at v001, with a warning, for a prerelease not in the label-v-number format' {
+        $result = Get-MFNextSemver -Version ([semver]'1.0.0-beta.1') -PreRelease -WarningVariable warned -WarningAction SilentlyContinue
+        $result.ToString() | Should -BeExactly '1.0.0-prev001'
+        $warned | Should -Not -BeNullOrEmpty
     }
 }
