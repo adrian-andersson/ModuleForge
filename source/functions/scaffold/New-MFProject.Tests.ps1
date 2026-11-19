@@ -20,6 +20,7 @@ BeforeAll{
         'Add-MFFilesAndFolders.ps1'
         'Add-MFGithubScaffold.ps1'
         'Add-MFAzureDevOpsScaffold.ps1'
+        'Add-MFProjectRules.ps1'
     )
     $dependencies.ForEach{ . $_ }
     #The scaffold commands read their templates from source/resource when not running from the module
@@ -155,6 +156,51 @@ Describe 'New-MFProject -Scaffold' {
     }
     It 'Should reject an unknown scaffold' {
         { New-MFProject -ModuleName 'BadModule' -description 'Bad' -ModulePath $testPath -Scaffold GitLab } | Should -Throw
+    }
+    AfterAll{
+        Set-Location $currentPath
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
+        start-sleep -Seconds 2
+    }
+}
+
+Describe 'New-MFProject -ProjectRules' {
+    BeforeAll{
+        $null = new-item -ItemType Directory -path $testPath -force
+        Set-Location $currentPath
+    }
+    It 'Should add every rule set and enable Project Rules on both platforms, in one step' {
+        $allPath = join-path $testPath -ChildPath 'everything'
+        $null = new-item -ItemType Directory -Path $allPath -Force
+        New-MFProject -ModuleName 'EverythingModule' -description 'Everything' -ModulePath $allPath -Scaffold GitHub,AzureDevOps -ProjectRules
+        foreach($rule in 'clm.psd1','rules/HelpExamples/HelpExamples.psm1','rules/ArrayAddition/ArrayAddition.psm1')
+        {
+            Test-Path (join-path $allPath 'PSScriptAnalyzer' -AdditionalChildPath ($rule -split '/')) | Should -Be $true
+        }
+        Test-Path (join-path $allPath '.github' -AdditionalChildPath 'workflows','projectRules.yml') | Should -Be $true
+        Test-Path (join-path $allPath '.github' -AdditionalChildPath 'workflows','projectRules.yml.example') | Should -Be $false
+        Test-Path (join-path $allPath '.azuredevops' -AdditionalChildPath 'pipelines','projectRules.yml') | Should -Be $true
+    }
+    It 'Should add the rules without a CI scaffold' {
+        $rulesOnlyPath = join-path $testPath -ChildPath 'rulesOnly'
+        $null = new-item -ItemType Directory -Path $rulesOnlyPath -Force
+        New-MFProject -ModuleName 'RulesOnlyModule' -description 'Rules only' -ModulePath $rulesOnlyPath -ProjectRules
+        Test-Path (join-path $rulesOnlyPath 'PSScriptAnalyzer' -AdditionalChildPath 'clm.psd1') | Should -Be $true
+        Test-Path (join-path $rulesOnlyPath '.github') | Should -Be $false
+        Test-Path (join-path $rulesOnlyPath 'scripts' -AdditionalChildPath 'Invoke-MFProjectRules.ps1') | Should -Be $true
+    }
+    It 'Should add no rules when -ProjectRules is not passed' {
+        $noRulesPath = join-path $testPath -ChildPath 'noRules'
+        $null = new-item -ItemType Directory -Path $noRulesPath -Force
+        New-MFProject -ModuleName 'NoRulesModule' -description 'No rules' -ModulePath $noRulesPath -Scaffold GitHub
+        Test-Path (join-path $noRulesPath 'PSScriptAnalyzer') | Should -Be $false
+        Test-Path (join-path $noRulesPath '.github' -AdditionalChildPath 'workflows','projectRules.yml.example') | Should -Be $true
+    }
+    It 'Should add no rules with -WhatIf' {
+        $whatIfRulesPath = join-path $testPath -ChildPath 'whatIfRules'
+        $null = new-item -ItemType Directory -Path $whatIfRulesPath -Force
+        New-MFProject -ModuleName 'WhatIfRulesModule' -description 'WhatIf' -ModulePath $whatIfRulesPath -ProjectRules -WhatIf
+        Test-Path (join-path $whatIfRulesPath 'PSScriptAnalyzer') | Should -Be $false
     }
     AfterAll{
         Set-Location $currentPath

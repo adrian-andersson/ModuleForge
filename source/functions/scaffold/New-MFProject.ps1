@@ -31,6 +31,17 @@ function New-MFProject
             #### OUTPUT
             The project scaffold, plus a .github folder with workflows and a pull request template.
 
+        .EXAMPLE
+            New-MFProject -ModuleName "MyModule" -Description "A module for automating tasks" -Scaffold GitHub,AzureDevOps -ProjectRules
+
+            #### DESCRIPTION
+            Sets up everything in one step: the project, the GitHub and Azure DevOps scaffolds, and every Project Rules
+            rule set with the Project Rules workflow enabled, as Add-MFProjectRules does. Azure DevOps still needs a
+            pipeline creating for each pipeline file.
+
+            #### OUTPUT
+            The project scaffold, .github and .azuredevops folders, and a PSScriptAnalyzer folder of Project Rules.
+
         .NOTES
             Author: Adrian Andersson
             
@@ -93,7 +104,10 @@ function New-MFProject
         #Add the CI scaffold too. GitHub runs Add-MFGithubScaffold, AzureDevOps runs Add-MFAzureDevOpsScaffold. Pass both for both
         [Parameter()]
         [ValidateSet('GitHub','AzureDevOps')]
-        [string[]]$Scaffold
+        [string[]]$Scaffold,
+        #Add every Project Rules rule set too, as Add-MFProjectRules does, and enable the Project Rules workflow in the CI scaffold. For only some rule sets, use Add-MFProjectRules -RuleSet afterwards
+        [Parameter()]
+        [switch]$ProjectRules
 
     )
     begin{
@@ -208,6 +222,12 @@ function New-MFProject
                     'GitHub' { Add-MFGithubScaffold -ModulePath $ModulePath }
                     'AzureDevOps' { Add-MFAzureDevOpsScaffold -ModulePath $ModulePath }
                 }
+            }
+
+            #After the scaffold, so the Project Rules workflow it enables is there
+            if($ProjectRules)
+            {
+                Add-MFProjectRules -ModulePath $ModulePath
             }
         }
     }
