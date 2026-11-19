@@ -69,6 +69,12 @@ Describe 'Add-MFGithubScaffold should Copy Files' {
         get-Item $prTemplateFile|Should -Not -BeNullOrEmpty
         get-content $prTemplateFile|should -Not -BeNullOrEmpty
     }
+    It 'Should add the detailed PR template as .example, so the short one is used' {
+        $example = $prTemplateFile + '.example'
+        $example|Should -Exist
+        get-content $example -Raw|should -Match 'Type of Changes included in this PR'
+        get-content $prTemplateFile -Raw|should -Match '## Type of change'
+    }
     It 'Should have created the workflows folder '  {
         get-Item $workflowsFolder|Should -Not -BeNullOrEmpty
     }
