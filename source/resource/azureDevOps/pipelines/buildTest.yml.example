@@ -47,6 +47,8 @@ parameters:
 
 jobs:
 - job: buildTest
+  # A dry run of Build and Release succeeds without publishing, and its run name ends in -dryrun. Manual runs always run
+  condition: or(ne(variables['Build.Reason'], 'ResourceTrigger'), not(endsWith(variables['resources.pipeline.buildAndRelease.runName'], '-dryrun')))
   pool:
     name: 'Azure Pipelines'
     vmImage: 'ubuntu-latest'

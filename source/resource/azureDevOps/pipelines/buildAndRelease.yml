@@ -1,26 +1,30 @@
 trigger: none
 
 parameters:
-  - name: version_type
-    displayName: 'Type of version increment'
+  # A release goes: New Prerelease Series once, Next Prerelease as often as needed, then Promote to Stable
+  # The version step reads the text before the bracket, so keep these prefixes if you reword an option
+  - name: release
+    displayName: 'What are you releasing? Start a series once, run Next Prerelease until it is ready, then Promote to Stable'
     type: string
-    default: 'none'
-    values: [major, minor, patch, none]
-
-  - name: release_type
-    displayName: 'Type of release, stable or prerelease'
-    type: string
-    default: 'prerelease'
-    values: [stable, prerelease]
+    default: 'Next Prerelease (x.y.z-prevN -> prevN+1, or starts a patch series from stable)'
+    values:
+      - 'Next Prerelease (x.y.z-prevN -> prevN+1, or starts a patch series from stable)'
+      - 'New Prerelease Series: minor (x.y.z -> x.Y.0-prev001)'
+      - 'New Prerelease Series: major (x.y.z -> X.0.0-prev001)'
+      - 'Promote to Stable (x.y.z-prevN -> x.y.z)'
+      # To release a stable version without a prerelease series first, uncomment these. Needs ModuleForge 1.4.1 or newer
+      # - 'Stable Release: patch (x.y.z -> x.y.Z)'
+      # - 'Stable Release: minor (x.y.z -> x.Y.0)'
+      # - 'Stable Release: major (x.y.z -> X.0.0)'
 
   - name: dependency_source
-    displayName: 'Where to install ModuleForge and other build modules from. required-resource-file uses the versions pinned in BuildDependencies.psd1'
+    displayName: 'Advanced: where to install ModuleForge and other build modules from. required-resource-file uses the versions pinned in BuildDependencies.psd1'
     type: string
     default: 'required-resource-file'
     values: [required-resource-file, psgallery-latest, psgallery-prerelease]
 
   - name: include_source_metadata
-    displayName: 'Add the branch and commit this was built from to the package metadata'
+    displayName: 'Advanced: add the branch and commit this was built from to the package metadata'
     type: boolean
     default: true
 
@@ -28,9 +32,14 @@ parameters:
   # The feed can be scoped to this project or to the organization: the pipeline finds which before it builds.
   # Change the default if your feed has another name, and the same parameter in buildTest.yml
   - name: feed_name
-    displayName: 'Azure DevOps feed'
+    displayName: 'Advanced: Azure DevOps feed'
     type: string
     default: 'psPackages'
+
+  - name: dry_run
+    displayName: 'Advanced: dry run. Work out the version and build, but do not tag or publish'
+    type: boolean
+    default: false
 
 
 jobs:
@@ -128,15 +137,25 @@ jobs:
       {
         Write-Verbose "Rerun of a run that tagged this commit as $existingTag. Finishing that version"
         git tag -d $existingTag
+        $latest = $existingTag.TrimStart('v')
         $nextVersion = [semver]$existingTag.TrimStart('v')
         $changeLog = get-mfGitChangeLog -fromLastTag
       }else{
       $latest = get-mfGitLatestVersion
-      #Inputs to determine next semver
-      $versionType = '${{ parameters.version_type }}'
-      write-verbose "Version Increment Type: $versionType"
-      $releaseType = '${{ parameters.release_type }}'
+      #Work out the release type and increment from the release choice. Only the text before the bracket counts
+      $choice = ($env:RELEASE -split '\(')[0].Trim()
+      if($choice -notmatch '^(Next Prerelease|New Prerelease Series|Promote to Stable|Stable Release)')
+      {
+        throw "❌ Unrecognised release choice '$($env:RELEASE)'. It should start with Next Prerelease, New Prerelease Series, Promote to Stable or Stable Release"
+      }
+      $releaseType = if($choice -match '^(Promote to Stable|Stable Release)'){ 'stable' }else{ 'prerelease' }
       Write-Verbose "Version Release Type: $releaseType"
+      $versionType = if($choice -match '\b(major|minor|patch)\b'){ $Matches[1].ToLower() }else{ 'none' }
+      write-verbose "Version Increment Type: $versionType"
+      if($releaseType -eq 'stable' -and $versionType -eq 'none' -and !([semver]$latest).PreReleaseLabel)
+      {
+        throw "❌ v$latest is already stable, so there is no prerelease to promote. Run Next Prerelease or start a New Prerelease Series first. To release a stable version without a prerelease series, uncomment the Stable Release options in .azuredevops/pipelines/buildAndRelease.yml"
+      }
       $nextVerSplat = @{
         version = $latest
       }
@@ -158,10 +177,26 @@ jobs:
       $nextVersion = Get-mfNextSemver @nextVerSplat
       }
       Write-Verbose "NEXT VERSION SHOULD BE: $nextVersion"
+      #Say what this run will do before building, at the top of the run's summary page, and name the run after the version
+      $dryRun = '${{ parameters.dry_run }}' -eq 'True'
+      $planTitle = if($dryRun){ '## 🧪 Release plan - DRY RUN, nothing is tagged or published' }else{ '## 🚀 Release plan' }
+      $planPath = join-path -path $env:AGENT_TEMPDIRECTORY -childPath 'releasePlan.md'
+      @(
+        $planTitle
+        ''
+        '|Latest version|Release|Next version|'
+        '|---|---|---|'
+        "|$(if($latest){"v$latest"}else{'none'})|$($env:RELEASE)|**v$nextVersion**|"
+        ''
+      ) -join "`n" | out-file -FilePath $planPath -encoding UTF8
+      Write-Output "##vso[task.uploadsummary]$planPath"
+      Write-Output "##vso[build.updatebuildnumber]v$nextVersion$(if($dryRun){'-dryrun'})"
       Build-mfProject -version $nextVersion -InformationAction Continue -releaseNotes $changeLog
       Write-Verbose "Push $nextVersion to pipeline variable"
       Write-Output "##vso[task.setvariable variable=next_version]$nextVersion"
     displayName: 'Get next version and build'
+    env:
+      RELEASE: ${{ parameters.release }}
 
   - pwsh: |
       $verbosePreference = 'continue'
@@ -259,32 +294,33 @@ jobs:
         write-verbose "VerTag: $versionTag"
     displayName: 'Verifying Nuget Path Var and Version Tag Var'
 
-  - pwsh: |
-      $verbosePreference = 'Continue'
-      $nextVersionTag = "v$(next_version)"
-      write-verbose "NextVersionTag: $nextVersionTag"
-      if($nextVersionTag)
-      {
-        write-verbose "Tagging Version as: $nextVersionTag"
-        git tag "$nextVersionTag"
-        #Checkout did not keep the token, so hand it to this push only, through env rather than the command line
-        $env:GIT_CONFIG_COUNT = '1'
-        $env:GIT_CONFIG_KEY_0 = 'http.extraheader'
-        $env:GIT_CONFIG_VALUE_0 = "AUTHORIZATION: bearer $($env:SYSTEM_ACCESSTOKEN)"
-        git push origin "refs/tags/$nextVersionTag"
-        if($LASTEXITCODE -ne 0){throw "Unable to push tag $nextVersionTag"}
-      }else{
-        throw 'Error, Next Version was not correctly passed through'
-      }
-    displayName: 'Apply Version Tag'
-    env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  # A dry run stops here, before anything is tagged or published
+  - ${{ if eq(parameters.dry_run, false) }}:
+    - pwsh: |
+        $verbosePreference = 'Continue'
+        $nextVersionTag = "v$(next_version)"
+        write-verbose "NextVersionTag: $nextVersionTag"
+        if($nextVersionTag)
+        {
+          write-verbose "Tagging Version as: $nextVersionTag"
+          git tag "$nextVersionTag"
+          #Checkout did not keep the token, so hand it to this push only, through env rather than the command line
+          $env:GIT_CONFIG_COUNT = '1'
+          $env:GIT_CONFIG_KEY_0 = 'http.extraheader'
+          $env:GIT_CONFIG_VALUE_0 = "AUTHORIZATION: bearer $($env:SYSTEM_ACCESSTOKEN)"
+          git push origin "refs/tags/$nextVersionTag"
+          if($LASTEXITCODE -ne 0){throw "Unable to push tag $nextVersionTag"}
+        }else{
+          throw 'Error, Next Version was not correctly passed through'
+        }
+      displayName: 'Apply Version Tag'
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Push NuGet Package to Azure Artifacts'
-    inputs:
-      command: 'push'
-      packagesToPush: '$(nuget_Package_Path)'
-      nuGetFeedType: 'internal'
-      publishVstsFeed: '$(publishFeed)' #Set by 'Find the Azure Artifacts feed'
+    - task: DotNetCoreCLI@2
+      displayName: 'Push NuGet Package to Azure Artifacts'
+      inputs:
+        command: 'push'
+        packagesToPush: '$(nuget_Package_Path)'
+        nuGetFeedType: 'internal'
+        publishVstsFeed: '$(publishFeed)' #Set by 'Find the Azure Artifacts feed'

@@ -47,7 +47,8 @@ on:
 jobs:
   docsUpdate:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    #A dry run of Build and Release succeeds without publishing, and says DRY RUN in its run name
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.display_title, 'DRY RUN')) }}
     permissions:
       packages: read
 

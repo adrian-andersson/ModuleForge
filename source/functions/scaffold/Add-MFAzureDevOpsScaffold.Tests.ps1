@@ -124,6 +124,57 @@ Describe 'Add-MFAzureDevOpsScaffold Azure Artifacts feeds' {
     }
 }
 
+Describe 'Build and Release form matches GitHub' {
+    BeforeAll {
+        #The release choices, including the commented-out Stable Release ones, in the order they appear
+        $optionPattern = "(?m)^\s*#?\s*- '((?:Next Prerelease|New Prerelease Series|Promote to Stable|Stable Release)[^']*)'"
+        $azdText = Get-Content -Path (join-path $sourcePath 'resource' -AdditionalChildPath 'azureDevOps','pipelines','buildAndRelease.yml') -Raw
+        $ghText = Get-Content -Path (join-path $sourcePath 'resource' -AdditionalChildPath 'github','workflows','buildandrelease.yml') -Raw
+        $azdOptions = [regex]::Matches($azdText, $optionPattern).ForEach{ $_.Groups[1].Value }
+        $ghOptions = [regex]::Matches($ghText, $optionPattern).ForEach{ $_.Groups[1].Value }
+    }
+    It 'Should offer the same release choices, in the same order' {
+        $azdOptions.Count | Should -Be 7
+        $azdOptions | Should -Be $ghOptions
+    }
+    It 'Should default to the same release choice' {
+        $azdDefault = [regex]::Match($azdText, "(?m)^\s+default: '(Next Prerelease[^']*)'").Groups[1].Value
+        $ghDefault = [regex]::Match($ghText, "(?m)^\s+default: '(Next Prerelease[^']*)'").Groups[1].Value
+        $azdDefault | Should -Not -BeNullOrEmpty
+        $azdDefault | Should -Be $ghDefault
+        $azdOptions | Should -Contain $azdDefault
+    }
+    It 'Should leave the Stable Release choices commented out' {
+        $azdText | Should -Not -Match "(?m)^\s*- 'Stable Release"
+        $ghText | Should -Not -Match "(?m)^\s*- 'Stable Release"
+    }
+    It 'Should work out <Expected> from <Prefix>' -ForEach @(
+        @{ Prefix = 'Next Prerelease';              Expected = 'prerelease/none' }
+        @{ Prefix = 'New Prerelease Series: minor'; Expected = 'prerelease/minor' }
+        @{ Prefix = 'New Prerelease Series: major'; Expected = 'prerelease/major' }
+        @{ Prefix = 'Promote to Stable';            Expected = 'stable/none' }
+        @{ Prefix = 'Stable Release: patch';        Expected = 'stable/patch' }
+        @{ Prefix = 'Stable Release: minor';        Expected = 'stable/minor' }
+        @{ Prefix = 'Stable Release: major';        Expected = 'stable/major' }
+    ) {
+        #The same parsing the version step does, on the option as written in the pipeline
+        $option = $azdOptions | Where-Object { $_.StartsWith($Prefix) }
+        $option | Should -HaveCount 1
+        $choice = ($option -split '\(')[0].Trim()
+        $releaseType = if($choice -match '^(Promote to Stable|Stable Release)'){ 'stable' }else{ 'prerelease' }
+        $versionType = if($choice -match '\b(major|minor|patch)\b'){ $Matches[1].ToLower() }else{ 'none' }
+        "$releaseType/$versionType" | Should -Be $Expected
+    }
+    It 'Should parse the release choice the same way on both platforms' {
+        $parseLine = '$versionType = if($choice -match ''\b(major|minor|patch)\b''){ $Matches[1].ToLower() }else{ ''none'' }'
+        $azdText | Should -BeLike "*$([WildcardPattern]::Escape($parseLine))*"
+        $ghText | Should -BeLike "*$([WildcardPattern]::Escape($parseLine))*"
+    }
+    It 'Should not tag or publish on a dry run' {
+        $azdText | Should -Match '(?s)\$\{\{ if eq\(parameters\.dry_run, false\) \}\}:.*Apply Version Tag.*DotNetCoreCLI'
+    }
+}
+
 Describe 'Add-MFAzureDevOpsScaffold should NOT copy if files exist' {
     BeforeAll{
         $endOfFileString = "`n#### End of File Change"
