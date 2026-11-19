@@ -202,26 +202,25 @@ jobs:
               Write-Verbose "Coverage is acceptable."
             }
 
-  # OPTIONAL - test on Windows and macOS as well. Remove the # from each line below to enable.
+  # Test on Windows and macOS as well.
   # These runs fail the check if a test fails, but the PR comment and coverage check above
   # only report the Ubuntu run, so their results never overwrite each other.
-  #
-  # pesterTestOtherOS:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [windows-latest, macos-latest]
-  #   runs-on: ${{ matrix.os }}
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-  #       with:
-  #         persist-credentials: false
-  #     - name: Run Pester tests
-  #       shell: pwsh
-  #       run: |
-  #         ./source/resource/scripts/Install-MFBuildDependencies.ps1 -ForTests | Format-Table
-  #         $result = ./source/resource/scripts/Invoke-MFPester.ps1 -SkipCodeCoverage -Verbosity Normal
-  #         if($result.Result -ne 'Passed'){throw "Pester failed on $($env:RUNNER_OS): $($result.FailedCount) test(s)"}
+  pesterTestOtherOS:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          ./source/resource/scripts/Install-MFBuildDependencies.ps1 -ForTests | Format-Table
+          $result = ./source/resource/scripts/Invoke-MFPester.ps1 -SkipCodeCoverage -Verbosity Normal
+          if($result.Result -ne 'Passed'){throw "Pester failed on $($env:RUNNER_OS): $($result.FailedCount) test(s)"}

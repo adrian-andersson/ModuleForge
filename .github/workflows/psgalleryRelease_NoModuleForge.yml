@@ -333,12 +333,11 @@ jobs:
           $version = $env:TAG_NAME.TrimStart('v')
           $target = "$($env:GITHUB_REPOSITORY_OWNER)/ModuleForge.Test.Public"
           write-verbose "Starting Build and Release in $target with ModuleForge $version from PSGallery"
-          #The same inputs as a manual run: no version increment, prerelease, this exact ModuleForge
+          #main, built with this exact ModuleForge. Only moduleforge_version is sent, so the other inputs use their defaults and the release is Next Prerelease.
+          #GitHub rejects inputs a workflow doesn't have, so this works with the workflow before and after its 1.4.1 release form
           $body = @{
             ref = 'main'
             inputs = @{
-              version_type = 'none'
-              release_type = 'prerelease'
               moduleforge_version = $version
             }
           } | ConvertTo-Json
