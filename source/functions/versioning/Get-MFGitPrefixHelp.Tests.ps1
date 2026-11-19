@@ -39,7 +39,7 @@ Describe 'Get-MFGitPrefixHelp output' {
         @{heading = 'FORMAT'}
         @{heading = 'PREFIXES'}
         @{heading = 'EXAMPLES'}
-        @{heading = 'VERSION INCREMENT'}
+        @{heading = 'RELEASE'}
         @{heading = 'GOTCHAS'}
     ) {
         $lines | Should -Contain $heading
@@ -56,6 +56,21 @@ Describe 'Get-MFGitPrefixHelp -Section' {
 
     It 'Should keep the guide link on a single section' {
         Get-MFGitPrefixHelp -Section Format | Should -Match 'Full guide:'
+    }
+
+    It 'Should still accept Increments, the old name for Release' {
+        $result = Get-MFGitPrefixHelp -Section Increments
+        $result | Should -MatchExactly 'RELEASE'
+        $result | Should -Not -MatchExactly 'GOTCHAS'
+    }
+
+    It 'Should use the Build and Release choices in the Release section' {
+        $result = Get-MFGitPrefixHelp -Section Release
+        foreach($choice in 'Next Prerelease','New Prerelease Series: minor','New Prerelease Series: major','Promote to Stable')
+        {
+            $result | Should -Match ([regex]::Escape($choice))
+        }
+        $result | Should -Not -Match '\b(major|minor|patch|none)\s*$'
     }
 
     It 'Should reject an unknown section' {
@@ -86,6 +101,14 @@ Describe 'Prefixes stay in step with Get-MFGitChangeLog' {
         $excluded = $rows.where{$_.Section -eq '(excluded)'}.Prefix
         $excluded | Should -Be @('chore','test')
         $excluded | Should -Not -BeIn @($defaultTypes.Keys)
+    }
+
+    It 'Should give each prefix a type of change from the pull request template' {
+        $rows.Count | Should -Be 7
+        foreach($row in $rows)
+        {
+            $row.Bump | Should -BeIn @('Feature','Fix','Non-module')
+        }
     }
 
     It 'Should list every prefix in the examples' {
@@ -121,6 +144,7 @@ Describe 'Gotchas are true of Get-MFGitChangeLog' {
     It 'Should drop <subject>' -ForEach @(
         @{subject = 'feature: unknown long form'}
         @{subject = 'bugfix: unknown long form'}
+        @{subject = 'ci: not a prefix'}
         @{subject = 'feat!: unknown bang form'}
         @{subject = 'feat(build): unsupported scope'}
         @{subject = 'Merged PR 11: fix: squashed in azure devops'}
