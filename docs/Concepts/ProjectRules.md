@@ -23,7 +23,7 @@ It is optional, additive and advisory:
 Add-MFProjectRules
 ```
 
-This adds two ready-made rule sets to a `PSScriptAnalyzer` folder in your project root, and enables the Project Rules workflow (GitHub) or pipeline (Azure DevOps) in whichever CI folders your project has, by renaming `projectRules.yml.example` to `projectRules.yml`. On Azure DevOps you still need to create a pipeline for the file, and add it to your branch policy, as with the others.
+This adds the ready-made rule sets to a `PSScriptAnalyzer` folder in your project root, and enables the Project Rules workflow (GitHub) or pipeline (Azure DevOps) in whichever CI folders your project has, by renaming `projectRules.yml.example` to `projectRules.yml`. On Azure DevOps you still need to create a pipeline for the file, and add it to your branch policy, as with the others.
 
 Pick rule sets with `-RuleSet`:
 
@@ -35,8 +35,31 @@ Add-MFProjectRules -RuleSet CLM
 | --- | --- | --- |
 | `CLM` | `PSScriptAnalyzer/clm.psd1` | Compatibility with [Constrained Language Mode](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_language_modes), with PSScriptAnalyzer's `PSUseConstrainedLanguageMode` rule. Needs PSScriptAnalyzer 1.25.0 or newer |
 | `HelpExamples` | `PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1` | Every public function, in `source/functions`, has at least one `.EXAMPLE` in its comment-based help. Your docs are generated from that help, and an example is the first thing most people look for |
+| `ArrayAddition` | `PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1` | Adding to an array with `+=`, which copies the whole array every time, and recommends a generic list instead. See [ArrayAddition](#arrayaddition) |
 
-Existing files are kept unless you pass `-Force`. A CLM finding is a prompt, not proof: a clean static check doesn't guarantee your module works under CLM, so test it there too if it matters.
+Existing files are kept unless you pass `-Force`.
+
+### ArrayAddition
+
+Arrays are a fixed size, so `$results += $item` makes a new array and copies every item into it. In a loop, that work grows with the square of the item count. PowerShell 7.5 made `+=` faster, but it still copies, and Windows PowerShell 5.1 has no such improvement. The rule recommends either of these instead:
+
+```powershell
+# A generic list, added to in place
+$results = [System.Collections.Generic.List[string]]::new()
+foreach($item in $items){ $results.Add($item) }
+
+# Or the loop's output, collected directly
+$results = foreach($item in $items){ $item }
+```
+
+It flags `+=` only on a variable the same function or script sets up as an array, such as `$results = @()`, `[string[]]$names = ...` or an `[array]` parameter. `+=` on a number or a string is fine, and isn't reported. Its findings are:
+
+| Where | Severity |
+| --- | --- |
+| In a loop: `foreach`, `for`, `while`, `do`, a `ForEach-Object` block or `.ForEach()` | Warning |
+| Anywhere else | Information |
+
+An addition outside a loop copies once, so it costs little. It's still reported, as Information, so the habit is visible before it ends up in a loop. Like every Project Rule it's advisory and never fails a pull request. A CLM finding is a prompt, not proof: a clean static check doesn't guarantee your module works under CLM, so test it there too if it matters.
 
 ---
 

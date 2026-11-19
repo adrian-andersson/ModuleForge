@@ -189,7 +189,7 @@ When it runs it installs your released module from GitHub Packages, imports it, 
 
 You do not have to wait for a stable release to see this work. A prerelease exercises the whole flow:
 
-1. **Build a prerelease.** Run **Actions → Build and Release → Run workflow** with the release type set to **prerelease**. This publishes a prerelease of your module to GitHub Packages.
+1. **Build a prerelease.** Run **Actions → Build and Release → Run workflow** with **Release** left at **Next Prerelease**. This publishes a prerelease of your module to GitHub Packages.
 2. **Let the docs workflow fire.** When the `Build and Release` run finishes, `Docs Update` triggers automatically and opens a docs pull request for that prerelease. You do not need to do anything to kick it off. (The manual trigger is still there if you ever want to re-document a specific release on demand.)
 3. **Review and merge the PR.** The workflow opens a pull request against `docs` (branch `docs-update/<tag>`) containing your freshly generated `functions/` reference and a stamped, navigable structure. Review it like any other PR and merge, or close it if you do not want this particular update.
 4. **Watch Pages rebuild.** Once merged, GitHub Pages redeploys and your function reference appears in the sidebar alongside your hand-written pages.

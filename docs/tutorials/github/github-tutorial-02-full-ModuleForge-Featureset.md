@@ -1134,7 +1134,7 @@ Open a pull request. Two GitHub Actions workflows run automatically as PR checks
 - **PSScriptAnalyzer** - analyses your function source files and posts a lint report as a PR comment
 - **Pester** - runs your test suite and posts results as a PR comment
 
-After merging to `main`, dispatch the **Build and Release** workflow from the Actions tab. For a first build, choose version type `none` and release type `prerelease`. [Making the Most of Releases](../releases.md) explains what to pick after that.
+After merging to `main`, dispatch the **Build and Release** workflow from the Actions tab. For a first build, leave **Release** at its default, **Next Prerelease**. [Making the Most of Releases](../releases.md) explains what to pick after that.
 
 The build automatically derives the next version from git tags, generates a changelog from your commit history (this is why small, well-prefixed commits matter), compiles the module, copies the `resource/` folder to the output, appends SHA256 checksums to the release notes, and publishes the module to your repository's **GitHub Packages** feed.
 

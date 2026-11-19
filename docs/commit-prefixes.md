@@ -121,12 +121,13 @@ Excluded from the default changelog. No version bump.
 
 ## How Prefixes Connect to the Build Pipeline
 
-At release time, the build pipeline asks for a **version increment type** (`major`, `minor`, `patch`, or `none`) and a **release type** (`stable` or `prerelease`). The commit prefix history informs which increment type to select:
+At release time, the build pipeline asks what you're **releasing**: the **Next Prerelease**, a **New Prerelease Series** (minor or major), or **Promote to Stable**. The commit prefix history since the last stable release informs which series to start:
 
-- One or more `feat:` commits since the last tag → **minor**
-- Only `fix:`, `refactor:`, or `perf:` commits → **patch**
-- Only `docs:`, `chore:`, or `test:` commits → **none**
-- Any breaking change → **major** (add a `BREAKING CHANGE:` note in the commit body)
+- One or more `feat:` commits → **New Prerelease Series: minor**
+- Any breaking change → **New Prerelease Series: major** (add a `BREAKING CHANGE:` note in the commit body)
+- Only `fix:`, `refactor:`, `perf:`, `docs:`, `chore:` or `test:` commits → **Next Prerelease**, which starts a patch series after a stable release
+
+Start a series once, on its first build, then use Next Prerelease until it's ready to promote.
 
 See [Commit Strategy and PR Process](./Concepts/CommitStrategy_And_PRProcess.md) for how this fits into the full PR workflow.
 

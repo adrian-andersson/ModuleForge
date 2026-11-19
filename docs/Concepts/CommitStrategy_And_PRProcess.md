@@ -85,16 +85,17 @@ This means a well-prefixed commit history produces accurate, zero-effort release
 
 ## Triggering a Release
 
-The build and release pipeline is triggered manually via GitHub Actions (`workflow_dispatch`). When triggered, a form is presented with two key inputs:
+The build and release pipeline is triggered manually via GitHub Actions (`workflow_dispatch`). When triggered, a form asks one key question, **Release**, with these choices:
 
-| Input | Options | Maps To |
-| --- | --- | --- |
-| **Version increment type** | `major`, `minor`, `patch`, `none` | The PR type of change category |
-| **Release type** | `stable`, `prerelease` | The PR release intent |
+| Choice | Maps To |
+| --- | --- |
+| **Next Prerelease** | A PR that is part of a **PreRelease series**, or bug fixes after a stable release |
+| **New Prerelease Series: minor** / **major** | The first PR of a release with a Minor (Features) or Major (Breaking) change |
+| **Promote to Stable** | The PR release intent, once the series is ready to ship |
 
-These inputs directly reflect the decisions already made during the PR process - if the PR template was filled out correctly, the right values to enter here should already be known.
+These choices directly reflect the decisions already made during the PR process - if the PR template was filled out correctly, the right choice should already be known.
 
-> **`none` for version type** does not skip versioning - it increments the prerelease counter without changing the major.minor.patch version. This is the default and is safe for iterative prerelease builds.
+> **Next Prerelease** is the default, and right for most runs. It continues the current series (`1.3.0-prev001 → 1.3.0-prev002`), or after a stable release starts a patch series (`1.3.0 → 1.3.1-prev001`). See the [Build and Release Guide](../build-and-release.md) for every choice.
 
 Before the build proceeds, the pipeline validates that the latest Pester test run passed and that its commit SHA matches the current branch. This acts as a safety gate - a build cannot be triggered against code that has not passed automated tests.
 

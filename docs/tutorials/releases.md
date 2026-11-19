@@ -8,7 +8,9 @@ nav_order: 3
 
 The Build and Release form asks you to make choices every time you run it, and it isn't obvious which ones matter. This page is the practical version: what to pick, and when. The [Build and Release Guide](../build-and-release.md) has the full reference.
 
-**The short version: leave the form at its defaults for almost every run.** You change **Version type** at most once per release, and **Release type** once, when you ship.
+**The short version: leave the form at its default, Next Prerelease, for almost every run.** You start a new series at most once per release, and promote once, when you ship.
+
+> This page describes the form from ModuleForge 1.4.1. Older scaffolds have `version_type` and `release_type` instead, see [Updating an older workflow](../build-and-release.md#updating-an-older-workflow).
 
 ---
 
@@ -16,55 +18,58 @@ The Build and Release form asks you to make choices every time you run it, and i
 
 | Input | Default | When to change it |
 | --- | --- | --- |
-| **Version type** | `none` | Once, on the first build that adds a feature (`minor`) or a breaking change (`major`) |
-| **Release type** | `prerelease` | When you're ready to ship, to `stable` |
-| **Dependency source** | `required-resource-file` | Rarely. To try a newer ModuleForge before you pin it, use `psgallery-prerelease` |
-| **Include source metadata** | On | Leave it on. It records the branch and commit in the package |
-| **Feed name** *(Azure DevOps only)* | `psPackages` | Only if your feed has another name. Change the default in the pipeline file instead, so you never have to remember |
+| **Release** | Next Prerelease | Once, to **New Prerelease Series** on the first build that adds a feature (`minor`) or a breaking change (`major`). Once, to **Promote to Stable**, when you ship |
+| **Advanced: dependency source** | `required-resource-file` | Rarely. To try a newer ModuleForge before you pin it, use `psgallery-prerelease` |
+| **Advanced: include source metadata** | On | Leave it on. It records the branch and commit in the package |
+| **Advanced: feed name** *(Azure DevOps only)* | `psPackages` | Only if your feed has another name. Change the default in the pipeline file instead, so you never have to remember |
+| **Advanced: dry run** | Off | To see the next version, and check the build, without tagging or publishing anything |
 
 ---
 
 ## The rhythm
 
-Each release follows the same loop: a series of prereleases you test, then one stable release.
+Each release follows the same loop: start a prerelease series, build as many prereleases as you need, then promote the last one.
 
 ```mermaid
 flowchart TD
     A(["Merge a pull request"]) --> B{"First build since\nthe last stable release?"}
-    B -->|"No: continuing a series"| N["Version type: none\nRelease type: prerelease"]
+    B -->|"No: continuing a series"| N["Next Prerelease"]
     B -->|"Yes"| C{"What's the biggest\nchange in this release?"}
     C -->|"Bug fixes only"| N
-    C -->|"A new feature"| M["Version type: minor\nRelease type: prerelease"]
-    C -->|"A breaking change"| J["Version type: major\nRelease type: prerelease"]
+    C -->|"A new feature"| M["New Prerelease Series: minor"]
+    C -->|"A breaking change"| J["New Prerelease Series: major"]
     N --> T["Install and test the prerelease"]
     M --> T
     J --> T
     T --> R{"Ready to ship?"}
     R -->|"Not yet"| A
-    R -->|"Yes"| S["Version type: none\nRelease type: stable"]
+    R -->|"Yes"| S["Promote to Stable"]
 ```
 
 Here's how that looks over one release, starting from `1.2.3`:
 
-| You did | Version type | Release type | Result |
-| --- | --- | --- | --- |
-| Merged a bug fix | `none` | `prerelease` | `1.2.4-prev001` |
-| Merged another fix | `none` | `prerelease` | `1.2.4-prev002` |
-| Merged a new function | **`minor`** | `prerelease` | `1.3.0-prev001` |
-| Merged a fix to the new function | `none` | `prerelease` | `1.3.0-prev002` |
-| Tested it, ready to ship | `none` | **`stable`** | `1.3.0` |
+| You did | Release | Result |
+| --- | --- | --- |
+| Merged a bug fix | Next Prerelease | `1.2.4-prev001` |
+| Merged another fix | Next Prerelease | `1.2.4-prev002` |
+| Merged a new function | **New Prerelease Series: minor** | `1.3.0-prev001` |
+| Merged a fix to the new function | Next Prerelease | `1.3.0-prev002` |
+| Tested it, ready to ship | **Promote to Stable** | `1.3.0` |
 
-Two things make `none` the right default:
+Two things make Next Prerelease the right default:
 
-- **During a series, `none` continues it:** `1.3.0-prev001` becomes `1.3.0-prev002`.
-- **After a stable release, `none` starts a patch series:** `1.3.0` becomes `1.3.1-prev001`. So bug fixes never need a version type at all.
+- **During a series, it continues it:** `1.3.0-prev001` becomes `1.3.0-prev002`.
+- **After a stable release, it starts a patch series:** `1.3.0` becomes `1.3.1-prev001`. So bug fixes never need anything else.
+
+Not sure what a choice will give you? Turn on **dry run**. The run's summary page shows the latest version, what you chose and the next version, then stops before anything is tagged or published.
 
 ---
 
 ## Mistakes worth avoiding
 
-- **Choosing `minor` on every build.** Each `minor` starts a *new* minor version: `1.3.0-prev001`, then `1.4.0-prev001`, then `1.5.0-prev001`. Choose it once, on the first build with the new feature, then go back to `none`.
-- **Choosing a version type when you ship a prerelease.** The version was decided when the series started, so promoting it is always `none` + `stable`: `1.3.0-prev002` becomes `1.3.0`. Choose the version type earlier, on the first prerelease of the series.
+- **Starting a new series on every build.** Each **New Prerelease Series: minor** starts a *new* minor version: `1.3.0-prev001`, then `1.4.0-prev001`, then `1.5.0-prev001`. Choose it once, on the first build with the new feature, then go back to Next Prerelease.
+- **Looking for a version choice when you ship.** The version was decided when the series started, so shipping is always **Promote to Stable**: `1.3.0-prev002` becomes `1.3.0`.
+- **Promoting a version that's already stable.** There's no prerelease to promote, so the run stops and says so. Run Next Prerelease first. If your project really wants stable releases without a prerelease series, the [Build and Release Guide](../build-and-release.md#stable-releases-without-a-prerelease-series) shows how to turn them on.
 - **Running Build and Release before Pester has finished.** Build and Release first checks the latest Pester run passed, for the commit you're building. Merge, wait for Pester, then run it. If you merged several pull requests in a row, run Pester on `main` by hand first. See [the FAQ](../faq.md).
 - **Starting a new run after a failure.** If a run fails partway, use **Re-run failed jobs** on the same run instead. It finishes the version that run started, rather than using up another one.
 
