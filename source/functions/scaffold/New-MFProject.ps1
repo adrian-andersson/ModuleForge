@@ -211,6 +211,7 @@ function New-MFProject
             Write-Host " v$mfVersion" -ForegroundColor DarkCyan
             Write-Host "  Project '$ModuleName' scaffolded." -ForegroundColor Green
             Write-Host "  Docs: $docsUri" -ForegroundColor Gray
+            Write-Host '  Run the Get-MFGitPrefixHelp function for git commit message guidance.' -ForegroundColor Gray
             Write-Host '  Happy forging PowerShell.' -ForegroundColor Yellow
             Write-Host ''
 

@@ -164,6 +164,27 @@ Describe 'New-MFProject -Scaffold' {
     }
 }
 
+Describe 'New-MFProject welcome message' {
+    BeforeAll{
+        $null = new-item -ItemType Directory -path $testPath -force
+        Set-Location $currentPath
+        $welcomePath = join-path $testPath -ChildPath 'welcome'
+        $null = new-item -ItemType Directory -Path $welcomePath -Force
+        #Write-Host goes to the information stream, so capture that, and the output on its own
+        $output = New-MFProject -ModuleName 'WelcomeModule' -description 'Welcome' -ModulePath $welcomePath -InformationVariable welcome 6>$null
+    }
+    It 'Should point to Get-MFGitPrefixHelp for commit message guidance' {
+        "$welcome" | Should -Match 'Run the Get-MFGitPrefixHelp function for git commit message guidance'
+    }
+    It 'Should not put the welcome message in the output' {
+        $output | Should -BeNullOrEmpty
+    }
+    AfterAll{
+        Set-Location $currentPath
+        Remove-Item $testPath -Force -Recurse -ProgressAction SilentlyContinue
+    }
+}
+
 Describe 'New-MFProject -ProjectRules' {
     BeforeAll{
         $null = new-item -ItemType Directory -path $testPath -force
