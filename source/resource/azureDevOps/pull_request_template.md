@@ -25,6 +25,7 @@
 - [ ] **New Prerelease Series: major**
 - [ ] **No build yet** - more pull requests to come first
 
+<!-- And, separately -->
 - [ ] Last pull request in this series: **Promote to Stable** once its prerelease is tested
 
 ## Checklist
