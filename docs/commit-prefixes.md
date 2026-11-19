@@ -16,17 +16,19 @@ A well-prefixed commit history produces accurate, zero-effort release notes on e
 
 ## Prefix Reference
 
-| Prefix | Changelog Section | Default Changelog | Typical Version Impact |
+| Prefix | Changelog Section | Default Changelog | Type of change |
 | --- | --- | --- | --- |
-| `feat:` | New Features | Yes | Minor |
-| `fix:` | Bug Fixes | Yes | Patch |
-| `docs:` | Documentation Changes | Yes | None |
-| `refactor:` | Code Rewrite/Refactor | Yes | Patch |
-| `perf:` | Performance Improvements | Yes | Patch |
-| `chore:` | *(excluded)* | No | None |
-| `test:` | *(excluded)* | No | None |
+| `feat:` | New Features | Yes | Feature |
+| `fix:` | Bug Fixes | Yes | Fix |
+| `docs:` | Documentation Changes | Yes | Non-module |
+| `refactor:` | Code Rewrite/Refactor | Yes | Fix |
+| `perf:` | Performance Improvements | Yes | Fix |
+| `chore:` | *(excluded)* | No | Non-module |
+| `test:` | *(excluded)* | No | Non-module |
 
 `chore` and `test` are excluded from the default changelog output. This keeps release notes focused on user-facing changes. They can be included by passing a custom `ChangeLogTypes` hashtable to `Get-MFGitChangeLog` - see [Including chore and test](#including-chore-and-test) below.
+
+The **Type of change** column matches the pull request template. Any other prefix, such as `ci:`, `feature:` or `bugfix:`, is dropped from the changelog without a warning, so use `chore:` for CI changes. `Get-MFGitPrefixHelp` shows this table, and the other gotchas, from the command line.
 
 ---
 

@@ -50,9 +50,9 @@ The specific branching model you adopt - GitFlow, GitHub Flow, trunk-based, or y
 
 ### The pull request template
 
-When ModuleForge scaffolds a new project, it adds a short pull request template. It asks three things, so a pull request records what it is and what should happen when it merges:
+When ModuleForge scaffolds a new project, it adds a short pull request template. It has three sections, so a pull request records what it is and what should happen when it merges:
 
-1. **What and why** - a summary, and the issue or work item it relates to.
+1. **Notes for reviewers** - anything the commits don't say: why, context, how it was tested, where to look closely, and any issue or work item it relates to. What changed belongs in the commit messages.
 2. **Type of change** - the highest-impact change it contains.
 3. **Release** - which Build and Release choice should follow the merge.
 
@@ -64,12 +64,12 @@ Each PR is labelled with the highest-impact change it contains:
 
 | Type | Examples | Usually means |
 | --- | --- | --- |
-| 🔴 **Breaking** | Output changed in a way callers rely on, a mandatory parameter added, a parameter renamed or removed without an alias, validation tightened | **New Prerelease Series: major** |
-| 🟡 **Feature** | A new function, a new optional parameter, a parameter renamed with an alias kept, output added to | **New Prerelease Series: minor** |
-| 🟢 **Fix or maintenance** | Bug fixes, refactors, performance, verbose and error output | **Next Prerelease** |
-| ⚪ **No change to the module** | Documentation, CI, tooling | **Next Prerelease**, or no build |
+| 🔴 **Breaking** (rare) | A mandatory parameter added; a parameter renamed or removed without an alias, including one that takes pipeline input; validation that rejects input that used to work; a changed default value; output changed in a way likely to break piping | **New Prerelease Series: major** |
+| 🟡 **Feature** | New functions; new optional parameters, or a parameter renamed with an alias kept; validation that accepts more; additions to function output | **New Prerelease Series: minor** |
+| 🟢 **Fix** | Bug fixes; additions or changes to the Error, Warning, Information or Verbose streams; performance improvements, or refactoring that doesn't change behaviour | **Next Prerelease** |
+| ⚪ **Non-module change** | Help, README or other documentation; CI/CD workflows; tests | **Next Prerelease**, or no build |
 
-The type stays on the pull request as part of its history, and your commit prefixes should agree with it: `feat:` for a feature, `fix:` for a fix.
+The type stays on the pull request as part of its history. The template's hidden comment lists these examples, so contributors don't need this page to fill it in. Your commit prefixes should agree with it: `feat:` for a feature; `fix:`, `refactor:` or `perf:` for a fix; `docs:`, `chore:` or `test:` for a non-module change. `Get-MFGitPrefixHelp` shows the type of change for every prefix.
 
 See [Module Versioning with SemVer](./ModuleVersioning_With_SemVer.md) for a full breakdown of how version increments are applied.
 
