@@ -74,6 +74,17 @@ The output will be '3.0.0'.
 #### OUTPUT
 '3.0.0'
 
+### EXAMPLE 3
+
+Get-MFNextSemver -Version '1.2.3' -Increment 'Minor' -StableRelease
+
+#### DESCRIPTION
+Releases a new stable version directly, without a prerelease series first.
+Without -Increment, -StableRelease only promotes a prerelease, so it throws for a version that is already stable.
+
+#### OUTPUT
+'1.3.0'
+
 ## PARAMETERS
 
 ### -Increment
@@ -148,7 +159,7 @@ HelpMessage: ''
 ### -PreReleaseLabel
 
 Optional override the prerelease label.
-If not supplied will use 'prerelease'
+If not supplied will use 'pre', giving prev001, prev002 and so on
 
 ```yaml
 Type: System.String
@@ -175,7 +186,9 @@ HelpMessage: ''
 
 ### -StableRelease
 
-Is this a stable release - drops the prerelease tag from a prerelease version
+Is this a stable release.
+With -Increment, returns the incremented stable version.
+Without, drops the prerelease tag from a prerelease version
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
