@@ -72,8 +72,13 @@ function Get-MFDependencyTree
                 $output.add('```mermaid')
             }
             $output.add('flowchart TD')
+            #Each arrow once, even if a file references the same dependency more than once
+            $edges = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
             foreach ($dep in $dependencies) {
-                $output.add("'$($dep.Parent)' --> '$($dep.Child)'")
+                $edge = "'$($dep.Parent)' --> '$($dep.Child)'"
+                if ($edges.Add($edge)) {
+                    $output.add($edge)
+                }
             }
             if ($OutputType -eq 'MermaidMarkdown') {
                 $output.add('```')
@@ -89,18 +94,34 @@ function Get-MFDependencyTree
                     $tree[$dep.Parent] = New-Object System.Collections.Generic.List[string]
                 }
 
-                write-verbose "Need to add $($dep.Child) as child of $($dep.Parent)"
-                $tree[$dep.Parent].add($dep.Child)
+                if (-not $tree[$dep.Parent].Contains($dep.Child)) {
+                    write-verbose "Need to add $($dep.Child) as child of $($dep.Parent)"
+                    $tree[$dep.Parent].add($dep.Child)
+                }
             }
 
-            $rootNodes = $ReferenceData.where{$_.Dependencies.Count -gt 0}.relativePath
-            $rootNodes.foreach{
-                write-output $_
-                if ($tree.ContainsKey($_)) {
-                    foreach ($child in $tree[$_]) {
-                        printTree -node $child -level 1
-                    }
+            #Each file's dependencies are printed once. Without this, shared and circular dependencies repeat endlessly
+            $visited = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            $ancestors = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+            #Start from files nothing else depends on, then any left over, which only happens when files depend on each other in a loop
+            $children = [System.Collections.Generic.HashSet[string]]::new([string[]]@($dependencies.Child), [System.StringComparer]::OrdinalIgnoreCase)
+            #ForEach, as .relativePath on an empty result gives $null, not an empty list
+            $parents = @($ReferenceData.where{$_.Dependencies.Count -gt 0}.ForEach{$_.relativePath})
+            $rootNodes = @($parents.where{-not $children.Contains($_)}) + @($parents.where{$children.Contains($_)})
+
+            foreach ($root in $rootNodes) {
+                if (-not $tree.ContainsKey($root) -or $visited.Contains($root)) {
+                    write-verbose "Skipping $root, its dependencies are already shown"
+                    continue
                 }
+                write-output $root
+                $null = $visited.Add($root)
+                $null = $ancestors.Add($root)
+                foreach ($child in $tree[$root]) {
+                    printTree -node $child -level 1 -Visited $visited -Ancestors $ancestors
+                }
+                $null = $ancestors.Remove($root)
             }
         }
     }

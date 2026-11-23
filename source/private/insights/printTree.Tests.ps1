@@ -46,4 +46,25 @@ Describe 'printTree' {
         $childLine  = $out | Where-Object { $_ -match '>--DEPENDS-ON--> B' }
         ($childLine.Length - $childLine.TrimStart().Length) | Should -BeGreaterThan ($parentLine.Length - $parentLine.TrimStart().Length)
     }
+
+    It 'Expands a shared dependency only once' {
+        $tree = @{ 'A' = @('B','C'); 'B' = @('D'); 'C' = @('D'); 'D' = @('E') }
+        $out = printTree -node 'A' -level 0
+        @($out.where{$_ -match '>--DEPENDS-ON--> E$'}).Count | Should -Be 1
+        @($out.where{$_ -match '>--DEPENDS-ON--> D \(dependencies shown above\)'}).Count | Should -Be 1
+    }
+
+    It 'Stops and flags a circular reference' {
+        $tree = @{ 'A' = @('B'); 'B' = @('A') }
+        $out = printTree -node 'A' -level 0
+        $out | Should -HaveCount 3
+        $out[-1] | Should -Match '>--DEPENDS-ON--> A \(circular reference\)'
+    }
+
+    It 'Shares visited files across calls when given the same set' {
+        $tree = @{ 'A' = @('B') }
+        $visited = [System.Collections.Generic.HashSet[string]]::new()
+        $null = printTree -node 'A' -Visited $visited
+        printTree -node 'A' -Visited $visited | Should -Match '\(dependencies shown above\)'
+    }
 }
