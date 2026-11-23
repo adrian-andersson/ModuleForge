@@ -23,7 +23,7 @@ It is optional, additive and advisory:
 Add-MFProjectRules
 ```
 
-This adds two ready-made rule sets to a `PSScriptAnalyzer` folder in your project root, and enables the Project Rules workflow (GitHub) or pipeline (Azure DevOps) in whichever CI folders your project has, by renaming `projectRules.yml.example` to `projectRules.yml`. On Azure DevOps you still need to create a pipeline for the file, and add it to your branch policy, as with the others.
+This adds four ready-made rule sets to a `PSScriptAnalyzer` folder in your project root, and enables the Project Rules workflow (GitHub) or pipeline (Azure DevOps) in whichever CI folders your project has, by renaming `projectRules.yml.example` to `projectRules.yml`. On Azure DevOps you still need to create a pipeline for the file, and add it to your branch policy, as with the others.
 
 Pick rule sets with `-RuleSet`:
 
@@ -35,6 +35,16 @@ Add-MFProjectRules -RuleSet CLM
 | --- | --- | --- |
 | `CLM` | `PSScriptAnalyzer/clm.psd1` | Compatibility with [Constrained Language Mode](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_language_modes), with PSScriptAnalyzer's `PSUseConstrainedLanguageMode` rule. Needs PSScriptAnalyzer 1.25.0 or newer |
 | `HelpExamples` | `PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1` | Every public function, in `source/functions`, has at least one `.EXAMPLE` in its comment-based help. Your docs are generated from that help, and an example is the first thing most people look for |
+| `ArrayAddition` | `PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1` | `+=` on an array, which copies the whole array each time, and recommends a generic list or collecting a loop's output instead. A Warning in a loop, Information elsewhere. Only variables the same function sets up as an array are checked, so `+=` on numbers and strings is left alone |
+| `NestedFunctions` | `PSScriptAnalyzer/rules/NestedFunctions/NestedFunctions.psm1` | A function defined inside another function or a class method, which can't be tested or reused on its own. Move it to its own file, such as in `source/private`. Functions inside a script block, such as one passed to `Start-Job`, are left alone |
+
+`New-MFProject -ProjectRules` adds all four when it creates a project.
+
+To keep a finding on purpose, suppress it on the function it's in, with the rule's name:
+
+```powershell
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('Measure-MFNestedFunction', '', Justification = 'Why')]
+```
 
 Existing files are kept unless you pass `-Force`. A CLM finding is a prompt, not proof: a clean static check doesn't guarantee your module works under CLM, so test it there too if it matters.
 
