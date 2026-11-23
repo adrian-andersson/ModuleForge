@@ -10,6 +10,38 @@ The headline features of each ModuleForge release. Every release, including prer
 
 ---
 
+## 1.4.1 (November 2026)
+
+A release about the everyday experience of the workflows, and fixes.
+
+**One Release choice in Build and Release**
+- `version_type` and `release_type` are replaced by one **Release** choice that follows how a release goes: start a **New Prerelease Series** (minor or major) once, run **Next Prerelease** until it's ready, then **Promote to Stable**. Most runs are Next Prerelease, the default. See [Making the Most of Releases](./tutorials/releases.md).
+- Releasing stable without a prerelease series is commented out in the workflow, so it's always a deliberate choice. Promoting a version that's already stable stops and says why.
+- A **dry run** option works out the version and builds, without tagging, releasing or publishing.
+- Every run starts its summary with a **release plan**: the latest version, your choice, and the version it builds. See the [Build and Release Guide](./build-and-release.md).
+
+**A shorter pull request template**
+- Notes for reviewers, a two-item checklist, every type of change the pull request includes, and the Release choice to follow the merge, in the Build and Release form's own words. Each box says what it means beside it, so there's nothing to look up.
+- The previous, detailed template is still scaffolded, as `.example`, for projects that prefer it.
+
+**More Project Rules**
+- **ArrayAddition** flags `+=` on arrays, which copies the whole array each time, and recommends a generic list.
+- **NestedFunctions** flags functions defined inside other functions, which can't be tested or reused.
+- **`New-MFProject -ProjectRules`** adds every rule set as it creates the project, so `New-MFProject -Scaffold GitHub,AzureDevOps -ProjectRules` sets up everything in one command. See [Project Rules](./Concepts/ProjectRules.md).
+
+**Fixes**
+- **`Get-MFNextSemver`** uses the incremented version for a stable release: from `1.2.3-prev002`, minor and stable now gives `1.3.0`, not `1.2.3`. Prerelease labels containing a `v`, such as `devv003`, keep their counter.
+- **`Get-MFDependencyTree`** shows each file's dependencies once, and marks circular references, rather than repeating itself or never finishing.
+- **`Add-MFGithubScaffold`** and **`Add-MFAzureDevOpsScaffold`** show their help again.
+- **`Get-MFGitPrefixHelp`** uses the new Release choices and types of change, and `New-MFProject`'s welcome message points to it.
+
+### Upgrading from 1.4
+
+- **The new Build and Release form and pull request template only reach your project when you update your workflows.** [Updating Your Workflows and Templates](./tutorials/updating-scaffold.md) shows how to do it without losing your own changes.
+- To add the new rule sets to a project that already uses Project Rules, run `Add-MFProjectRules -RuleSet ArrayAddition,NestedFunctions`.
+
+---
+
 ## 1.4 (November 2026)
 
 **Pinned, predictable builds**
@@ -19,7 +51,7 @@ The headline features of each ModuleForge release. Every release, including prer
 
 **Checking what you ship**
 - **Build Test**, an optional workflow or pipeline, installs the module you just published and checks it exports exactly what your source declares. See [Testing the Published Module](./tutorials/build-test.md).
-- **Project Rules** runs your own PSScriptAnalyzer rules as an advisory pass with its own pull request comment. **`Add-MFProjectRules`** adds two ready-made rule sets: Constrained Language Mode compatibility, and help examples. See [Project Rules](./Concepts/ProjectRules.md).
+- **Project Rules** runs your own PSScriptAnalyzer rules as an advisory pass with its own pull request comment. **`Add-MFProjectRules`** adds ready-made rule sets: Constrained Language Mode compatibility, and help examples, with more in 1.4.1. See [Project Rules](./Concepts/ProjectRules.md).
 - **`Get-MFBuildSummary`** reports a build's version, exports, size and SHA256 hashes, and Build and Release shows it on the run.
 
 **Easier setup**
