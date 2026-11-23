@@ -43,6 +43,14 @@ Describe 'Add-MFProjectRules rule sets' {
         Test-Path (Join-Path $path 'PSScriptAnalyzer/clm.psd1') | Should -Be $true
         Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1') | Should -Be $true
         Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1') | Should -Be $true
+        Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/NestedFunctions/NestedFunctions.psm1') | Should -Be $true
+    }
+    It 'Should add a NestedFunctions rule module that exports its rule' {
+        $path = New-TestProject -Name 'nestedContent'
+        Add-MFProjectRules -ModulePath $path -RuleSet NestedFunctions
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $path 'PSScriptAnalyzer/rules/NestedFunctions/NestedFunctions.psm1'), [ref]$null, [ref]$null)
+        $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true).Name | Should -Contain 'Measure-MFNestedFunction'
+        Test-Path (Join-Path $path 'PSScriptAnalyzer/rules/ArrayAddition') | Should -Be $false
     }
     It 'Should add an ArrayAddition rule module that exports its rule' {
         $path = New-TestProject -Name 'arrayContent'
@@ -214,5 +222,79 @@ function Get-Collected {
     }
     It 'Should report only the four array additions' {
         $findings | Should -HaveCount 4
+    }
+}
+
+Describe 'NestedFunctions rule' -Skip:(!(Get-Module -ListAvailable PSScriptAnalyzer)) {
+    BeforeAll {
+        $path = New-TestProject -Name 'nestedFunctions' -Folders 'source/functions'
+        Add-MFProjectRules -ModulePath $path -RuleSet NestedFunctions
+        $fixture = @'
+function Get-Outer {
+    function innerHelper { 'inner' }
+    if($true){
+        function innerInIf { 'deeper' }
+    }
+    innerHelper
+}
+function Get-TwoLevels {
+    function levelOne {
+        function levelTwo { 2 }
+        levelTwo
+    }
+    levelOne
+}
+function Get-JobHelper {
+    Start-Job -ScriptBlock {
+        function jobOnly { 'runs in the job' }
+        jobOnly
+    }
+}
+function Get-Suppressed {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('Measure-MFNestedFunction', '', Justification = 'Kept on purpose')]
+    param()
+    function keptOnPurpose { 'fine' }
+    keptOnPurpose
+}
+function Get-Alone { 'no nesting' }
+class Widget {
+    [string] Describe() {
+        function inMethod { 'in a method' }
+        return (inMethod)
+    }
+}
+'@
+        $fixturePath = Join-Path $path 'source/functions/Fixture.ps1'
+        $fixture | Set-Content $fixturePath
+        $findings = @(Invoke-ScriptAnalyzer -Path $fixturePath -CustomRulePath (Join-Path $path 'PSScriptAnalyzer/rules/NestedFunctions') -IncludeRule 'Measure-MFNestedFunction')
+        $findingFor = { param($name) $findings | Where-Object { $_.Message -match "^Function '$name' " } }
+    }
+    It 'Should warn about a function defined inside another' {
+        $finding = & $findingFor 'innerHelper'
+        $finding | Should -HaveCount 1
+        "$($finding.Severity)" | Should -Be 'Warning'
+        $finding.Message | Should -Match "inside 'Get-Outer'"
+    }
+    It 'Should warn about a function nested inside a statement in another function' {
+        & $findingFor 'innerInIf' | Should -HaveCount 1
+    }
+    It 'Should name the closest function each nested function is inside' {
+        (& $findingFor 'levelOne').Message | Should -Match "inside 'Get-TwoLevels'"
+        (& $findingFor 'levelTwo').Message | Should -Match "inside 'levelOne'"
+    }
+    It 'Should warn about a function defined in a class method' {
+        (& $findingFor 'inMethod').Message | Should -Match "inside 'Widget::Describe'"
+    }
+    It 'Should not report a function inside a script block' {
+        & $findingFor 'jobOnly' | Should -BeNullOrEmpty
+    }
+    It 'Should not report a nested function the outer function suppresses' {
+        & $findingFor 'keptOnPurpose' | Should -BeNullOrEmpty
+    }
+    It 'Should not report top-level functions' {
+        $findings.Message | Should -Not -Match "'Get-(Outer|TwoLevels|JobHelper|Suppressed|Alone)' is defined inside"
+    }
+    It 'Should report only the five nested functions' {
+        $findings | Should -HaveCount 5
     }
 }

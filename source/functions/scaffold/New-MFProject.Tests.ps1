@@ -194,7 +194,7 @@ Describe 'New-MFProject -ProjectRules' {
         $allPath = join-path $testPath -ChildPath 'everything'
         $null = new-item -ItemType Directory -Path $allPath -Force
         New-MFProject -ModuleName 'EverythingModule' -description 'Everything' -ModulePath $allPath -Scaffold GitHub,AzureDevOps -ProjectRules
-        foreach($rule in 'clm.psd1','rules/HelpExamples/HelpExamples.psm1','rules/ArrayAddition/ArrayAddition.psm1')
+        foreach($rule in 'clm.psd1','rules/HelpExamples/HelpExamples.psm1','rules/ArrayAddition/ArrayAddition.psm1','rules/NestedFunctions/NestedFunctions.psm1')
         {
             Test-Path (join-path $allPath 'PSScriptAnalyzer' -AdditionalChildPath ($rule -split '/')) | Should -Be $true
         }
