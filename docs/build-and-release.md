@@ -8,9 +8,9 @@ nav_order: 5
 
 The **Build and Release** workflow is triggered manually from GitHub Actions (`Actions → Build and Release → Run workflow`), or by running the Build and Release pipeline in Azure DevOps. It versions, builds, and publishes your module to your package feed, and on GitHub creates a release with notes built from your commits.
 
-This guide is the full reference for its inputs. For the practical version, what to pick from one run to the next, start with [Making the Most of Releases](./tutorials/releases.md). The short answer: **most runs use Next Prerelease, the default.**
+This guide is the full reference for its inputs. For the practical version, what to pick from one run to the next, start with [Making the Most of Releases](./tutorials/releases.md). The short answer: **most runs use `Next Prerelease`, the default.**
 
-> This page describes the Build and Release form from ModuleForge 1.4.1. Projects scaffolded with an earlier version have the older `version_type` and `release_type` inputs until they [update their workflows](./tutorials/updating-scaffold.md).
+> This page describes the form from ModuleForge 1.4.1. Projects scaffolded earlier have `version_type` and `release_type` inputs instead until they [update their workflows](./tutorials/updating-scaffold.md). [Updating an older workflow](#updating-an-older-workflow) maps the old inputs to the new choices.
 
 ---
 
@@ -24,31 +24,65 @@ The workflow checks a safety gate before it does anything else: the most recent 
 
 ## The Inputs
 
-One input decides the version: **Release**, below. The others are marked **Advanced** and rarely change:
+One input decides the version: **`release`**, below. The rest are marked **Advanced** and rarely change:
 
 | Input | Default | What it does |
 | --- | --- | --- |
+| `release` | `Next Prerelease` | What you're releasing. See [The release choices](#the-release-choices) |
 | `dependency_source` | `required-resource-file` | Where ModuleForge itself is installed from for the build: the version pinned in `BuildDependencies.psd1`, or the latest (`psgallery-latest`) or latest prerelease (`psgallery-prerelease`) from PSGallery. See [Build Dependencies](./Concepts/BuildDependencies.md) |
 | `include_source_metadata` | On | Adds the branch and commit the build came from to the package metadata |
 | `feed_name` *(Azure DevOps only)* | `psPackages` | The Azure Artifacts feed to publish to. It can be scoped to the project or the organization |
 | `dry_run` | Off | Works out the version and builds, then stops before anything is tagged, released or published. See [Dry runs](#dry-runs) |
 
-### Release - What are you releasing?
+---
 
-A release follows the same path every time: **start a series once, run Next Prerelease until it's ready, then Promote to Stable.**
+## The release choices
 
-| Choice | What it does | Example |
+A release is a **prerelease series**: you start the series once, build as many prereleases as you need, then promote the last one to stable. The choices follow that order:
+
+| Choice | Example result | When to use |
 | --- | --- | --- |
-| **Next Prerelease** *(default)* | Continues the current prerelease series. From a stable version, starts a patch series | `1.2.3-prev002 → 1.2.3-prev003`<br>`1.2.3 → 1.2.4-prev001` |
-| **New Prerelease Series: minor** | Starts a minor series, for the first new feature since the last stable release | `1.2.3 → 1.3.0-prev001`<br>`1.2.4-prev002 → 1.3.0-prev001` |
-| **New Prerelease Series: major** | Starts a major series, for the first breaking change since the last stable release | `1.2.3 → 2.0.0-prev001`<br>`1.3.0-prev002 → 2.0.0-prev001` |
-| **Promote to Stable** | Releases the current prerelease as a stable version | `1.2.3-prev003 → 1.2.3` |
-
-Each choice shows the same example in brackets in the form, such as `(x.y.z-prevN -> prevN+1)`. Only the text before the bracket counts, so you can reword the brackets, but keep the choice names.
-
-> **Start a series only once.** A New Prerelease Series always increments from the current version, so choosing minor again inside a minor series skips a version: `1.3.0-prev002 → 1.4.0-prev001`. Every later pull request in the series is Next Prerelease. A series can still move up: if a breaking change arrives during a minor series, New Prerelease Series: major moves it to the next major version.
+| **Next Prerelease** | `1.3.0-prev001 → 1.3.0-prev002`, or from stable `1.2.3 → 1.2.4-prev001` | Almost every run. Continues the current series. After a stable release, it starts a patch series, so bug fixes never need anything else |
+| **New Prerelease Series: minor** | `1.2.3 → 1.3.0-prev001`, or from a patch series `1.2.4-prev002 → 1.3.0-prev001` | Once, on the first build with a new function or optional parameter |
+| **New Prerelease Series: major** | `1.2.3 → 2.0.0-prev001` | Once, on the first build with a breaking change |
+| **Promote to Stable** | `1.3.0-prev002 → 1.3.0` | When the series is tested and ready to ship |
 
 Prereleases are published to your feed but are hidden from `Find-PSResource` / `Find-Module` unless `-AllowPrerelease` is explicitly passed. Use them to validate across environments before committing to a stable version.
+
+> Start a series with the **highest-impact** change since your last stable release. If you added a new function (`minor`) and fixed a bug in the same release, choose `minor`. If a breaking change comes along part way through a minor series, start a new `major` series: `1.3.0-prev002 → 2.0.0-prev001`.
+
+> **Start a series only once.** A New Prerelease Series always increments from the current version, so choosing minor again inside a minor series skips a version: `1.3.0-prev002 → 1.4.0-prev001`. Every later pull request in the series is Next Prerelease.
+
+### Promoting a version that's already stable
+
+**Promote to Stable** only promotes a prerelease. If the latest version is already stable, there's nothing to promote, so the run stops before it builds:
+
+```text
+❌ v1.3.0 is already stable, so there is no prerelease to promote. Run Next Prerelease or start a
+New Prerelease Series first. To release a stable version without a prerelease series, uncomment the
+Stable Release options in .github/workflows/buildandrelease.yml
+```
+
+### Stable releases without a prerelease series
+
+Releasing straight to stable skips the step where you test what you're about to ship, so the form doesn't offer it by default. If your project wants it, uncomment the **Stable Release** choices in the workflow file (`.github/workflows/buildandrelease.yml`, or `.azuredevops/pipelines/buildAndRelease.yml`):
+
+```yaml
+          #To release a stable version without a prerelease series first, uncomment these. Needs ModuleForge 1.4.1 or newer
+          - 'Stable Release: patch (x.y.z -> x.y.Z)'
+          - 'Stable Release: minor (x.y.z -> x.Y.0)'
+          - 'Stable Release: major (x.y.z -> X.0.0)'
+```
+
+| Choice | Example result |
+| --- | --- |
+| **Stable Release: patch** | `1.2.3 → 1.2.4` |
+| **Stable Release: minor** | `1.2.3 → 1.3.0` |
+| **Stable Release: major** | `1.2.3 → 2.0.0` |
+
+They need ModuleForge 1.4.1 or newer in `BuildDependencies.psd1`, as earlier versions stopped with `version supplied does not contain a prerelease`.
+
+The workflow reads the text before the bracket to decide what to do, so you can reword the examples in brackets, but keep each choice starting with `Next Prerelease`, `New Prerelease Series`, `Promote to Stable` or `Stable Release`.
 
 ---
 
@@ -57,13 +91,41 @@ Prereleases are published to your feed but are hidden from `Find-PSResource` / `
 ```mermaid
 flowchart TD
     A([Trigger Build and Release]) --> GATE["⚠️ Pester safety gate checked automatically\nLatest test run must match current HEAD"]
-    GATE --> R{Tested the prerelease\nand ready to ship?}
-    R -->|Yes| STA["Promote to Stable\n1.3.0-prev003 → 1.3.0"]
-    R -->|No| S{First feature or breaking change\nsince the last stable release?}
-    S -->|First breaking change| MAJ["New Prerelease Series: major\n1.2.3 → 2.0.0-prev001"]
-    S -->|First new feature| MIN["New Prerelease Series: minor\n1.2.3 → 1.3.0-prev001"]
-    S -->|"No: fixes, or the series\nis already started"| NEXT["Next Prerelease\n1.3.0-prev001 → 1.3.0-prev002"]
+    GATE --> RT{Tested and ready to\npublish to end users?}
+
+    RT -->|Yes - ship it| STA["Promote to Stable\n1.3.0-prev003 → 1.3.0"]
+    RT -->|No - still testing| PC{Continuing the\ncurrent series?}
+
+    PC -->|"Yes, or bug fixes after\na stable release"| NEXT["Next Prerelease\n1.3.0-prev001 → 1.3.0-prev002\n1.3.0 → 1.3.1-prev001"]
+    PC -->|No - this release adds more| VT{Highest-impact change?}
+
+    VT -->|"Breaking: mandatory param,\nrenamed param, output type changed"| MAJ["New Prerelease Series: major\n1.2.3 → 2.0.0-prev001"]
+    VT -->|New function or optional param| MIN["New Prerelease Series: minor\n1.2.3 → 1.3.0-prev001"]
 ```
+
+---
+
+## Dry runs
+
+Turn on **`dry_run`** to see what a run would do without doing it. The workflow checks the Pester gate, works out the next version, writes the release plan and builds the module, then stops. Nothing is tagged, no release is created and nothing is published, so you can run it as often as you like.
+
+A dry run is marked in the run's name (`- DRY RUN` on GitHub, `-dryrun` on Azure DevOps), and the Build Test and Docs Update workflows skip it, as there's no new package to test or document.
+
+---
+
+## The release plan
+
+Every run, dry or not, starts its summary page with what it's going to do:
+
+| Latest version | Release | Next version |
+| --- | --- | --- |
+| v1.3.0-prev002 | Promote to Stable (x.y.z-prevN -> x.y.z) | **v1.3.0** |
+
+On GitHub it's at the top of the run's **Summary**, and the run is named after the release chosen. On Azure DevOps it's on the run's **Extensions** tab, and the run is named after the version.
+
+A build summary follows it, with the version, what the module exports, and SHA256 checksums of the built files:
+
+![GitHub Actions run summary showing the release plan and build summary](./tutorials/github/img/buildSummary.png)
 
 ---
 
@@ -71,73 +133,47 @@ flowchart TD
 
 ### "This is my first release"
 
-Starting fresh on a brand new module - no tags exist yet.
-
-**Release:** Next Prerelease
+Starting fresh on a brand new module - no tags exist yet. Choose **Next Prerelease**.
 
 Result: `1.0.1-prev001`. With no version tags yet, ModuleForge treats the current version as `1.0.0`. Lets you validate the build pipeline before shipping anything.
 
+---
+
 ### "I merged a bug fix PR and want to test it"
 
-**Release:** Next Prerelease
+Choose **Next Prerelease**.
 
-Result: e.g. `1.2.3 → 1.2.4-prev001` after a stable release, or `1.2.4-prev001 → 1.2.4-prev002` during a series. The module is published to your feed but marked as prerelease.
+Result: after a stable release, `1.2.3 → 1.2.4-prev001`. Part way through a series, `1.3.0-prev001 → 1.3.0-prev002`, and the fix ships with that series.
 
-### "I merged the first new function since the last stable release"
-
-**Release:** New Prerelease Series: minor
-
-Result: e.g. `1.2.3 → 1.3.0-prev001`, or `1.2.4-prev002 → 1.3.0-prev001` if a patch series was already running. The bug fixes in that patch series come along too.
-
-### "I merged another new function in the same series"
-
-**Release:** Next Prerelease
-
-Result: e.g. `1.3.0-prev001 → 1.3.0-prev002`. The series already says minor, so there's nothing to start.
+---
 
 ### "I've tested the prerelease and it's good - ship it"
 
-**Release:** Promote to Stable
+Choose **Promote to Stable**.
 
-Result: e.g. `1.3.0-prev002 → 1.3.0`. Promotes the prerelease to stable and creates a GitHub Release with the changelog. If the latest version is already stable, the workflow stops with a message, as there's no prerelease to promote.
-
----
-
-## Releasing Stable Without a Prerelease
-
-The form doesn't offer this by default, so it's always a deliberate choice. To enable it, uncomment the **Stable Release** options in your workflow file (`.github/workflows/buildandrelease.yml` or `.azuredevops/pipelines/buildAndRelease.yml`):
-
-| Choice | Example |
-| --- | --- |
-| **Stable Release: patch** | `1.2.3 → 1.2.4` |
-| **Stable Release: minor** | `1.2.3 → 1.3.0` |
-| **Stable Release: major** | `1.2.3 → 2.0.0` |
-
-Only skip prerelease validation if you have high confidence, for example when the change is trivial or well covered by tests.
+Result: e.g. `1.2.4-prev002 → 1.2.4`. Promotes the prerelease to stable and creates a GitHub Release with the changelog.
 
 ---
 
-## Dry Runs
+### "I added two new functions"
 
-Tick **dry run** to see what a run would do without doing it. The workflow works out the version and builds the module, then stops before anything is tagged, released or published. The Docs Update and Build Test workflows skip dry runs.
+Choose **New Prerelease Series: minor** on the first build with them, then **Next Prerelease** for each build after that, then **Promote to Stable**.
 
-It's a safe way to check what a choice will give you before a real run.
+Result: `1.2.3 → 1.3.0-prev001 → 1.3.0-prev002 → 1.3.0`. The version was decided when the series started, so promoting it never needs a version choice.
 
 ---
 
-## The Release Plan
+### "I have several bug fixes ready - skipping prerelease"
 
-Every run, dry or not, writes a release plan at the top of its summary page: the latest version, the release you chose, and the version it will build. On GitHub the run is named after the release you chose, and on Azure DevOps it's named after the version. Both are marked when it's a dry run.
+Only skip prerelease validation if you have high confidence (e.g. the change is trivial or well-covered by tests). Uncomment the [Stable Release choices](#stable-releases-without-a-prerelease-series) first, then choose **Stable Release: patch**.
 
-A build summary follows it, with the version, what the module exports, and SHA256 checksums of the built files. On Azure DevOps it's on the run's **Extensions** tab.
-
-![GitHub Actions run summary showing the release plan and build summary](./tutorials/github/img/buildSummary.png)
+Result: e.g. `1.2.3 → 1.2.4` directly.
 
 ---
 
 ## What Happens After a Stable Release
 
-When you Promote to Stable, the workflow:
+When you choose **Promote to Stable** or a **Stable Release**, the workflow:
 
 1. Tags the commit with `v{version}` (e.g. `v1.3.0`)
 2. Publishes the module package to your GitHub Packages feed
@@ -162,6 +198,23 @@ ModuleForge uses zero-padded three-digit counters to ensure correct lexicographi
 The label `prev` is lowercase by design - there is a known PSResourceGet bug where uppercase prerelease labels cause incorrect behaviour on some feeds.
 
 See [Module Versioning with SemVer](./Concepts/ModuleVersioning_With_SemVer.md) for the full explanation of the versioning rules and PSGallery constraints.
+
+---
+
+## Updating an older workflow
+
+Projects scaffolded before ModuleForge 1.4.1 have two inputs, `version_type` and `release_type`, and keep them until the workflow is updated. They map to the new choices like this:
+
+| `version_type` | `release_type` | New choice |
+| --- | --- | --- |
+| `none` | `prerelease` | Next Prerelease |
+| `minor` | `prerelease` | New Prerelease Series: minor |
+| `major` | `prerelease` | New Prerelease Series: major |
+| `patch` | `prerelease` | Next Prerelease, from a stable version |
+| `none` | `stable` | Promote to Stable |
+| `patch` / `minor` / `major` | `stable` | Stable Release, once uncommented |
+
+To update, follow [Updating Your Workflows and Templates](./tutorials/updating-scaffold.md). It runs `Add-MFGithubScaffold -Force` or `Add-MFAzureDevOpsScaffold -Force` on a branch, and shows how to keep changes of your own, such as a `feed_name` default.
 
 ---
 

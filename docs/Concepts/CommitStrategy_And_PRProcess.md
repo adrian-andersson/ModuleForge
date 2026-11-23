@@ -48,52 +48,64 @@ The specific branching model you adopt - GitFlow, GitHub Flow, trunk-based, or y
 - [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow) - GitHub's lightweight, branch-per-feature approach
 - [Comparing Workflows](https://www.atlassian.com/git/tutorials/comparing-workflows) - Atlassian's overview of common strategies and their trade-offs
 
+### The pull request template
+
+When ModuleForge scaffolds a new project, it adds a short pull request template. It has three sections, so a pull request records what it is and what should happen when it merges:
+
+1. **Notes for reviewers** - anything the commits don't say: why, context, how it was tested, where to look closely, and any issue or work item it relates to. What changed belongs in the commit messages.
+2. **Type of change** - every type of change it contains.
+3. **Release** - which Build and Release choice should follow the merge.
+
+It also has a two-item checklist: commits use [changelog prefixes](../commit-prefixes.md), and new or changed behaviour has Pester tests. Coverage and PSScriptAnalyzer aren't on it, as the Pester and lint workflows check those on every pull request.
+
 ### Type of Change
 
-Each PR records every type of change it contains. The highest-impact one decides the version:
+**Tick all that apply**: a pull request with a feature and a bug fix ticks both. That keeps a record of what's in it, while the highest-impact tick guides the Release choice. Each box in the template has a short description beside it, so there's nothing to look up. In more detail:
 
-| Type of change | Version impact | Examples |
+| Type | Examples | Usually means |
 | --- | --- | --- |
-| 🔴 **Breaking** | Major | Mandatory parameter added, parameter renamed or removed without an alias, changed defaults or output |
-| 🟡 **Feature** | Minor | New function, new optional parameter, more output |
-| 🟢 **Fix** | Patch | Bug fix, stream message change, performance improvement |
-| ⚪ **Non-module change** | None | Documentation, CI/CD, tests |
+| 🔴 **Breaking** (rare) | A mandatory parameter added; a parameter renamed or removed without an alias, including one that takes pipeline input; validation that rejects input that used to work; a changed default value; output changed in a way likely to break piping | **New Prerelease Series: major** |
+| 🟡 **Feature** | New functions; new optional parameters, or a parameter renamed with an alias kept; validation that accepts more; additions to function output | **New Prerelease Series: minor** |
+| 🟢 **Fix** | Bug fixes; additions or changes to the Error, Warning, Information or Verbose streams; performance improvements, or refactoring that doesn't change behaviour | **Next Prerelease** |
+| ⚪ **Non-module change** | Help, README or other documentation; CI/CD workflows; tests | **Next Prerelease**, or no build |
 
-When ModuleForge scaffolds a new project, it includes a PR template that asks for these as checkboxes, with a short description beside each, so there's nothing to memorise. **Tick all that apply**: a PR with a feature and a bug fix ticks both. That keeps a record of what's in the PR, while the highest-impact tick guides the Release choice below. The template also has a two-item checklist, for commit prefixes and Pester tests.
+Your commit prefixes should agree with the types you tick: `feat:` for a feature; `fix:`, `refactor:` or `perf:` for a fix; `docs:`, `chore:` or `test:` for a non-module change. `Get-MFGitPrefixHelp` shows the type of change for every prefix.
 
 See [Module Versioning with SemVer](./ModuleVersioning_With_SemVer.md) for a full breakdown of how version increments are applied.
 
 ### Release
 
-The template also asks which Build and Release choice should follow the merge, in the form's own words:
+The Release section uses the same wording as the Build and Release form, so whoever runs the build can pick the matching choice:
 
-- **Next Prerelease** - most pull requests: the change continues the current prerelease series, or starts a patch series after a stable release
-- **New Prerelease Series: minor** or **major** - the first feature, or breaking change, since the last stable release
+- **Next Prerelease** - most pull requests: fixes, docs, CI, or more work on the current series
+- **New Prerelease Series: minor** or **major** - only the *first* feature or breaking change since the last stable release. Later ones in the same series are Next Prerelease
 - **No build yet** - more pull requests to come before the next build
 - **Promote to Stable** - the last pull request in the series, once its prerelease is tested
 
+### Prefer the detailed template?
+
+Projects scaffolded before ModuleForge 1.4.1 had a longer template, with a checkbox for each kind of change. It's still scaffolded, as `PULL_REQUEST_TEMPLATE.md.example` in `.github` (`pull_request_template.md.example` in `.azuredevops`). To use it, replace the template with it, renamed without `.example`.
+
 ### How It Connects
 
-The commit prefix convention and the PR template work together:
+The commit prefix convention and the pull request template work together:
 
 1. Commit prefixes feed `Get-MFGitChangeLog`, which generates the release notes automatically
-2. The PR's types of change show what kind of release it is
-3. The PR's Release choice is what to pick when you run Build and Release
+2. The types of change and the Release choice on the pull request say which Build and Release choice to run
 
 This means a well-prefixed commit history produces accurate, zero-effort release notes on every tag.
 
 ## Triggering a Release
 
-The build and release pipeline is triggered manually, via GitHub Actions (`workflow_dispatch`) or an Azure DevOps pipeline run. Its form has one key input, **Release**, with the same choices as the PR template:
+The build and release pipeline is triggered manually via GitHub Actions (`workflow_dispatch`), or by running the pipeline in Azure DevOps. The form asks one key question, **Release**, and its choices are the ones in the pull request template:
 
-| Release | Example |
+| Choice | When |
 | --- | --- |
-| **Next Prerelease** *(default)* | `1.3.0-prev001 → 1.3.0-prev002`, or `1.3.0 → 1.3.1-prev001` |
-| **New Prerelease Series: minor** | `1.2.3 → 1.3.0-prev001` |
-| **New Prerelease Series: major** | `1.2.3 → 2.0.0-prev001` |
-| **Promote to Stable** | `1.3.0-prev002 → 1.3.0` |
+| **Next Prerelease** *(default)* | Most runs. Continues the current series (`1.3.0-prev001 → 1.3.0-prev002`), or after a stable release starts a patch series (`1.3.0 → 1.3.1-prev001`) |
+| **New Prerelease Series: minor** / **major** | The first feature or breaking change since the last stable release |
+| **Promote to Stable** | After the last pull request in the series, once its prerelease is tested |
 
-If the PR template was filled out, the right choice is already ticked on the pull request. There is no automated way to carry it forward, so check the merged pull request when you run it. The [Build and Release Guide](../build-and-release.md) covers every choice.
+If the PR template was filled out, the right choice is already ticked on the merged pull request. If you merged several pull requests since the last build, use the highest-impact choice among them. See the [Build and Release Guide](../build-and-release.md) for every choice.
 
 Before the build proceeds, the pipeline validates that the latest Pester test run passed and that its commit SHA matches the current branch. This acts as a safety gate - a build cannot be triggered against code that has not passed automated tests.
 

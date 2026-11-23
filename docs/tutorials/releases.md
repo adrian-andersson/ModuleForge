@@ -10,7 +10,7 @@ The Build and Release form asks you to make a choice every time you run it, and 
 
 **The short version: leave the form at Next Prerelease for almost every run.** You start a series at most once per release, and Promote to Stable once, when you ship.
 
-> This page describes the Build and Release form from ModuleForge 1.4.1. If your form still has `version_type` and `release_type`, [update your workflows](./updating-scaffold.md) to get it.
+> This page describes the Build and Release form from ModuleForge 1.4.1. If your form still has `version_type` and `release_type`, [update your workflows](./updating-scaffold.md) to get it. [Updating an older workflow](../build-and-release.md#updating-an-older-workflow) maps the old inputs to the new choices.
 
 ---
 
@@ -19,10 +19,10 @@ The Build and Release form asks you to make a choice every time you run it, and 
 | Input | Default | When to change it |
 | --- | --- | --- |
 | **Release** | Next Prerelease | Once to start a series, on the first feature (`minor`) or breaking change (`major`) since the last stable release. Once more, to **Promote to Stable**, when you ship |
-| **Dependency source** *(Advanced)* | `required-resource-file` | Rarely. To try a newer ModuleForge before you pin it, use `psgallery-prerelease` |
-| **Include source metadata** *(Advanced)* | On | Leave it on. It records the branch and commit in the package |
-| **Feed name** *(Azure DevOps only, Advanced)* | `psPackages` | Only if your feed has another name. Change the default in the pipeline file instead, so you never have to remember |
-| **Dry run** *(Advanced)* | Off | To see what version a choice gives, without releasing anything |
+| **Advanced: dependency source** | `required-resource-file` | Rarely. To try a newer ModuleForge before you pin it, use `psgallery-prerelease` |
+| **Advanced: include source metadata** | On | Leave it on. It records the branch and commit in the package |
+| **Advanced: feed name** *(Azure DevOps only)* | `psPackages` | Only if your feed has another name. Change the default in the pipeline file instead, so you never have to remember |
+| **Advanced: dry run** | Off | To see the next version, and check the build, without tagging or publishing anything |
 
 The pull request template asks for the same choice, under **Release**. If the person who merged ticked it, that's your answer.
 
@@ -61,15 +61,17 @@ Two things make Next Prerelease the right default:
 - **During a series, it continues it:** `1.3.0-prev001` becomes `1.3.0-prev002`.
 - **After a stable release, it starts a patch series:** `1.3.0` becomes `1.3.1-prev001`. So bug fixes never need anything else.
 
+Not sure what a choice will give you? Turn on **dry run**. The run's summary page shows the latest version, what you chose and the next version, then stops before anything is tagged or published.
+
 ---
 
 ## Mistakes worth avoiding
 
 - **Starting a new series on every build.** Each New Prerelease Series starts a *new* version: `1.3.0-prev001`, then `1.4.0-prev001`, then `1.5.0-prev001`. Choose it once, on the first build with the new feature, then go back to Next Prerelease.
+- **Looking for a version choice when you ship.** The version was decided when the series started, so shipping is always **Promote to Stable**: `1.3.0-prev002` becomes `1.3.0`.
+- **Promoting a version that's already stable.** There's no prerelease to promote, so the run stops and says so. Run Next Prerelease first. If your project really wants stable releases without a prerelease series, the [Build and Release Guide](../build-and-release.md#stable-releases-without-a-prerelease-series) shows how to turn them on.
 - **Running Build and Release before Pester has finished.** Build and Release first checks the latest Pester run passed, for the commit you're building. Merge, wait for Pester, then run it. If you merged several pull requests in a row, run Pester on `main` by hand first. See [the FAQ](../faq.md).
 - **Starting a new run after a failure.** If a run fails partway, use **Re-run failed jobs** on the same run instead. It finishes the version that run started, rather than using up another one.
-
-Promoting a version that's already stable can't go wrong: the workflow stops and says so, as there's no prerelease to promote.
 
 ---
 
