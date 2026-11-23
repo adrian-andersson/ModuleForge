@@ -59,7 +59,11 @@ The files in `PSScriptAnalyzer/` decide everything. Each one is a **rule set**, 
 | `PSScriptAnalyzer/*.psd1` | A [settings file](https://learn.microsoft.com/powershell/utility-modules/psscriptanalyzer/using-scriptanalyzer) naming the rules to run, in `IncludeRules` or `Rules` |
 | `PSScriptAnalyzer/rules/<Name>/` | A custom rule module |
 
-With no files, Project Rules does nothing and posts no comment.
+With no files, Project Rules does nothing and posts no comment. With all four ready-made rule sets, the comment on a pull request looks like this:
+
+![Project Rules pull request comment with a line for each rule set, its type, status and number of findings](./img/projectRulesComment.png)
+
+Below the table, each rule set with findings gets its own short tables: the most common findings, and the files with the most.
 
 It scans `source/functions`, `private`, `classes`, `enums` and `validationClasses`. That is wider than the default lint, as a class anywhere in a module can matter as much as a function.
 
