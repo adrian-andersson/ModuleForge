@@ -193,9 +193,10 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - ![GitHub banner prompting to create a pull request from the new branch](./img/prbanner.png)
 2. Click the option to create a Pull Request
 3. Fill in the Pull Request template
-   - Type in a decent description
-   - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
-   - ![Pull request template showing change type and release intent checkboxes](./img/prForm.png)
+   - Add notes for reviewers: anything your commits don't say
+   - Tick every type of change the pull request includes. The highest-impact one guides the Release choice
+   - Tick the Build and Release choice to run after it merges. Most pull requests are **Next Prerelease**. The ticks stay on the pull request as a record, and tell whoever runs Build and Release which choice to pick
+   - ![Pull request template with notes for reviewers, a checklist, the types of change and the Release choice](./img/prForm.png)
 4. Once you have completed the PR template, create the Pull Request
 5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
    - ![Automated Pester and PSScriptAnalyzer results posted as pull request comments](./img/prComments.png)
@@ -210,10 +211,11 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 3. This workflow has a `workflow_dispatch` event that we can use to version, build and release our code as a PowerShell module
 4. Select the `Run Workflow` option, a menu will appear. Fill out the fields appropriately and then choose `run workflow`
    - Branch should be main
-   - Since this is our first release, lets leave the type to increment as `none`
-   - Type of release should be `prerelease`
+   - Leave **Release** at **Next Prerelease**. With no versions yet, this builds `1.0.1-prev001`
+   - Leave the **Advanced** options at their defaults
    - ![GitHub Actions Run Workflow form for Build and Release](./img/workflowMenu.png)
-5. Wait for our workload to finish.
+5. Wait for our workflow to finish. The run's summary page starts with the release plan, then a build summary: the version, what the module exports, and SHA256 checksums of the built files
+   - ![GitHub Actions run summary showing the release plan and build summary](./img/buildSummary.png)
 6. Navigate back to the `code` tab after the workflow completes. You should now see:
    - A new Release with a version tag and a `latest` badge
    - Packages set at 1
