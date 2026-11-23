@@ -50,51 +50,50 @@ The specific branching model you adopt - GitFlow, GitHub Flow, trunk-based, or y
 
 ### Type of Change
 
-Each PR should be categorised by the highest-impact change it contains. This maps directly to the semantic version increment:
+Each PR records every type of change it contains. The highest-impact one decides the version:
 
-| Category | Version Impact | Examples |
+| Type of change | Version impact | Examples |
 | --- | --- | --- |
-| 🔴 **Major** | Breaking - bump major | Mandatory parameter added, output type changed, parameter renamed without alias |
-| 🟡 **Minor** | Feature - bump minor | New function, new optional parameter, non-breaking output change |
-| 🟢 **Patch** | Fix - bump patch | Bug fix, stream output change, test or performance update |
-| ⚪ **Non-release** | No version bump | Documentation, CI/CD, internal tooling |
+| 🔴 **Breaking** | Major | Mandatory parameter added, parameter renamed or removed without an alias, changed defaults or output |
+| 🟡 **Feature** | Minor | New function, new optional parameter, more output |
+| 🟢 **Fix** | Patch | Bug fix, stream message change, performance improvement |
+| ⚪ **Non-module change** | None | Documentation, CI/CD, tests |
 
-> **Note the change type you select here - you will need it when triggering the build and release pipeline.** There is no automated way to carry this forward, so take note before closing the PR. See [Triggering a Release](#triggering-a-release) for details.
-
-When ModuleForge scaffolds a new project, it includes a PR template that surfaces these categories as a checklist directly in the pull request form. Contributors are guided through the classification at PR time - no need to memorise the categories. The template also includes a quick review checklist covering Pester test coverage, PSScriptAnalyzer compliance, commit prefix usage, and release intent, keeping the full process visible at the point of review. When filling out the template, use the highest-impact ticked section as your guide for the overall type of change.
+When ModuleForge scaffolds a new project, it includes a PR template that asks for these as checkboxes, with a short description beside each, so there's nothing to memorise. **Tick all that apply**: a PR with a feature and a bug fix ticks both. That keeps a record of what's in the PR, while the highest-impact tick guides the Release choice below. The template also has a two-item checklist, for commit prefixes and Pester tests.
 
 See [Module Versioning with SemVer](./ModuleVersioning_With_SemVer.md) for a full breakdown of how version increments are applied.
 
-### Release Intent
+### Release
 
-PRs are also tagged with their release intent:
+The template also asks which Build and Release choice should follow the merge, in the form's own words:
 
-- **PreRelease series** - the change is part of an ongoing set of changes building toward a stable release
-- **Stable release** - this PR finalises a version for stable release
-- **No release** - the change does not trigger a release (documentation, CI changes, etc.)
+- **Next Prerelease** - most pull requests: the change continues the current prerelease series, or starts a patch series after a stable release
+- **New Prerelease Series: minor** or **major** - the first feature, or breaking change, since the last stable release
+- **No build yet** - more pull requests to come before the next build
+- **Promote to Stable** - the last pull request in the series, once its prerelease is tested
 
 ### How It Connects
 
-The commit prefix convention and PR change type work together:
+The commit prefix convention and the PR template work together:
 
 1. Commit prefixes feed `Get-MFGitChangeLog`, which generates the release notes automatically
-2. The PR change type informs the version bump applied by the build pipeline
-3. The release intent controls whether the build tags a prerelease or a stable version
+2. The PR's types of change show what kind of release it is
+3. The PR's Release choice is what to pick when you run Build and Release
 
 This means a well-prefixed commit history produces accurate, zero-effort release notes on every tag.
 
 ## Triggering a Release
 
-The build and release pipeline is triggered manually via GitHub Actions (`workflow_dispatch`). When triggered, a form is presented with two key inputs:
+The build and release pipeline is triggered manually, via GitHub Actions (`workflow_dispatch`) or an Azure DevOps pipeline run. Its form has one key input, **Release**, with the same choices as the PR template:
 
-| Input | Options | Maps To |
-| --- | --- | --- |
-| **Version increment type** | `major`, `minor`, `patch`, `none` | The PR type of change category |
-| **Release type** | `stable`, `prerelease` | The PR release intent |
+| Release | Example |
+| --- | --- |
+| **Next Prerelease** *(default)* | `1.3.0-prev001 → 1.3.0-prev002`, or `1.3.0 → 1.3.1-prev001` |
+| **New Prerelease Series: minor** | `1.2.3 → 1.3.0-prev001` |
+| **New Prerelease Series: major** | `1.2.3 → 2.0.0-prev001` |
+| **Promote to Stable** | `1.3.0-prev002 → 1.3.0` |
 
-These inputs directly reflect the decisions already made during the PR process - if the PR template was filled out correctly, the right values to enter here should already be known.
-
-> **`none` for version type** does not skip versioning - it increments the prerelease counter without changing the major.minor.patch version. This is the default and is safe for iterative prerelease builds.
+If the PR template was filled out, the right choice is already ticked on the pull request. There is no automated way to carry it forward, so check the merged pull request when you run it. The [Build and Release Guide](../build-and-release.md) covers every choice.
 
 Before the build proceeds, the pipeline validates that the latest Pester test run passed and that its commit SHA matches the current branch. This acts as a safety gate - a build cannot be triggered against code that has not passed automated tests.
 

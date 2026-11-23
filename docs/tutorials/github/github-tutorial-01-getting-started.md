@@ -211,8 +211,8 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 3. This workflow has a `workflow_dispatch` event that we can use to version, build and release our code as a PowerShell module
 4. Select the `Run Workflow` option, a menu will appear. Fill out the fields appropriately and then choose `run workflow`
    - Branch should be main
-   - Since this is our first release, lets leave the type to increment as `none`
-   - Type of release should be `prerelease`
+   - Leave **Release** at **Next Prerelease**. With no versions yet, this builds `1.0.1-prev001`
+   - Leave the **Advanced** options at their defaults
    - ![GitHub Actions Run Workflow form for Build and Release](./img/workflowMenu.png)
 5. Wait for our workload to finish.
 6. Navigate back to the `code` tab after the workflow completes. You should now see:

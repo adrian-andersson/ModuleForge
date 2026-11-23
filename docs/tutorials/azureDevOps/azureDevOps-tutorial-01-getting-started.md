@@ -249,8 +249,9 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - ![Azure DevOps banner prompting to create a pull request from the new branch](./img/tut_newPr.png)
 2. Click the option to create a Pull Request
 3. Fill in the Pull Request template
-   - Type in a decent description
-   - Check the appropriate options with an `X` to help determine your next version, and to make it easier to review later.
+   - Add notes for reviewers: anything your commits don't say
+   - Tick every type of change the pull request includes. The highest-impact one guides the Release choice
+   - Tick the Build and Release choice to run after it merges. Most pull requests are **Next Prerelease**
    - ![Pull request template showing change type and release intent checkboxes](./img/tut_newPrForm.png)
 4. Once you have completed the PR template, create the Pull Request
 5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
@@ -265,10 +266,9 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
 2. Find and select the `Build and Release` pipeline associated to your repository
 3. Select the `Run Pipeline` option, a menu will appear. Fill out the fields appropriately and then choose `run workflow`
    - Branch should be main
-   - Since this is our first release, lets leave the type to increment as `none`
-   - Type of release should be `prerelease`
-   - The `ModuleForge` version should be stable
-   - The feedname should match what you set in the PreRequisits
+   - Leave **Release** at **Next Prerelease**. With no versions yet, this builds `1.0.1-prev001`
+   - Leave the **Advanced** options at their defaults
+   - The feed name should match what you set in the Prerequisites
         - If you changed the feedname, recommend you also update this form to reflect that change by editing the _buildAndRelease.yml_ file
    - ![Azure DevOps Run Pipeline form for Build and Release](./img/tut_runPipeline.png)
 4. Wait for our pipeline to finish.
