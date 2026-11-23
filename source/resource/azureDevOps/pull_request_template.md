@@ -10,7 +10,7 @@
 
 ## Type of change
 
-<!-- Tick the highest-impact one. Your commit prefixes should agree: run Get-MFGitPrefixHelp or read the docs for details.
+<!-- Tick all that apply. The highest-impact one guides the Release choice below. Your commit prefixes should agree: run Get-MFGitPrefixHelp or read the docs for details.
 
 - Breaking (rare): something changed that could break scripts or modules that depend on this one. E.g.:
   - A mandatory parameter added, a parameter renamed or removed without an alias, changes to pipeline input,
