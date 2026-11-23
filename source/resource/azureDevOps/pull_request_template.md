@@ -1,37 +1,26 @@
-## Notes for reviewers
+## Notes for reviewers, related issues and change IDs
 
 <!-- Anything the commits don't say: why, context, how you tested it, or where to look closely.
      Mention a work item as #123 to link it -->
 
+## Checklist
+
+- [ ] Commits use changelog prefixes (`feat:`, `fix:` ...). `Get-MFGitPrefixHelp` lists them
+- [ ] New or changed behaviour has Pester tests
+
 ## Type of change
 
-<!-- Tick the highest-impact one.
+<!-- Tick the highest-impact one. Your commit prefixes should agree: run Get-MFGitPrefixHelp or read the docs for details.
 
-- Breaking (rare): something changed that could break scripts or modules that depend on this one. For example:
-  - A mandatory parameter added
-  - A parameter renamed or removed without an alias, including one that takes pipeline input
-  - Validation that now rejects input that used to work
-  - A changed default value, or other changed behaviour callers rely on
-  - Function output changed in a way that's likely to break piping
-- Feature (common): you added or streamlined something. For example:
-  - New functions
-  - New optional parameters, or a parameter renamed with an alias kept
-  - Validation that now accepts more
-  - Additions to function output
-- Fix (common): you fixed something that was broken, without breaking anything that depends on it. For example:
-  - A bug fix
-  - Additions or changes to the Error, Warning, Information or Verbose streams
-  - Performance improvements, or refactoring that doesn't change behaviour
-- Non-module change (common): tweaks that don't touch the module's code. For example:
-  - Help, README or other documentation
-  - CI/CD workflows
-  - Tests
-
-Your commit prefixes should agree:
-  - feat: for a feature
-  - fix:, refactor: or perf: for a fix
-  - docs:, chore: or test: for a non-module change
-  Run Get-MFGitPrefixHelp for more guidance
+- Breaking (rare): something changed that could break scripts or modules that depend on this one. E.g.:
+  - A mandatory parameter added, a parameter renamed or removed without an alias, changes to pipeline input,
+    changed default values, or other changed behaviour callers rely on
+- Feature (common): you added or streamlined something. E.g.:
+  - New functions, new optional parameters or ones renamed with an alias kept, additions to function output
+- Fix (common): you fixed something that was broken, without breaking anything that depends on it. E.g.:
+  - A bug fix, additions or changes to the Error, Warning, Information or Verbose streams, performance improvements
+- Non-module change (common): tweaks that don't touch the module's code. E.g.:
+  - Help, README or other documentation, CI/CD workflows, tests
 -->
 
 - [ ] 🔴 Breaking
@@ -49,13 +38,6 @@ Your commit prefixes should agree:
 - [ ] **New Prerelease Series: minor**
 - [ ] **New Prerelease Series: major**
 - [ ] **No build yet** - more pull requests to come first
-
-<!-- And, separately -->
 - [ ] Last pull request in this series: **Promote to Stable** once its prerelease is tested
-
-## Checklist
-
-- [ ] Commits use changelog prefixes (`feat:`, `fix:` ...). `Get-MFGitPrefixHelp` lists them
-- [ ] New or changed behaviour has Pester tests
 
 <!-- ModuleForge's pull request template. Adapt it to your project, or replace it -->
