@@ -35,11 +35,18 @@ Project Rules run a project's own PSScriptAnalyzer rules, from a PSScriptAnalyze
 as an advisory pass with its own pull request comment.
 This copies ready-made rule sets into that folder:
 
-  - CLM           PSScriptAnalyzer settings that check for Constrained Language Mode compatibility,
-                  with the PSUseConstrainedLanguageMode rule.
+  - CLM             PSScriptAnalyzer settings that check for Constrained Language Mode compatibility,
+                    with the PSUseConstrainedLanguageMode rule.
 Needs PSScriptAnalyzer 1.25.0 or newer
-  - HelpExamples  A custom rule that warns when a public function has no .EXAMPLE in its help,
-                  as the docs are generated from it
+  - HelpExamples    A custom rule that warns when a public function has no .EXAMPLE in its help,
+                    as the docs are generated from it
+  - ArrayAddition   A custom rule that flags += on an array, which copies the whole array each time,
+                    and recommends a generic list instead.
+A Warning in a loop, Information elsewhere
+  - NestedFunctions A custom rule that warns when a function is defined inside another function,
+                    as it can't be tested or reused.
+Functions in a script block, such as for a job,
+                    are left alone
 
 It then enables the Project Rules workflow in .github and the pipeline in .azuredevops, whichever exist,
 by renaming projectRules.yml.example to projectRules.yml, or adding it if it is missing.
@@ -57,11 +64,13 @@ Existing files are skipped unless -Force is used.
 Add-MFProjectRules
 
 #### DESCRIPTION
-Adds both rule sets to the PSScriptAnalyzer folder, and enables Project Rules in the CI folders that exist.
+Adds every rule set to the PSScriptAnalyzer folder, and enables Project Rules in the CI folders that exist.
 
 #### OUTPUT
-PSScriptAnalyzer/clm.psd1, PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1, and an enabled
-projectRules.yml in .github/workflows or .azuredevops/pipelines.
+PSScriptAnalyzer/clm.psd1, PSScriptAnalyzer/rules/HelpExamples/HelpExamples.psm1,
+PSScriptAnalyzer/rules/ArrayAddition/ArrayAddition.psm1,
+PSScriptAnalyzer/rules/NestedFunctions/NestedFunctions.psm1, and an enabled projectRules.yml in
+.github/workflows or .azuredevops/pipelines.
 
 ### EXAMPLE 2
 
@@ -151,7 +160,7 @@ Adds all of them by default
 
 ```yaml
 Type: System.String[]
-DefaultValue: "@('CLM','HelpExamples')"
+DefaultValue: "@('CLM','HelpExamples','ArrayAddition','NestedFunctions')"
 SupportsWildcards: false
 Aliases: []
 ParameterSets:

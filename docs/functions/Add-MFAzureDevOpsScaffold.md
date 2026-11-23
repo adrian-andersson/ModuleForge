@@ -13,7 +13,7 @@ PlatyPS schema version: 2024-05-01
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Initialises a `.azuredevops` scaffold in a PowerShell module, including YAML Azure DevOps Pipelines for pester testing and build and release
 
 ## SYNTAX
 
@@ -31,23 +31,53 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+This function will create a '.azuredevops' folder in the moduleforge root (if one does not exist).
+It will create Azure DevOps pipeline files for Pester testing, linting and Build and Release, plus optional
+pipelines ending in .example, which you rename to enable.
+One is Build Test, which installs the published module and checks it
+exports what source/functions declares.
+It will create 1 Pull Request template.
+It will also add any missing project scripts, as some pipeline templates call them, and the buildTest folder.
+
+The buildAndRelease pipeline will use Git Tags to mark versions.
+If you stick with this template you should refrain from
+using tags for other purposes.
+
+The purpose of these workflows and templates is to get you started, creating a quick and easy workflow scaffold.
+
+Please feel free to change the workflows and template to your own needs and preferences.
 
 ## EXAMPLES
 
-### Example 1
+### EXAMPLE 1
 
-{{ Add example description here }}
+Add-MFAzureDevOpsScaffold
+
+#### DESCRIPTION
+Copies the `.azuredevops` folder from the module's `resource` directory to the current module, skipping existing files.
+
+#### OUTPUT
+Should have a .azuredevops folder, with pipelines and a PR template
+
+### EXAMPLE 2
+
+Add-MFAzureDevOpsScaffold -Force
+
+#### DESCRIPTION
+Copies the `.azuredevops` scaffold and overwrites existing files in `.azuredevops` directory
+
+#### OUTPUT
+Should have a .azuredevops folder, with pipelines and a PR template
 
 ## PARAMETERS
 
 ### -AzdFolder
 
-{{ Fill AzdFolder Description }}
+Azure DevOps folder
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: .azuredevops
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -64,11 +94,11 @@ HelpMessage: ''
 
 ### -ConfigFile
 
-{{ Fill ConfigFile Description }}
+Module Config reference
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: moduleForgeConfig.xml
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -85,11 +115,11 @@ HelpMessage: ''
 
 ### -Force
 
-{{ Fill Force Description }}
+Should we overwrite if files exist?
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -106,11 +136,12 @@ HelpMessage: ''
 
 ### -ModulePath
 
-{{ Fill ModulePath Description }}
+Root path of the module.
+Uses the current working directory by default
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: $(get-location).path
 SupportsWildcards: false
 Aliases:
 - Path
@@ -137,13 +168,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.Object
-
-{{ Fill in the Description }}
-
 ## NOTES
 
-{{ Fill in the Notes }}
+Author: Adrian Andersson
+
 
 ## RELATED LINKS
 
