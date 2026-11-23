@@ -252,7 +252,7 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - Add notes for reviewers: anything your commits don't say
    - Tick every type of change the pull request includes. The highest-impact one guides the Release choice
    - Tick the Build and Release choice to run after it merges. Most pull requests are **Next Prerelease**
-   - ![Pull request template showing change type and release intent checkboxes](./img/tut_newPrForm.png)
+   - ![Pull request template with notes for reviewers, a checklist, the types of change and the Release choice](./img/tut_newPrForm.png)
 4. Once you have completed the PR template, create the Pull Request
 5. On submission of a Pull Request to the Main branch, the Pester and ScriptAnalyzer workflows will automatically be invoked. The results will be added as comments to the PR
    - ![Automated Pester and PSScriptAnalyzer results posted as pull request comments](./img/tut_prComments.png)
