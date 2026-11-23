@@ -75,10 +75,10 @@
         $builtFiles = @(Get-ChildItem -Path $moduleFolder -File -Recurse)
 
         #The manifest and module files, plus any external scripts the build wrote beside them
-        $hashFiles = @($builtFiles | Where-Object { $_.DirectoryName -eq $moduleFolder -and $_.Extension -in '.psd1','.psm1','.ps1' } | Sort-Object -Property @{Expression={@('.psd1','.psm1','.ps1').IndexOf($_.Extension)}},'Name')
+        $hashFiles = [System.Collections.Generic.List[System.IO.FileInfo]]@($builtFiles | Where-Object { $_.DirectoryName -eq $moduleFolder -and $_.Extension -in '.psd1','.psm1','.ps1' } | Sort-Object -Property @{Expression={@('.psd1','.psm1','.ps1').IndexOf($_.Extension)}},'Name')
         if($NugetPackagePath)
         {
-            $hashFiles += Get-Item -Path $NugetPackagePath -ErrorAction Stop
+            $hashFiles.Add((Get-Item -Path $NugetPackagePath -ErrorAction Stop))
         }
         $files = foreach($file in $hashFiles)
         {
