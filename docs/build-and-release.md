@@ -129,6 +129,10 @@ It's a safe way to check what a choice will give you before a real run.
 
 Every run, dry or not, writes a release plan at the top of its summary page: the latest version, the release you chose, and the version it will build. On GitHub the run is named after the release you chose, and on Azure DevOps it's named after the version. Both are marked when it's a dry run.
 
+A build summary follows it, with the version, what the module exports, and SHA256 checksums of the built files. On Azure DevOps it's on the run's **Extensions** tab.
+
+![GitHub Actions run summary showing the release plan and build summary](./tutorials/github/img/buildSummary.png)
+
 ---
 
 ## What Happens After a Stable Release

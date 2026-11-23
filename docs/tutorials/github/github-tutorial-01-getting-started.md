@@ -214,7 +214,8 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - Leave **Release** at **Next Prerelease**. With no versions yet, this builds `1.0.1-prev001`
    - Leave the **Advanced** options at their defaults
    - ![GitHub Actions Run Workflow form for Build and Release](./img/workflowMenu.png)
-5. Wait for our workload to finish.
+5. Wait for our workflow to finish. The run's summary page starts with the release plan, then a build summary: the version, what the module exports, and SHA256 checksums of the built files
+   - ![GitHub Actions run summary showing the release plan and build summary](./img/buildSummary.png)
 6. Navigate back to the `code` tab after the workflow completes. You should now see:
    - A new Release with a version tag and a `latest` badge
    - Packages set at 1

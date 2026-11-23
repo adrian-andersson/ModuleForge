@@ -271,8 +271,9 @@ Invoke-Pester '.\source\functions\Get-HelloWorld.Tests.ps1'
    - The feed name should match what you set in the Prerequisites
         - If you changed the feedname, recommend you also update this form to reflect that change by editing the _buildAndRelease.yml_ file
    - ![Azure DevOps Run Pipeline form for Build and Release](./img/tut_runPipeline.png)
-4. Wait for our pipeline to finish.
-5. Browse to _Artifacts_ and your Package Feed, where you can 
+4. Wait for our pipeline to finish. The run's **Extensions** tab shows a build summary: the version, what the module exports, and SHA256 checksums of the built files
+   - ![Azure DevOps Extensions tab showing the build summary with version, exports and SHA256 checksums](./img/tut_buildSummary.png)
+5. Browse to _Artifacts_ and your Package Feed, where you can see your new module
 
 >If you want to `manually` download and install your new module, you can download the nupkg from the package feed, rename the extension to `.zip` and uncompress to find your module.
 
