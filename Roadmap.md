@@ -38,9 +38,30 @@
 - [x] Pull request template reordered after use: the checklist comes straight after the notes for reviewers, the type of change examples are shorter, and Promote to Stable is the last Release option rather than a separate tick
 - [x] `NestedFunctions` Project Rules template - a custom rule, added by `Add-MFProjectRules`, that warns when a function is defined inside another function or a class method, as it can't be tested or reused, and suggests its own file in `source/private`. Functions inside a script block, such as one passed to `Start-Job`, are left alone, and it can be suppressed on the outer function
 - [x] Fix `Get-MFDependencyTree` repeating itself, and never finishing when files depend on each other in a loop. Each file's dependencies are shown once, a file seen again is marked `(dependencies shown above)`, a loop is marked `(circular reference)`, and the tree starts from the files nothing else depends on. The Mermaid chart no longer repeats arrows
-- [ ] Link [Updating Your Workflows and Templates](https://adrian-andersson.github.io/ModuleForge/tutorials/updating-scaffold.html) in the 1.4.1 release notes, as the Build and Release form only changes for projects that update their workflows
-- [ ] Keep [Making the Most of Releases](https://adrian-andersson.github.io/ModuleForge/tutorials/releases.html), the Build and Release Guide and the Project Rules page in step with the above
+- [x] Link [Updating Your Workflows and Templates](https://adrian-andersson.github.io/ModuleForge/tutorials/updating-scaffold.html) in the 1.4.1 release notes, as the Build and Release form only changes for projects that update their workflows
+- [x] Keep [Making the Most of Releases](https://adrian-andersson.github.io/ModuleForge/tutorials/releases.html), the Build and Release Guide and the Project Rules page in step with the above
 
+## v1.4.2
+
+- [ ] **Build can't silently drop a file.** A source file that can't be read (locked, mid-save) can leave its functions out of the `.psm1` and `FunctionsToExport`, and the build still succeeds. The Pester gate has already passed by then, so nothing stops it shipping. Found on review, not seen in the wild:
+  - `Get-MFFolderItemDetails` reads files in a job and collects them with `Receive-Job`, without checking the job's state or its error stream
+  - The scriptblock calls `Parser::ParseFile` with its errors discarded (`[ref]$null`)
+  - `Build-MFProject` never compares the source files it found with what it wrote
+  - Fix: fail the build on any job error or parse error, then check every source file was processed and every public function is in `FunctionsToExport` and the `.psm1`. Build Test only catches missing *public* functions, after publishing, and only where it's enabled
+- [ ] **`CrossPlatform` Project Rules template** - flags code that works on Windows but not Linux or macOS: hard-coded `\` path separators (use `Join-Path` or `[IO.Path]::DirectorySeparatorChar`), Windows-only environment variables (`$env:USERPROFILE`, `$env:APPDATA`, `$env:TEMP`, `$env:COMPUTERNAME`, `$env:USERNAME`), Windows-only commands and modules (`Resolve-DnsName`, `Get-WmiObject`, `Get-CimInstance`, the registry provider, `Get-EventLog`, `*-Service`, `Get-Acl` and friends), `.exe` assumptions, and case-sensitive file name mismatches. Information severity where it might be guarded by an `$IsWindows` check, Warning otherwise
+- [ ] **`New-MFProject -AddQuickstart`**, and `Add-MFQuickstart` for existing projects - adds `QUICKSTART.md` to the project root: the project's conventions in one place, for people and for AI-assisted development ("read QUICKSTART.md and follow its conventions"). It covers:
+  - Folder layout and grouping files into subfolders, one function per file named after it, and the `functions` / `private` / `classes` / `enums` / `validationClasses` split
+  - Every function has its own Pester suite, beside it or in `tests/`, or both, whichever suits the project
+  - The test dependency loader (`Get-MFTestDependency` and the walk-up to the project root) as a ready-to-copy scriptblock
+  - Mocking, so tests never depend on installed modules, and the `$mockPsScriptRoot` pattern for resources
+  - Commit prefixes, types of change and the release cycle: start a series once, Next Prerelease while iterating, Promote to Stable when done
+  - Aliases for functions, and keeping old parameter names as aliases so renames aren't breaking
+  - Argument completers, and that a completer function must be public (in `source/functions`) or it won't be found when the completer runs
+  - The Project Rules in use, that they're advisory, to check with the project owner, and to write custom rules where they help
+  - Adding operating systems to the Pester matrix where the module is cross-platform
+  - Also worth including: comment-based help with an `.EXAMPLE` (the docs are generated from it), streams (`Write-Verbose` and `Write-Information`, not `Write-Host`, and no accidental pipeline output), approved verbs and singular nouns, running Pester, the build and Project Rules locally, and never editing `build/`
+  - Consider also writing `AGENTS.md` (or pointing `CLAUDE.md` / `.github/copilot-instructions.md` at it), so AI tools pick it up without being told
+  - Stamp it with the ModuleForge version, as it will drift like the workflows (see Managed project workflows in 1.5.0)
 ## v1.5.0
 
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below. Moved from 1.4.0: it needs to be done well, not quickly
