@@ -112,6 +112,21 @@ Describe 'Invoke-MFProjectRules settings files' {
         $project = New-TestProject @{ 'PSScriptAnalyzer/clm.psd1' = $settings }
         (Invoke-TestProject $project).RuleSets.Findings.RuleName | Should -Be 'PSUseConstrainedLanguageMode'
     }
+    It 'Should ignore a CustomRulePath in a settings file, so it never loads rule code from outside the rules folder' {
+        #A module that leaves a marker file when it's imported, which PSScriptAnalyzer does to load custom rules
+        $marker = join-path $TestDrive "$([guid]::NewGuid().Guid).loaded"
+        $outsideRule = "New-Item -Path '$marker' -ItemType File -Force | Out-Null`n$customRule"
+        $settings = "@{ IncludeRules = @('PSAvoidUsingCmdletAliases'); CustomRulePath = @('elsewhere/rules'); RecurseCustomRulePath = `$true }"
+        $project = New-TestProject @{ 'PSScriptAnalyzer/alias.psd1' = $settings; 'elsewhere/rules/Outside/Outside.psm1' = $outsideRule }
+        $result = Invoke-TestProject $project
+        $result.RuleSets.Findings.RuleName | Should -Be 'PSAvoidUsingCmdletAliases'
+        $marker | Should -Not -Exist
+    }
+    It 'Should return only its result' {
+        $output = @(Invoke-TestProject (New-TestProject @{ 'PSScriptAnalyzer/clm.psd1' = $clmSettings }))
+        $output | Should -HaveCount 1
+        $output[0].HasRuleSets | Should -BeTrue
+    }
     It 'Should run a default rule the file deliberately names' {
         $project = New-TestProject @{ 'PSScriptAnalyzer/alias.psd1' = "@{ IncludeRules = @('PSAvoidUsingCmdletAliases') }" }
         (Invoke-TestProject $project).RuleSets.Findings.RuleName | Should -Be 'PSAvoidUsingCmdletAliases'
