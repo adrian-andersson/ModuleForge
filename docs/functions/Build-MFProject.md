@@ -39,6 +39,18 @@ Add the contents of any Validators to a separate external ps1 file as a module d
 Create a new module manifest from the parameters saved with new-mfProject
 Tag as a pre-release if a semverPreRelease label is found
 
+Records build provenance in the psm1 header and a ModuleForge section in the manifest PrivateData: the ModuleForge version and
+SHA256 hashes, and the build date.
+When the build runs in GitHub Actions or Azure Pipelines, it also
+records the commit, run ID and run attempt in a Source group, so an installed module can be traced back
+to the exact source and run that built it.
+The repository, branch and run URL are added for a public
+GitHub repository, as they'd name a private one.
+The project's sourceProvenance setting changes this:
+see New-MFProject.
+Local builds leave these out.
+-NoBuildProvenance turns all of it off.
+
 ## EXAMPLES
 
 ### EXAMPLE 1
@@ -160,8 +172,8 @@ HelpMessage: ''
 
 ### -NoBuildProvenance
 
-If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForgeBuild* keys in
-the manifest PrivateData).
+If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForge section in
+the manifest PrivateData, including the CI source and run).
 Provenance is on by default - the SHA256 hashes it records match the checksums
 published on the ModuleForge release, so impacted builds can be traced if a vulnerability is found in the tooling
 
