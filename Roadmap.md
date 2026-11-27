@@ -67,6 +67,17 @@
   - Add `build/` and `coverage.xml` to `.gitignore`
   - Running Build and Release: the Release choice, the Pester gate, dry runs and reading the release plan
   - Enabling optional workflows: rename the `.example` file for now, until managed workflows replace that in 1.5.0
+  - Exactly where each kind of file goes: public functions, private helpers, classes, enums, validators, resources, tests, and `buildTest/`
+  - Testing and building locally when needed, with the exact commands to paste: `scripts/Invoke-MFPester.ps1`, `Build-MFProject` or `Invoke-MFBuildPreRelease`, `scripts/Invoke-MFProjectRules.ps1` and PSScriptAnalyzer, and importing the built module from `build/` to check it
+  - Prefer PowerShell 7.6+ and PSResourceGet (`Install-PSResource`) over Windows PowerShell and PowerShellGet (`Install-Module`), plus a note on PowerShell 7.6 (content to confirm)
+  - Links to the ModuleForge docs, repository and PowerShell Gallery page
+  - For AI agents especially:
+    - Copy-ready skeletons for a function (help block with `.EXAMPLE`, `CmdletBinding`, the verbose and debug lines) and its test (project root walk-up, `Get-MFTestDependency`, clean environment check). Agents copy what they're shown more reliably than they follow descriptions
+    - A definition of done for a change: function, test, help example, lint and Project Rules clean, prefixed commit
+    - What not to touch: `build/`, generated `docs/functions`, `.example` files unless enabling one, and the pins in `BuildDependencies.psd1`
+    - Where project settings live: `moduleForgeConfig.xml` for manifest data, `RequiredModules` and `testDependencies`
+    - Known gotchas: Pester's discovery and run phases, class load order and TypeNotFound noise, `$null =` for `.Add()`, `Write-Host`, and one PR before Build and Release because of the Pester gate
+    - Rules first and explanations after, with stable headings, so an agent can find a section without reading it all
 - [x] **Stronger build provenance.** Add values that can be checked against the CI platform to the provenance block in the `.psm1` header and manifest `PrivateData`, beside the ModuleForge version, hashes and build date already there. ModuleForge's own builds first:
   - The commit SHA and branch. `include_source_metadata` already records these, but only in the package metadata, which is lost once the module is installed
   - The repository, and the run ID, attempt and URL (`GITHUB_RUN_ID` / `GITHUB_RUN_ATTEMPT`; Azure DevOps `Build.BuildId`). Unique per build like a GUID, and it leads to the run's logs and release plan
