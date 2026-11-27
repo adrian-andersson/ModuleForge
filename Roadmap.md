@@ -62,6 +62,16 @@
   - Also worth including: comment-based help with an `.EXAMPLE` (the docs are generated from it), streams (`Write-Verbose` and `Write-Information`, not `Write-Host`, and no accidental pipeline output), approved verbs and singular nouns, running Pester, the build and Project Rules locally, and never editing `build/`
   - Consider also writing `AGENTS.md` (or pointing `CLAUDE.md` / `.github/copilot-instructions.md` at it), so AI tools pick it up without being told
   - Stamp it with the ModuleForge version, as it will drift like the workflows (see Managed project workflows in 1.5.0)
+  - How versions come from git tags: the latest `v*` tag is the current version, so a tag added or moved by hand changes the next version, and tags shouldn't be used for anything else
+  - Build Test and how build dependencies work: `BuildDependencies.psd1` pins what CI installs, and `testDependencies` decides what the Pester workflows install
+  - Add `build/` and `coverage.xml` to `.gitignore`
+  - Running Build and Release: the Release choice, the Pester gate, dry runs and reading the release plan
+  - Enabling optional workflows: rename the `.example` file for now, until managed workflows replace that in 1.5.0
+- [ ] **Stronger build provenance.** Add values that can be checked against the CI platform to the provenance block in the `.psm1` header and manifest `PrivateData`, beside the ModuleForge version, hashes and build date already there. ModuleForge's own builds first:
+  - The commit SHA and branch. `include_source_metadata` already records these, but only in the package metadata, which is lost once the module is installed
+  - The repository, and the run ID, attempt and URL (`GITHUB_RUN_ID` / `GITHUB_RUN_ATTEMPT`; Azure DevOps `Build.BuildId`). Unique per build like a GUID, and it leads to the run's logs and release plan
+  - Passed into `Build-MFProject` by the workflows, so local builds just leave them out. Respects `-NoBuildProvenance`
+  - These are traceable, not unforgeable: anyone can write values into a manifest. Proving where a package came from needs a signature, so consider GitHub artifact attestations (`actions/attest-build-provenance`) alongside code signing in 1.5.0
 ## v1.5.0
 
 - [ ] Optional code-signing support in the pipeline - keep it simple: the workflow checks for a code-signing cert and, if present, signs the module **before** the local publish step. Opt-in (no cert = no-op), so it never gets in the way. Design note: signing is intentionally not used by MF's own pipeline; the hard part is testing it (would require handling a real private+public key pair), so the test story needs thought. Pairs with the docs signing tutorial below. Moved from 1.4.0: it needs to be done well, not quickly
