@@ -49,6 +49,10 @@ function Update-MFProject
         [Parameter()]
         [ValidateSet('None','PesterAndScriptAnalyzer','All')]
         [string]$TestDependencies,
+        #How much of the CI source a build records in the module: Auto, Full, Minimal or None. See New-MFProject
+        [Parameter()]
+        [ValidateSet('Auto','Full','Minimal','None')]
+        [string]$SourceProvenance,
         #Who are the primary module authors. Can expand later with add-mfmoduleAuthors command
         [Parameter()]
         [string[]]$ModuleAuthors,
@@ -142,6 +146,13 @@ function Update-MFProject
             write-verbose "Updating Module testDependencies from: $($config.testDependencies) -> $($TestDependencies)"
             #Configs made before this setting existed don't have the property yet
             $config|Add-Member -NotePropertyName 'testDependencies' -NotePropertyValue $TestDependencies -Force
+        }
+
+        if($SourceProvenance)
+        {
+            write-verbose "Updating Module sourceProvenance from: $($config.sourceProvenance) -> $($SourceProvenance)"
+            #Configs made before this setting existed don't have the property yet
+            $config|Add-Member -NotePropertyName 'sourceProvenance' -NotePropertyValue $SourceProvenance -Force
         }
 
         if($ModuleAuthors)

@@ -15,9 +15,10 @@ function Build-MFProject
 
             Records build provenance in the psm1 header and a ModuleForge section in the manifest PrivateData: the ModuleForge version and
             SHA256 hashes, and the build date. When the build runs in GitHub Actions or Azure Pipelines, it also
-            records the repository, commit, branch, run ID, run attempt and run URL, in a Source group,
-            so an installed module can be traced back to the exact source and run that built it. Local builds
-            leave these out. -NoBuildProvenance turns all of it off.
+            records the commit, run ID and run attempt in a Source group, so an installed module can be traced back
+            to the exact source and run that built it. The repository, branch and run URL are added for a public
+            GitHub repository, as they'd name a private one. The project's sourceProvenance setting changes this:
+            see New-MFProject. Local builds leave these out. -NoBuildProvenance turns all of it off.
 
         .EXAMPLE
             Build-MFProject -Version '0.12.2-prerelease.1'
@@ -177,11 +178,19 @@ function Build-MFProject
                 $mfPsm1Hash = 'unknown'
             }
 
-            #Single timestamp shared by the psm1 header and the manifest provenance block
-            $mfBuildDate = get-date -format s
+            #Single timestamp shared by the psm1 header and the manifest provenance block. With its UTC offset, as CI
+            #runners use UTC and local builds use local time, so the same text could otherwise mean different times
+            $mfBuildDate = get-date -format 'yyyy-MM-ddTHH:mm:sszzz'
             #The CI run and commit this was built from, so the module can be traced back to them once installed.
-            #Nothing outside GitHub Actions or Azure Pipelines, so local builds don't record any of this
-            $ciProvenance = Get-MFCIProvenance
+            #Nothing outside GitHub Actions or Azure Pipelines, so local builds don't record any of this.
+            #The project's sourceProvenance setting decides how much: Auto (the default, and for configs made before
+            #the setting existed), Full, Minimal or None. A private repository isn't named in the module unless it asks
+            $sourceProvenance = if($config.sourceProvenance){ "$($config.sourceProvenance)" }else{ 'Auto' }
+            if($sourceProvenance -notin 'Auto','Full','Minimal','None')
+            {
+                throw "sourceProvenance in $ConfigFile is '$sourceProvenance'. It should be Auto, Full, Minimal or None. Set it with Update-MFProject -SourceProvenance"
+            }
+            $ciProvenance = if($sourceProvenance -ne 'None'){ Get-MFCIProvenance -Detail $sourceProvenance }else{ write-verbose 'sourceProvenance is None, so no CI source is recorded' }
             $ciHeader = if($ciProvenance){ ($ciProvenance.GetEnumerator().ForEach{ "`n`tSource $($_.Key): $($_.Value)" }) -join '' }
             $moduleHeader = "<#`nModule built with ModuleForge`n`t ModuleForge Version: $mfVersion`n`tModuleForge psd1 SHA256: $mfPsd1Hash`n`tModuleForge psm1 SHA256: $mfPsm1Hash`n`tBuildDate: $mfBuildDate$ciHeader`n#>"
         }

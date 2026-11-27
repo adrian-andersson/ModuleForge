@@ -358,7 +358,11 @@ foreach($file in $settingsFiles)
     $ruleSet.Unconfirmed = @($ruleNames.Where{ !($settings.Rules -and $settings.Rules[$_] -and $settings.Rules[$_].Enable) })
 
     #An explicit rule list is what keeps the default rules out
-    'IncludeDefaultRules','CustomRulePath','RecurseCustomRulePath'.ForEach{ $settings.Remove($_) }
+    #A loop, not 'a','b','c'.ForEach{}, which only acts on the last name and writes the others to the output
+    foreach($key in 'IncludeDefaultRules','CustomRulePath','RecurseCustomRulePath')
+    {
+        $settings.Remove($key)
+    }
     $settings.IncludeRules = [string[]]$ruleNames
     $ruleSet.Splat = @{ Settings = $settings }
 }

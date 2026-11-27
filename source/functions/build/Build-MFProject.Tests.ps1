@@ -443,18 +443,25 @@ describe 'Build-MFProject with NoBuildProvenance' {
 describe 'Build-MFProject records the CI source and run' {
     beforeAll {
         #These tests set the CI variables themselves, so they run the same locally and inside GitHub Actions
-        $ciVariables = 'GITHUB_ACTIONS','GITHUB_SERVER_URL','GITHUB_REPOSITORY','GITHUB_SHA','GITHUB_REF_NAME','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','TF_BUILD'
+        $ciVariables = 'GITHUB_ACTIONS','GITHUB_SERVER_URL','GITHUB_REPOSITORY','GITHUB_SHA','GITHUB_REF_NAME','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','GITHUB_EVENT_PATH','TF_BUILD'
         $savedCiVariables = @{}
         foreach($name in $ciVariables){ $savedCiVariables[$name] = [Environment]::GetEnvironmentVariable($name) }
         $getManifestData = { (Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname).PrivateData }
         $getPsm1 = { Get-Content -Path (get-childItem -path 'build' -recurse -filter '*.psm1').fullname -Raw }
+        #GitHub event data saying whether the repository is public, which decides how much the default records
+        $publicEvent = join-path $TestDrive 'publicEvent.json'
+        '{"repository":{"private":false,"visibility":"public"}}' | Set-Content -Path $publicEvent
+        $privateEvent = join-path $TestDrive 'privateEvent.json'
+        '{"repository":{"private":true,"visibility":"private"}}' | Set-Content -Path $privateEvent
+        $setSourceProvenance = { param($value) $configPath = join-path $testPath 'moduleForgeConfig.xml'; $config = Import-Clixml $configPath; $config | Add-Member -NotePropertyName 'sourceProvenance' -NotePropertyValue $value -Force; $config | Export-Clixml $configPath }
         Set-Location $testPath
     }
     afterEach {
         foreach($name in $ciVariables){ [Environment]::SetEnvironmentVariable($name, $savedCiVariables[$name]) }
     }
-    it 'Should record the commit and run when built in GitHub Actions' {
+    it 'Should record the commit and run when built in a public GitHub repository' {
         $env:TF_BUILD = $null
+        $env:GITHUB_EVENT_PATH = $publicEvent
         $env:GITHUB_ACTIONS = 'true'
         $env:GITHUB_SERVER_URL = 'https://github.com'
         $env:GITHUB_REPOSITORY = 'contoso/TestModule'
@@ -510,6 +517,71 @@ describe 'Build-MFProject records the CI source and run' {
         $privateData.TestKey | Should -Be 'TestValue'
         $privateData.ModuleForge.Version | Should -Not -BeNullOrEmpty
         $privateData.PSData | Should -Not -BeNullOrEmpty
+    }
+    it 'Should not name a private GitHub repository in the module' {
+        $env:TF_BUILD = $null
+        $env:GITHUB_ACTIONS = 'true'
+        $env:GITHUB_EVENT_PATH = $privateEvent
+        $env:GITHUB_SERVER_URL = 'https://github.com'
+        $env:GITHUB_REPOSITORY = 'contoso/SecretProject'
+        $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $env:GITHUB_REF_NAME = 'feature/customer-x'
+        $env:GITHUB_RUN_ID = '123456789'
+        Build-MFProject -version '1.0.0-PREv012'
+        $source = (& $getManifestData).ModuleForge.Source
+        $source.Commit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $source.RunId | Should -Be '123456789'
+        $source.Repository | Should -BeNullOrEmpty
+        $source.RunUrl | Should -BeNullOrEmpty
+        $source.Branch | Should -BeNullOrEmpty
+        $everything = (& $getPsm1) + (Get-Content -Path (get-childItem -path 'build' -recurse -filter '*.psd1').fullname -Raw)
+        $everything | Should -Not -BeLike '*SecretProject*'
+        $everything | Should -Not -BeLike '*customer-x*'
+    }
+    it 'Should name a private repository when the project sets sourceProvenance to Full' {
+        & $setSourceProvenance 'Full'
+        try{
+            $env:TF_BUILD = $null
+            $env:GITHUB_ACTIONS = 'true'
+            $env:GITHUB_EVENT_PATH = $privateEvent
+            $env:GITHUB_SERVER_URL = 'https://github.com'
+            $env:GITHUB_REPOSITORY = 'contoso/SecretProject'
+            $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+            Build-MFProject -version '1.0.0-PREv013'
+            (& $getManifestData).ModuleForge.Source.Repository | Should -Be 'https://github.com/contoso/SecretProject'
+        }finally{
+            & $setSourceProvenance 'Auto'
+        }
+    }
+    it 'Should record no CI source when the project sets sourceProvenance to None' {
+        & $setSourceProvenance 'None'
+        try{
+            $env:TF_BUILD = $null
+            $env:GITHUB_ACTIONS = 'true'
+            $env:GITHUB_EVENT_PATH = $publicEvent
+            $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+            Build-MFProject -version '1.0.0-PREv014'
+            $privateData = & $getManifestData
+            $privateData.ModuleForge.Version | Should -Not -BeNullOrEmpty
+            $privateData.ModuleForge.Source | Should -BeNullOrEmpty
+            & $getPsm1 | Should -Not -BeLike '*Source Commit:*'
+        }finally{
+            & $setSourceProvenance 'Auto'
+        }
+    }
+    it 'Should stop on a sourceProvenance setting it does not know' {
+        & $setSourceProvenance 'Everything'
+        try{
+            { Build-MFProject -version '1.0.0-PREv015' } | Should -Throw '*Auto, Full, Minimal or None*'
+        }finally{
+            & $setSourceProvenance 'Auto'
+        }
+    }
+    it 'Should record the build date with its UTC offset' {
+        $env:GITHUB_ACTIONS = $null
+        $env:TF_BUILD = $null
+        Build-MFProject -version '1.0.0-PREv016'
+        (& $getManifestData).ModuleForge.BuildDate | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$'
     }
     it 'Should not record a CI source for a local build' {
         $env:GITHUB_ACTIONS = $null

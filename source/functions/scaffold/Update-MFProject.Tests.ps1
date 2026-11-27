@@ -112,6 +112,17 @@ Describe 'Update-MFProject' {
         (Import-Clixml -Path $moduleConfig).testDependencies | Should -Be 'All'
     }
 
+    It 'Should add sourceProvenance to a config made before the setting existed' {
+        $config = Import-Clixml -Path $moduleConfig
+        $config.PSObject.Properties.Remove('sourceProvenance')
+        $config | Export-Clixml -Path $moduleConfig
+        Update-MFProject -SourceProvenance Minimal
+        (Import-Clixml -Path $moduleConfig).sourceProvenance | Should -Be 'Minimal'
+    }
+
+    It 'Should reject an unknown sourceProvenance setting' {
+        { Update-MFProject -SourceProvenance Everything } | Should -Throw
+    }
     It 'Should change an existing testDependencies setting' {
         Update-MFProject -TestDependencies None
         (Import-Clixml -Path $moduleConfig).testDependencies | Should -Be 'None'

@@ -65,6 +65,14 @@ function New-MFProject
         [Parameter()]
         [ValidateSet('None','PesterAndScriptAnalyzer','All')]
         [string]$TestDependencies = 'PesterAndScriptAnalyzer',
+        #How much of the CI source a build records in the module, for builds in GitHub Actions or Azure Pipelines.
+        #Auto records the repository, branch and run URL only when the repository is public, on GitHub; Full always
+        #records them; Minimal records only the commit, run ID and attempt, which reveal nothing without access to the
+        #repository; None records no CI source. A published module can't be unpublished, so private repositories
+        #shouldn't have their names in it by default
+        [Parameter()]
+        [ValidateSet('Auto','Full','Minimal','None')]
+        [string]$SourceProvenance = 'Auto',
         #Who are the primary module authors. Can be updated later with Update-MFProject
         [Parameter()]
         [string[]]$ModuleAuthors,
@@ -176,6 +184,7 @@ function New-MFProject
             description = $description
             minimumPsVersion = $minimumPsVersion
             testDependencies = $TestDependencies
+            sourceProvenance = $SourceProvenance
             moduleAuthors = [array]$moduleAuthors
             companyName = $companyName
             tags = [array]$moduleTags
