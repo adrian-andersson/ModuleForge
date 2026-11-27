@@ -265,6 +265,9 @@ Describe 'New-MFProject trims a trailing path separator' {
     It 'Should default testDependencies to Pester and PSScriptAnalyzer' {
         (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).testDependencies | Should -Be 'PesterAndScriptAnalyzer'
     }
+    It 'Should default sourceProvenance to Auto, so a private repository is not named in its modules' {
+        (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).sourceProvenance | Should -Be 'Auto'
+    }
     It 'Should default the minimum PowerShell version to the current LTS' {
         (Import-Clixml -Path (join-path $testPath -ChildPath 'moduleForgeConfig.xml')).minimumPsVersion | Should -Be ([version]'7.6.0')
     }
