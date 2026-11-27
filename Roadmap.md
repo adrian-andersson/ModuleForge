@@ -4,7 +4,7 @@
 
 Built out over a series of prereleases. At a confidence point, review what's left, move it to 1.6, then release 1.5.0 as stable.
 
-- [x] **Stronger build provenance** (1.5.0-prev001). Builds in GitHub Actions or Azure Pipelines add values that can be checked against the CI platform to the `.psm1` header and the manifest `PrivateData` (`ModuleForgeBuildSource*`), beside the ModuleForge version, hashes and build date:
+- [x] **Stronger build provenance** (1.5.0-prev001). Builds in GitHub Actions or Azure Pipelines add values that can be checked against the CI platform to the `.psm1` header and the manifest, beside the ModuleForge version, hashes and build date. In the manifest they're one section, `PrivateData.ModuleForge`, with the CI values under `Source` (1.5.0-prev002):
   - The commit SHA and branch. `include_source_metadata` already records these, but only in the package metadata, which is lost once the module is installed
   - The repository, and the run ID, attempt and URL (`GITHUB_RUN_ID` / `GITHUB_RUN_ATTEMPT`; Azure DevOps `Build.BuildId`). Unique per build like a GUID, and it leads to the run's logs and release plan
   - Detected from the platform's own environment variables, so no workflow changes are needed. Local builds leave them out, and `-NoBuildProvenance` turns all of it off
