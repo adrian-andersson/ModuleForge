@@ -72,7 +72,7 @@
   - Prefer PowerShell 7.6+ and PSResourceGet (`Install-PSResource`) over Windows PowerShell and PowerShellGet (`Install-Module`), plus a note on PowerShell 7.6 (content to confirm)
   - Links to the ModuleForge docs, repository and PowerShell Gallery page
   - For AI agents especially:
-    - Copy-ready skeletons for a function (help block with `.EXAMPLE`, `CmdletBinding`, the verbose and debug lines) and its test (project root walk-up, `Get-MFTestDependency`, clean environment check). Agents copy what they're shown more reliably than they follow descriptions
+    - Recommended samples, not rules: a function (help block with `.EXAMPLE`, `CmdletBinding`, the verbose and debug lines) and its test (project root walk-up, `Get-MFTestDependency`, clean environment check), ready to copy. Agents copy what they're shown more reliably than they follow descriptions
     - A definition of done for a change: function, test, help example, lint and Project Rules clean, prefixed commit
     - What not to touch: `build/`, generated `docs/functions`, `.example` files unless enabling one, and the pins in `BuildDependencies.psd1`
     - Where project settings live: `moduleForgeConfig.xml` for manifest data, `RequiredModules` and `testDependencies`
