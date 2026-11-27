@@ -13,9 +13,9 @@ function Build-MFProject
             Create a new module manifest from the parameters saved with new-mfProject
             Tag as a pre-release if a semverPreRelease label is found
 
-            Records build provenance in the psm1 header and the manifest PrivateData: the ModuleForge version and
+            Records build provenance in the psm1 header and a ModuleForge section in the manifest PrivateData: the ModuleForge version and
             SHA256 hashes, and the build date. When the build runs in GitHub Actions or Azure Pipelines, it also
-            records the repository, commit, branch, run ID, run attempt and run URL, as ModuleForgeBuildSource* keys,
+            records the repository, commit, branch, run ID, run attempt and run URL, in a Source group,
             so an installed module can be traced back to the exact source and run that built it. Local builds
             leave these out. -NoBuildProvenance turns all of it off.
 
@@ -57,7 +57,7 @@ function Build-MFProject
         #If set, appends the release notes to the module description in the manifest
         [Parameter()]
         [switch]$IncludeReleaseNotesInDescription,
-        #If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForgeBuild* keys in
+        #If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForge section in
         #the manifest PrivateData, including the CI source and run). Provenance is on by default - the SHA256 hashes it records match the checksums
         #published on the ModuleForge release, so impacted builds can be traced if a vulnerability is found in the tooling
         [Parameter()]
@@ -472,25 +472,29 @@ function Build-MFProject
         }elseif(!$NoBuildProvenance){
             $splatManifest.PrivateData = @{}
         }
-        #ModuleForge build provenance. Added as flat scalar keys (not a nested hashtable) because
-        #New-ModuleManifest stringifies a nested hashtable in custom PrivateData to 'System.Collections.Hashtable',
-        #losing the values. Scalar keys serialise natively and sit alongside the PSData block the cmdlet generates.
-        #These SHA256 hashes match the checksums published on the corresponding ModuleForge GitHub release,
-        #so a consumer can verify which ModuleForge build produced this module. Skipped when -NoBuildProvenance is set.
+        #ModuleForge build provenance, as one PrivateData.ModuleForge section beside PSData. The SHA256 hashes match
+        #the checksums on the ModuleForge GitHub release, and the Source values can be checked against the CI platform.
+        #New-ModuleManifest writes a nested hashtable in custom PrivateData as 'System.Collections.Hashtable', losing
+        #its values, so it gets a placeholder here, and the section is written over it once the manifest exists.
+        #Skipped when -NoBuildProvenance is set.
+        $provenancePlaceholder = 'ModuleForgeProvenancePlaceholder'
         if(!$NoBuildProvenance)
         {
-            $splatManifest.PrivateData.ModuleForgeBuildVersion    = $mfVersion
-            $splatManifest.PrivateData.ModuleForgeBuildPsd1SHA256 = $mfPsd1Hash
-            $splatManifest.PrivateData.ModuleForgeBuildPsm1SHA256 = $mfPsm1Hash
-            $splatManifest.PrivateData.ModuleForgeBuildDate       = $mfBuildDate
-            #The CI run and commit, as ModuleForgeBuildSource* keys. Each can be checked against the CI platform
+            if($splatManifest.PrivateData.ContainsKey('ModuleForge'))
+            {
+                write-warning 'PrivateData already has a ModuleForge key in moduleForgeConfig.xml. It is replaced by the ModuleForge build provenance'
+            }
+            $provenance = [ordered]@{
+                Version    = $mfVersion
+                Psd1SHA256 = $mfPsd1Hash
+                Psm1SHA256 = $mfPsm1Hash
+                BuildDate  = $mfBuildDate
+            }
             if($ciProvenance)
             {
-                foreach($entry in $ciProvenance.GetEnumerator())
-                {
-                    $splatManifest.PrivateData["ModuleForgeBuildSource$($entry.Key)"] = $entry.Value
-                }
+                $provenance.Source = $ciProvenance
             }
+            $splatManifest.PrivateData.ModuleForge = $provenancePlaceholder
         }
 
         #FunctionsToExport
@@ -540,6 +544,24 @@ function Build-MFProject
 
         $splatManifest.ModuleVersion = $Version
         New-ModuleManifest @splatManifest
+
+        if(!$NoBuildProvenance)
+        {
+            write-verbose 'Writing the ModuleForge build provenance section into the manifest'
+            $manifestText = Get-Content -Path $manifestFile -Raw
+            $placeholderPattern = "(?m)^(?<indent>[ \t]*)ModuleForge = '$provenancePlaceholder'[ \t]*\r?$"
+            $placeholderMatch = [regex]::Match($manifestText, $placeholderPattern)
+            if(!$placeholderMatch.Success)
+            {
+                throw 'Unable to find where to write the ModuleForge build provenance in the manifest'
+            }
+            $newline = if($manifestText.Contains("`r`n")){ "`r`n" }else{ "`n" }
+            $section = (Format-MFManifestBlock -Name 'ModuleForge' -Data $provenance -Indent $placeholderMatch.Groups['indent'].Value) -replace "`n",$newline
+            $manifestText = $manifestText.Remove($placeholderMatch.Index, $placeholderMatch.Length).Insert($placeholderMatch.Index, $section)
+            Set-Content -Path $manifestFile -Value $manifestText -NoNewline -Encoding utf8
+            #Stop rather than publish a manifest that doesn't load
+            $null = Import-PowerShellDataFile -Path $manifestFile -ErrorAction Stop
+        }
         Write-Information 'Created Module Manifest' -tags 'CreatedModuleManifest'
     }
     

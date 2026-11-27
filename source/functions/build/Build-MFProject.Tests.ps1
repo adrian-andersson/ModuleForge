@@ -17,6 +17,7 @@ BeforeAll{
     $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'ConvertTo-MFSafeUri.ps1'
         'Get-MFCIProvenance.ps1'
+        'Format-MFManifestBlock.ps1'
         'Get-MFFolderItems.ps1'
         'Get-MFDependencyTree.ps1'
         'Get-MFFolderItemDetails.ps1'
@@ -237,11 +238,11 @@ describe 'Build-MFProject' {
         #than a nested hashtable because New-ModuleManifest stringifies nested hashtables in custom PrivateData
         $psd = (get-childItem -path 'build' -recurse -filter '*.psd1').fullname
         $privateData = (Import-PowerShellDataFile -Path $psd).PrivateData
-        $privateData.ModuleForgeBuildVersion | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForge.Version | Should -Not -BeNullOrEmpty
         #Hashes are lower-case SHA256 hex, or 'unknown' when the ModuleForge files cannot be located
-        $privateData.ModuleForgeBuildPsd1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
-        $privateData.ModuleForgeBuildPsm1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
-        $privateData.ModuleForgeBuildDate | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForge.Psd1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
+        $privateData.ModuleForge.Psm1SHA256 | Should -Match '^([a-f0-9]{64}|unknown)$'
+        $privateData.ModuleForge.BuildDate | Should -Not -BeNullOrEmpty
     }
 
     It 'Should export the aliases of public functions by name' {
@@ -424,9 +425,8 @@ describe 'Build-MFProject with NoBuildProvenance' {
     }
     it 'Should not write ModuleForge build provenance to the manifest' {
         $privateData = (Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname).PrivateData
-        $privateData.ModuleForgeBuildVersion | Should -BeNullOrEmpty
-        $privateData.ModuleForgeBuildPsd1SHA256 | Should -BeNullOrEmpty
-        $privateData.ModuleForgeBuildPsm1SHA256 | Should -BeNullOrEmpty
+        $privateData.ModuleForge | Should -BeNullOrEmpty
+        @($privateData.Keys | Where-Object { $_ -like 'ModuleForge*' }) | Should -BeNullOrEmpty
     }
     it 'Should keep any custom PrivateData even with provenance suppressed' {
         #The switch only drops ModuleForge provenance, not the author's own PrivateData
@@ -464,13 +464,13 @@ describe 'Build-MFProject records the CI source and run' {
         $env:GITHUB_RUN_ATTEMPT = '2'
         Build-MFProject -version '1.0.0-PREv006'
         $privateData = & $getManifestData
-        $privateData.ModuleForgeBuildSourcePlatform | Should -Be 'GitHub Actions'
-        $privateData.ModuleForgeBuildSourceRepository | Should -Be 'https://github.com/contoso/TestModule'
-        $privateData.ModuleForgeBuildSourceCommit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
-        $privateData.ModuleForgeBuildSourceBranch | Should -Be 'main'
-        $privateData.ModuleForgeBuildSourceRunId | Should -Be '123456789'
-        $privateData.ModuleForgeBuildSourceRunAttempt | Should -Be '2'
-        $privateData.ModuleForgeBuildSourceRunUrl | Should -Be 'https://github.com/contoso/TestModule/actions/runs/123456789'
+        $privateData.ModuleForge.Source.Platform | Should -Be 'GitHub Actions'
+        $privateData.ModuleForge.Source.Repository | Should -Be 'https://github.com/contoso/TestModule'
+        $privateData.ModuleForge.Source.Commit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $privateData.ModuleForge.Source.Branch | Should -Be 'main'
+        $privateData.ModuleForge.Source.RunId | Should -Be '123456789'
+        $privateData.ModuleForge.Source.RunAttempt | Should -Be '2'
+        $privateData.ModuleForge.Source.RunUrl | Should -Be 'https://github.com/contoso/TestModule/actions/runs/123456789'
         $psm1 = & $getPsm1
         $psm1 | Should -BeLike '*Source Commit: a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf*'
         $psm1 | Should -BeLike '*Source RunUrl: https://github.com/contoso/TestModule/actions/runs/123456789*'
@@ -481,17 +481,43 @@ describe 'Build-MFProject records the CI source and run' {
         $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
         Build-MFProject -version '1.0.0-PREv007'
         $privateData = & $getManifestData
-        $privateData.ModuleForgeBuildVersion | Should -Not -BeNullOrEmpty
-        $privateData.ModuleForgeBuildDate | Should -Not -BeNullOrEmpty
-        $privateData.ModuleForgeBuildSourceCommit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $privateData.ModuleForge.Version | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForge.BuildDate | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForge.Source.Commit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+    }
+    it 'Should write the provenance as one ModuleForge section, with the CI values in a Source group' {
+        $env:TF_BUILD = $null
+        $env:GITHUB_ACTIONS = 'true'
+        $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $env:GITHUB_REF_NAME = 'main'
+        Build-MFProject -version '1.0.0-PREv010'
+        $privateData = & $getManifestData
+        @($privateData.Keys | Where-Object { $_ -like 'ModuleForge*' }) | Should -Be @('ModuleForge')
+        $privateData.ModuleForge | Should -BeOfType [hashtable]
+        $privateData.ModuleForge.Source | Should -BeOfType [hashtable]
+        $manifestText = Get-Content -Path (get-childItem -path 'build' -recurse -filter '*.psd1').fullname -Raw
+        $manifestText | Should -Not -BeLike '*ModuleForgeProvenancePlaceholder*'
+        $manifestText | Should -Not -BeLike '*System.Collections*'
+        #In a fixed order, so the section reads the same in every build
+        $manifestText.IndexOf("Version = '") | Should -BeLessThan $manifestText.IndexOf("BuildDate = '")
+        $manifestText.IndexOf("BuildDate = '") | Should -BeLessThan $manifestText.IndexOf('Source = @{')
+    }
+    it 'Should keep the custom PrivateData beside the ModuleForge section' {
+        $env:GITHUB_ACTIONS = $null
+        $env:TF_BUILD = $null
+        Build-MFProject -version '1.0.0-PREv011'
+        $privateData = & $getManifestData
+        $privateData.TestKey | Should -Be 'TestValue'
+        $privateData.ModuleForge.Version | Should -Not -BeNullOrEmpty
+        $privateData.PSData | Should -Not -BeNullOrEmpty
     }
     it 'Should not record a CI source for a local build' {
         $env:GITHUB_ACTIONS = $null
         $env:TF_BUILD = $null
         Build-MFProject -version '1.0.0-PREv008'
         $privateData = & $getManifestData
-        $privateData.ModuleForgeBuildVersion | Should -Not -BeNullOrEmpty
-        @($privateData.Keys | Where-Object { $_ -like 'ModuleForgeBuildSource*' }) | Should -BeNullOrEmpty
+        $privateData.ModuleForge.Version | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForge.Source | Should -BeNullOrEmpty
         & $getPsm1 | Should -Not -BeLike '*Source Commit:*'
     }
     it 'Should not record a CI source with -NoBuildProvenance' {
@@ -500,7 +526,7 @@ describe 'Build-MFProject records the CI source and run' {
         $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
         Build-MFProject -version '1.0.0-PREv009' -NoBuildProvenance
         $privateData = & $getManifestData
-        @($privateData.Keys | Where-Object { $_ -like 'ModuleForgeBuild*' }) | Should -BeNullOrEmpty
+        $privateData.ModuleForge | Should -BeNullOrEmpty
         & $getPsm1 | Should -Not -BeLike '*Source Commit:*'
     }
 }
