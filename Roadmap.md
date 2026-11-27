@@ -15,7 +15,7 @@ Built out over a series of prereleases. At a confidence point, review what's lef
   - `Build-MFProject` never compares the source files it found with what it wrote
   - Fix: fail the build on any job error or parse error, then check every source file was processed and every public function is in `FunctionsToExport` and the `.psm1`. Build Test only catches missing *public* functions, after publishing, and only where it's enabled
 - [ ] **`CrossPlatform` Project Rules template** - flags code that works on Windows but not Linux or macOS: hard-coded `\` path separators (use `Join-Path` or `[IO.Path]::DirectorySeparatorChar`), Windows-only environment variables (`$env:USERPROFILE`, `$env:APPDATA`, `$env:TEMP`, `$env:COMPUTERNAME`, `$env:USERNAME`), Windows-only commands and modules (`Resolve-DnsName`, `Get-WmiObject`, `Get-CimInstance`, the registry provider, `Get-EventLog`, `*-Service`, `Get-Acl` and friends), `.exe` assumptions, and case-sensitive file name mismatches. Information severity where it might be guarded by an `$IsWindows` check, Warning otherwise
-- [ ] **`New-MFProject -AddQuickstart`**, and `Add-MFQuickstart` for existing projects - adds `QUICKSTART.md` to the project root: the project's conventions in one place, for people and for AI-assisted development ("read QUICKSTART.md and follow its conventions"). It covers:
+- [ ] **`New-MFProject -AddConventions`**, and `Add-MFConventions` for existing projects - adds `CONVENTIONS.md` to the project root: the project's conventions in one place, for people and for AI-assisted development ("read CONVENTIONS.md and follow it"). Named conventions rather than quickstart, as it covers far more than getting started. It covers:
   - Folder layout and grouping files into subfolders, one function per file named after it, and the `functions` / `private` / `classes` / `enums` / `validationClasses` split
   - Every function has its own Pester suite, beside it or in `tests/`, or both, whichever suits the project
   - The test dependency loader (`Get-MFTestDependency` and the walk-up to the project root) as a ready-to-copy scriptblock
@@ -23,6 +23,10 @@ Built out over a series of prereleases. At a confidence point, review what's lef
   - Commit prefixes, types of change and the release cycle: start a series once, Next Prerelease while iterating, Promote to Stable when done
   - A change is only breaking if it breaks something released as stable. Changing something that has only existed in the current prerelease series is not breaking, as prereleases make no compatibility promise
   - Aliases for functions, and keeping old parameter names as aliases so renames aren't breaking
+  - Single quotes unless the string needs expanding
+  - Large blocks of text go in a `.txt` file in `source/resource`, not in the code, with a sample of reading it in a function (`Join-Path $PSScriptRoot 'resource'`) and in its Pester test (`$mockPsScriptRoot`)
+  - Comments explain why, not what, such as "done this way to handle an edge case: …". Prefer `Write-Verbose`, and `Write-Warning` where appropriate, over a comment, so the explanation is there at runtime too
+  - `Write-Verbose` as progress markers in loops and between sections of code, so `-Verbose` shows where a run is. Not in very short loops, where it adds nothing
   - Argument completers, and that a completer function must be public (in `source/functions`) or it won't be found when the completer runs
   - The Project Rules in use, that they're advisory, to check with the project owner, and to write custom rules where they help
   - Adding operating systems to the Pester matrix where the module is cross-platform
