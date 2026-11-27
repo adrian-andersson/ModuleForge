@@ -21,6 +21,7 @@ Built out over a series of prereleases. At a confidence point, review what's lef
   - The test dependency loader (`Get-MFTestDependency` and the walk-up to the project root) as a ready-to-copy scriptblock
   - Mocking, so tests never depend on installed modules, and the `$mockPsScriptRoot` pattern for resources
   - Commit prefixes, types of change and the release cycle: start a series once, Next Prerelease while iterating, Promote to Stable when done
+  - A change is only breaking if it breaks something released as stable. Changing something that has only existed in the current prerelease series is not breaking, as prereleases make no compatibility promise
   - Aliases for functions, and keeping old parameter names as aliases so renames aren't breaking
   - Argument completers, and that a completer function must be public (in `source/functions`) or it won't be found when the completer runs
   - The Project Rules in use, that they're advisory, to check with the project owner, and to write custom rules where they help
