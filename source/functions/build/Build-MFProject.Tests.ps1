@@ -16,6 +16,7 @@ BeforeAll{
     #Dependencies by filename anywhere under source/, loaded in this order. Throws if a name is missing or found more than once
     $dependencies = & (join-path -path $sourcePath -childPath 'resource' -AdditionalChildPath 'scripts','Get-MFTestDependency.ps1') -SourcePath $sourcePath -Name @(
         'ConvertTo-MFSafeUri.ps1'
+        'Get-MFCIProvenance.ps1'
         'Get-MFFolderItems.ps1'
         'Get-MFDependencyTree.ps1'
         'Get-MFFolderItemDetails.ps1'
@@ -436,6 +437,71 @@ describe 'Build-MFProject with NoBuildProvenance' {
         $psm1 = Get-Content -Path (get-childItem -path 'build' -recurse -filter '*.psm1').fullname -Raw
         $psm1 | Should -Not -BeLike '*built with ModuleForge*'
         $psm1 | Should -Not -BeLike '*ModuleForge psm1 SHA256:*'
+    }
+}
+
+describe 'Build-MFProject records the CI source and run' {
+    beforeAll {
+        #These tests set the CI variables themselves, so they run the same locally and inside GitHub Actions
+        $ciVariables = 'GITHUB_ACTIONS','GITHUB_SERVER_URL','GITHUB_REPOSITORY','GITHUB_SHA','GITHUB_REF_NAME','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','TF_BUILD'
+        $savedCiVariables = @{}
+        foreach($name in $ciVariables){ $savedCiVariables[$name] = [Environment]::GetEnvironmentVariable($name) }
+        $getManifestData = { (Import-PowerShellDataFile (get-childItem -path 'build' -recurse -filter '*.psd1').fullname).PrivateData }
+        $getPsm1 = { Get-Content -Path (get-childItem -path 'build' -recurse -filter '*.psm1').fullname -Raw }
+        Set-Location $testPath
+    }
+    afterEach {
+        foreach($name in $ciVariables){ [Environment]::SetEnvironmentVariable($name, $savedCiVariables[$name]) }
+    }
+    it 'Should record the commit and run when built in GitHub Actions' {
+        $env:TF_BUILD = $null
+        $env:GITHUB_ACTIONS = 'true'
+        $env:GITHUB_SERVER_URL = 'https://github.com'
+        $env:GITHUB_REPOSITORY = 'contoso/TestModule'
+        $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $env:GITHUB_REF_NAME = 'main'
+        $env:GITHUB_RUN_ID = '123456789'
+        $env:GITHUB_RUN_ATTEMPT = '2'
+        Build-MFProject -version '1.0.0-PREv006'
+        $privateData = & $getManifestData
+        $privateData.ModuleForgeBuildSourcePlatform | Should -Be 'GitHub Actions'
+        $privateData.ModuleForgeBuildSourceRepository | Should -Be 'https://github.com/contoso/TestModule'
+        $privateData.ModuleForgeBuildSourceCommit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        $privateData.ModuleForgeBuildSourceBranch | Should -Be 'main'
+        $privateData.ModuleForgeBuildSourceRunId | Should -Be '123456789'
+        $privateData.ModuleForgeBuildSourceRunAttempt | Should -Be '2'
+        $privateData.ModuleForgeBuildSourceRunUrl | Should -Be 'https://github.com/contoso/TestModule/actions/runs/123456789'
+        $psm1 = & $getPsm1
+        $psm1 | Should -BeLike '*Source Commit: a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf*'
+        $psm1 | Should -BeLike '*Source RunUrl: https://github.com/contoso/TestModule/actions/runs/123456789*'
+    }
+    it 'Should keep the ModuleForge provenance beside the CI source' {
+        $env:TF_BUILD = $null
+        $env:GITHUB_ACTIONS = 'true'
+        $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        Build-MFProject -version '1.0.0-PREv007'
+        $privateData = & $getManifestData
+        $privateData.ModuleForgeBuildVersion | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForgeBuildDate | Should -Not -BeNullOrEmpty
+        $privateData.ModuleForgeBuildSourceCommit | Should -Be 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+    }
+    it 'Should not record a CI source for a local build' {
+        $env:GITHUB_ACTIONS = $null
+        $env:TF_BUILD = $null
+        Build-MFProject -version '1.0.0-PREv008'
+        $privateData = & $getManifestData
+        $privateData.ModuleForgeBuildVersion | Should -Not -BeNullOrEmpty
+        @($privateData.Keys | Where-Object { $_ -like 'ModuleForgeBuildSource*' }) | Should -BeNullOrEmpty
+        & $getPsm1 | Should -Not -BeLike '*Source Commit:*'
+    }
+    it 'Should not record a CI source with -NoBuildProvenance' {
+        $env:TF_BUILD = $null
+        $env:GITHUB_ACTIONS = 'true'
+        $env:GITHUB_SHA = 'a44b41efcf2c1eac6a1f66d9c0633f8660da8eaf'
+        Build-MFProject -version '1.0.0-PREv009' -NoBuildProvenance
+        $privateData = & $getManifestData
+        @($privateData.Keys | Where-Object { $_ -like 'ModuleForgeBuild*' }) | Should -BeNullOrEmpty
+        & $getPsm1 | Should -Not -BeLike '*Source Commit:*'
     }
 }
 

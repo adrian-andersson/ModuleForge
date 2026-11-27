@@ -13,6 +13,12 @@ function Build-MFProject
             Create a new module manifest from the parameters saved with new-mfProject
             Tag as a pre-release if a semverPreRelease label is found
 
+            Records build provenance in the psm1 header and the manifest PrivateData: the ModuleForge version and
+            SHA256 hashes, and the build date. When the build runs in GitHub Actions or Azure Pipelines, it also
+            records the repository, commit, branch, run ID, run attempt and run URL, as ModuleForgeBuildSource* keys,
+            so an installed module can be traced back to the exact source and run that built it. Local builds
+            leave these out. -NoBuildProvenance turns all of it off.
+
         .EXAMPLE
             Build-MFProject -Version '0.12.2-prerelease.1'
             
@@ -52,7 +58,7 @@ function Build-MFProject
         [Parameter()]
         [switch]$IncludeReleaseNotesInDescription,
         #If set, omits the ModuleForge build provenance (the psm1 header marker and the ModuleForgeBuild* keys in
-        #the manifest PrivateData). Provenance is on by default - the SHA256 hashes it records match the checksums
+        #the manifest PrivateData, including the CI source and run). Provenance is on by default - the SHA256 hashes it records match the checksums
         #published on the ModuleForge release, so impacted builds can be traced if a vulnerability is found in the tooling
         [Parameter()]
         [switch]$NoBuildProvenance
@@ -173,7 +179,11 @@ function Build-MFProject
 
             #Single timestamp shared by the psm1 header and the manifest provenance block
             $mfBuildDate = get-date -format s
-            $moduleHeader = "<#`nModule built with ModuleForge`n`t ModuleForge Version: $mfVersion`n`tModuleForge psd1 SHA256: $mfPsd1Hash`n`tModuleForge psm1 SHA256: $mfPsm1Hash`n`tBuildDate: $mfBuildDate`n#>"
+            #The CI run and commit this was built from, so the module can be traced back to them once installed.
+            #Nothing outside GitHub Actions or Azure Pipelines, so local builds don't record any of this
+            $ciProvenance = Get-MFCIProvenance
+            $ciHeader = if($ciProvenance){ ($ciProvenance.GetEnumerator().ForEach{ "`n`tSource $($_.Key): $($_.Value)" }) -join '' }
+            $moduleHeader = "<#`nModule built with ModuleForge`n`t ModuleForge Version: $mfVersion`n`tModuleForge psd1 SHA256: $mfPsd1Hash`n`tModuleForge psm1 SHA256: $mfPsm1Hash`n`tBuildDate: $mfBuildDate$ciHeader`n#>"
         }
         $sourceFolder = join-path -path $ModulePath -childPath 'source'
 
@@ -473,6 +483,14 @@ function Build-MFProject
             $splatManifest.PrivateData.ModuleForgeBuildPsd1SHA256 = $mfPsd1Hash
             $splatManifest.PrivateData.ModuleForgeBuildPsm1SHA256 = $mfPsm1Hash
             $splatManifest.PrivateData.ModuleForgeBuildDate       = $mfBuildDate
+            #The CI run and commit, as ModuleForgeBuildSource* keys. Each can be checked against the CI platform
+            if($ciProvenance)
+            {
+                foreach($entry in $ciProvenance.GetEnumerator())
+                {
+                    $splatManifest.PrivateData["ModuleForgeBuildSource$($entry.Key)"] = $entry.Value
+                }
+            }
         }
 
         #FunctionsToExport
