@@ -67,7 +67,7 @@
   - Add `build/` and `coverage.xml` to `.gitignore`
   - Running Build and Release: the Release choice, the Pester gate, dry runs and reading the release plan
   - Enabling optional workflows: rename the `.example` file for now, until managed workflows replace that in 1.5.0
-- [ ] **Stronger build provenance.** Add values that can be checked against the CI platform to the provenance block in the `.psm1` header and manifest `PrivateData`, beside the ModuleForge version, hashes and build date already there. ModuleForge's own builds first:
+- [x] **Stronger build provenance.** Add values that can be checked against the CI platform to the provenance block in the `.psm1` header and manifest `PrivateData`, beside the ModuleForge version, hashes and build date already there. ModuleForge's own builds first:
   - The commit SHA and branch. `include_source_metadata` already records these, but only in the package metadata, which is lost once the module is installed
   - The repository, and the run ID, attempt and URL (`GITHUB_RUN_ID` / `GITHUB_RUN_ATTEMPT`; Azure DevOps `Build.BuildId`). Unique per build like a GUID, and it leads to the run's logs and release plan
   - Passed into `Build-MFProject` by the workflows, so local builds just leave them out. Respects `-NoBuildProvenance`
