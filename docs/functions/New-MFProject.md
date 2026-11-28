@@ -21,11 +21,12 @@ Capture some basic parameters, and create the scaffold file structure
 
 ```
 New-MFProject [-ModuleName] <string> [-Description] <string> [[-MinimumPsVersion] <version>]
- [[-TestDependencies] <string>] [[-ModuleAuthors] <string[]>] [[-CompanyName] <string>]
- [[-ModuleTags] <string[]>] [[-ModulePath] <string>] [[-ProjectUri] <string>] [[-IconUri] <string>]
- [[-LicenseUri] <string>] [[-ConfigFile] <string>] [[-RequiredModules] <Object[]>]
- [[-ExternalModuleDependencies] <string[]>] [[-DefaultCommandPrefix] <string>]
- [[-PrivateData] <hashtable>] [[-Scaffold] <string[]>] [-ProjectRules] [-WhatIf] [-Confirm]
+ [[-TestDependencies] <string>] [[-SourceProvenance] <string>] [[-ModuleAuthors] <string[]>]
+ [[-CompanyName] <string>] [[-ModuleTags] <string[]>] [[-ModulePath] <string>]
+ [[-ProjectUri] <string>] [[-IconUri] <string>] [[-LicenseUri] <string>] [[-ConfigFile] <string>]
+ [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <string[]>]
+ [[-DefaultCommandPrefix] <string>] [[-PrivateData] <hashtable>] [[-Scaffold] <string[]>]
+ [-ProjectRules] [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -96,7 +97,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 5
+  Position: 6
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -118,7 +119,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 11
+  Position: 12
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -161,7 +162,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 14
+  Position: 15
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -204,7 +205,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 13
+  Position: 14
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -225,7 +226,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 9
+  Position: 10
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -247,7 +248,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 10
+  Position: 11
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -291,7 +292,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 4
+  Position: 5
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -335,7 +336,7 @@ Aliases:
 - Path
 ParameterSets:
 - Name: (All)
-  Position: 7
+  Position: 8
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -357,7 +358,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 6
+  Position: 7
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -379,7 +380,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 15
+  Position: 16
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -424,7 +425,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 8
+  Position: 9
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -445,7 +446,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 12
+  Position: 13
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -468,7 +469,33 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 16
+  Position: 17
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -SourceProvenance
+
+How much of the CI source a build records in the module, for builds in GitHub Actions or Azure Pipelines.
+Auto records the repository, branch and run URL only when the repository is public, on GitHub; Full always
+records them; Minimal records only the commit, run ID and attempt, which reveal nothing without access to the
+repository; None records no CI source.
+A published module can't be unpublished, so private repositories
+shouldn't have their names in it by default
+
+```yaml
+Type: System.String
+DefaultValue: Auto
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 4
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
