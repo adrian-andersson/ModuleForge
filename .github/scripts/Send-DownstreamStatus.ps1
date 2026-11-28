@@ -73,18 +73,19 @@ try{
     $version = $Version.Trim().TrimStart('v')
     $api = "https://api.github.com/repos/$Repository"
 
-    #The commit the release tag points to, unless it was passed in. An annotated tag points to a tag object, which points to the commit
-    $sha = $Sha
-    if(!$sha)
+    #The commit the release tag points to, unless it was passed in. An annotated tag points to a tag object, which points to the commit.
+    #$commit, not $sha: PowerShell names ignore case, so $sha is the -Sha parameter, and keeps its validation
+    $commit = $Sha
+    if(!$commit)
     {
         $ref = Invoke-RestMethod -Uri "$api/git/ref/tags/v$version" -Headers $headers -ErrorAction Stop
-        $sha = $ref.object.sha
+        $commit = $ref.object.sha
         if($ref.object.type -eq 'tag')
         {
-            $sha = (Invoke-RestMethod -Uri "$api/git/tags/$sha" -Headers $headers -ErrorAction Stop).object.sha
+            $commit = (Invoke-RestMethod -Uri "$api/git/tags/$commit" -Headers $headers -ErrorAction Stop).object.sha
         }
     }
-    Write-Verbose "v$version is commit $sha"
+    Write-Verbose "v$version is commit $commit"
 
     $text = "$Trigger$(if($Description){": $Description"})"
     if($text.Length -gt 140){ $text = $text.Substring(0,137) + '...' }
@@ -95,7 +96,7 @@ try{
     }
     if($TargetUrl){ $status.target_url = $TargetUrl }
 
-    $null = Invoke-RestMethod -Method Post -Uri "$api/statuses/$sha" -Headers $headers -Body ($status | ConvertTo-Json) -ContentType 'application/json; charset=utf-8' -ErrorAction Stop
+    $null = Invoke-RestMethod -Method Post -Uri "$api/statuses/$commit" -Headers $headers -Body ($status | ConvertTo-Json) -ContentType 'application/json; charset=utf-8' -ErrorAction Stop
     Write-Information "Reported $State for '$Check' against ModuleForge v$version" -InformationAction Continue
 }catch{
     Write-Warning "Unable to report '$Check' to ModuleForge v$($Version): $($_.Exception.Message)"
