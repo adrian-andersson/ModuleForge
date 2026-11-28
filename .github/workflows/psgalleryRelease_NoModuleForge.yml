@@ -35,6 +35,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+      statuses: write #Report the publish on the release's commit, for its Downstream testing table
+      actions: write #Start the Downstream Status workflow, which a status posted with GITHUB_TOKEN doesn't
 
     steps:
 
@@ -86,6 +88,14 @@ jobs:
           Write-Output "tag_name=$($release.tagName)" >> $env:GITHUB_OUTPUT
           Write-Output "release_name=$($release.name)" >> $env:GITHUB_OUTPUT
           Write-Output "release_isPreRelease=$($release.isPrerelease)" >> $env:GITHUB_OUTPUT
+
+      - name: Report the publish has started
+        shell: pwsh
+        env:
+          DOWNSTREAM_STATUS_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.get_release.outputs.tag_name }}
+        run: |
+          ./.github/scripts/Send-DownstreamStatus.ps1 -Repository $env:GITHUB_REPOSITORY -Version $env:TAG_NAME -Check 'PSGallery / Publish' -State pending -Trigger manual -Description 'Publishing to the PowerShell Gallery'
 
       - name: Install dependencies #Only PSResourceGet, and only if the runner's is missing or too old, as Install-MFBuildDependencies does
         shell: pwsh
@@ -359,3 +369,27 @@ jobs:
         run: |
           write-verbose 'PSGallery publish completed successfully'
           write-verbose 'Tip: To verify without publishing, comment out the Publish-PSResource call and inspect the Install step verbose output'
+
+      - name: Report the publish result
+        #Always, so a failed publish is reported too
+        if: always() && steps.get_release.outputs.tag_name != ''
+        shell: pwsh
+        env:
+          DOWNSTREAM_STATUS_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.get_release.outputs.tag_name }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          $version = $env:TAG_NAME.TrimStart('v')
+          $state = switch($env:JOB_STATUS){ 'success' { 'success' } 'failure' { 'failure' } default { 'error' } }
+          $send = @{ Repository = $env:GITHUB_REPOSITORY; Version = $env:TAG_NAME; Check = 'PSGallery / Publish'; State = $state; Trigger = 'manual' }
+          if($state -eq 'success'){
+            $send.Description = 'Published to the PowerShell Gallery'
+            $send.TargetUrl = "https://www.powershellgallery.com/packages/ModuleForge/$version"
+          }else{
+            $send.Description = 'Publish did not finish'
+          }
+          ./.github/scripts/Send-DownstreamStatus.ps1 @send
+          #A status posted with GITHUB_TOKEN doesn't start workflows, so start the redraw directly. Never fails this run
+          gh workflow run downstreamStatus.yml --repo $env:GITHUB_REPOSITORY --ref main -f "tag=$($env:TAG_NAME)"
+          if($LASTEXITCODE -ne 0){ Write-Warning 'Unable to start the Downstream Status workflow'; $global:LASTEXITCODE = 0 }
