@@ -343,12 +343,14 @@ jobs:
           $version = $env:TAG_NAME.TrimStart('v')
           $target = "$($env:GITHUB_REPOSITORY_OWNER)/ModuleForge.Test.Public"
           write-verbose "Starting Build and Release in $target with ModuleForge $version from PSGallery"
-          #main, built with this exact ModuleForge. Only moduleforge_version is sent, so the other inputs use their defaults and the release is Next Prerelease.
-          #GitHub rejects inputs a workflow doesn't have, so this works with the workflow before and after its 1.4.1 release form
+          #main, built with this exact ModuleForge. The other inputs use their defaults, so the release is Next Prerelease.
+          #downstream_trigger marks the run as automatic in this release's Downstream testing table, as a run started here is a
+          #workflow_dispatch, like a manual one. GitHub rejects inputs a workflow doesn't have, so it needs to exist there
           $body = @{
             ref = 'main'
             inputs = @{
               moduleforge_version = $version
+              downstream_trigger = 'automatic'
             }
           } | ConvertTo-Json
           $headers = @{

@@ -456,12 +456,14 @@ jobs:
               write-warning "No pipeline named '$($env:AZD_PIPELINE)' in $($env:AZD_ORGANIZATION)/$($env:AZD_PROJECT)"
               exit 0
             }
-            #main, built with this exact ModuleForge. Only moduleforge_version is sent, so the release is the pipeline's default, Next Prerelease.
-            #Azure DevOps rejects parameters a pipeline doesn't have, so this works with the pipeline before and after its 1.4.1 release form
+            #main, built with this exact ModuleForge. The release is left at the pipeline's default, Next Prerelease.
+            #downstream_trigger marks the run as automatic in this release's Downstream testing table, as Azure DevOps records
+            #a run started through its API as manual. Azure DevOps rejects parameters a pipeline doesn't have, so it needs to exist there
             $body = @{
               resources = @{ repositories = @{ self = @{ refName = 'refs/heads/main' } } }
               templateParameters = @{
                 moduleforge_version = $env:NEXT_VERSION
+                downstream_trigger = 'automatic'
               }
             } | ConvertTo-Json -Depth 5
             $run = Invoke-RestMethod -Method Post -Uri "$pipelinesUri/$($pipeline.id)/runs?api-version=7.1" -Headers $headers -Body $body -ContentType 'application/json' -ErrorAction Stop
