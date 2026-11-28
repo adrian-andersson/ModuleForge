@@ -69,6 +69,7 @@ A few principles hold throughout:
 Every ModuleForge release page ends with a **Downstream testing** table, filled in as the checks run. Nobody writes it: each check reports its own result, and the release page is redrawn from them.
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 sequenceDiagram
     autonumber
     actor You as Maintainer
