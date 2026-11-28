@@ -1,0 +1,55 @@
+name: Downstream Status
+
+# Redraws the Downstream testing table in a release's notes, whenever a test repository reports a result
+# as a commit status named 'downstream/<Check> (<Version>)'. The table is rebuilt from every status on the
+# commit each time, so results that arrive together can't overwrite each other.
+#
+# Statuses posted with this repository's own GITHUB_TOKEN don't start workflows, so steps that run here
+# call the script directly instead. The manual trigger redraws one release on demand.
+
+on:
+  status:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to redraw, such as v1.5.0-prev003'
+        required: true
+        type: string
+
+permissions:
+  contents: write #Editing release notes
+  statuses: read
+
+#One redraw at a time per commit, queued rather than cancelled, so the last one always sees every result
+concurrency:
+  group: downstream-status-${{ github.event.sha || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  redraw:
+    #Only our statuses. Anything else posting statuses to this repository is ignored
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.context, 'downstream/')
+    runs-on: ubuntu-latest
+    #A redraw takes seconds. Don't let a stuck one wait for GitHub's 6 hour default
+    timeout-minutes: 5
+    steps:
+      - name: Checkout the scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Redraw the Downstream testing table
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_SHA: ${{ github.event.sha }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          $VerbosePreference = 'Continue'
+          #GITHUB_SHA is the default branch for a status event, so the commit comes from the event itself
+          if($env:TAG){
+            ./.github/scripts/Update-DownstreamTesting.ps1 -Repository $env:GITHUB_REPOSITORY -Tag $env:TAG
+          }else{
+            ./.github/scripts/Update-DownstreamTesting.ps1 -Repository $env:GITHUB_REPOSITORY -Sha $env:EVENT_SHA
+          }
