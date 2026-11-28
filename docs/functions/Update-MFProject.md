@@ -21,9 +21,9 @@ Update the parameters of a moduleForge project
 
 ```
 Update-MFProject [[-ModuleName] <string>] [[-Description] <string>] [[-MinimumPsVersion] <version>]
- [[-TestDependencies] <string>] [[-ModuleAuthors] <string[]>] [[-CompanyName] <string>]
- [[-ModuleTags] <string[]>] [[-ProjectUri] <string>] [[-IconUri] <string>] [[-LicenseUri] <string>]
- [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <string[]>]
+ [[-TestDependencies] <string>] [[-SourceProvenance] <string>] [[-ModuleAuthors] <string[]>]
+ [[-CompanyName] <string>] [[-ModuleTags] <string[]>] [[-ProjectUri] <string>] [[-IconUri] <string>]
+ [[-LicenseUri] <string>] [[-RequiredModules] <Object[]>] [[-ExternalModuleDependencies] <string[]>]
  [[-DefaultCommandPrefix] <string>] [[-PrivateData] <hashtable>] [[-ModulePath] <string>]
  [[-ConfigFile] <string>] [-WhatIf] [-Confirm]
 ```
@@ -80,7 +80,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 5
+  Position: 6
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -101,7 +101,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 15
+  Position: 16
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -144,7 +144,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 12
+  Position: 13
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -187,7 +187,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 11
+  Position: 12
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -208,7 +208,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 8
+  Position: 9
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -230,7 +230,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 9
+  Position: 10
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -273,7 +273,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 4
+  Position: 5
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -317,7 +317,7 @@ Aliases:
 - path
 ParameterSets:
 - Name: (All)
-  Position: 14
+  Position: 15
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -339,7 +339,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 6
+  Position: 7
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -361,7 +361,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 13
+  Position: 14
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -383,7 +383,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 7
+  Position: 8
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -404,7 +404,29 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 10
+  Position: 11
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -SourceProvenance
+
+How much of the CI source a build records in the module: Auto, Full, Minimal or None.
+See New-MFProject
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 4
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
